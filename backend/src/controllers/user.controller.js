@@ -4,8 +4,8 @@ import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { UserModel } from "../models/user.model.js"
 
-const acceptableUserTypes = () => [process.env.USER_TYPE_COMPANY, process.env.USER_TYPE_RETAILER]
-const acceptableUserStatus = () => [
+const userTypes = () => [process.env.USER_TYPE_COMPANY, process.env.USER_TYPE_RETAILER]
+const userStatus = () => [
   process.env.USER_STATUS_PENDING,
   process.env.USER_STATUS_VERIFIED,
   process.env.USER_STATUS_DECLINED,
@@ -31,7 +31,8 @@ const generateRefreshAndAccessToken = async (userId) => {
 
 const userSignup = async (req, res, next) => {
   try {
-    const userTypeAcceptableStatus = acceptableUserTypes()
+    const acceptableUserTypes = userTypes()
+    const acceptableUserStatus = userStatus()
 
     const {
       firstName,
@@ -54,13 +55,13 @@ const userSignup = async (req, res, next) => {
     }
 
     // user type checker
-    if (!userTypeAcceptableStatus.some((eachAcceptableType) => userType.toLowerCase() === eachAcceptableType)) {
+    if (!acceptableUserTypes.some((eachAcceptableType) => userType.toLowerCase() === eachAcceptableType)) {
       throw new ApiError(406, "user type unacceptable")
     }
 
     // status checker
     if (status) {
-      if (!acceptableUserStatus().some((eachAccepatbleStatus) => status.toLowerCase() === eachAccepatbleStatus)) {
+      if (!acceptableUserStatus.some((eachAccepatbleStatus) => status.toLowerCase() === eachAccepatbleStatus)) {
         throw new ApiError(406, "user status unacceptable")
       }
     }
