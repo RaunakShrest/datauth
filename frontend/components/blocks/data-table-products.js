@@ -11,6 +11,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faEllipsisVertical } from "@fortawesome/free-solid-svg-icons"
 import { useProducts } from "@/contexts/products-context"
 import ImgWithWrapper from "../composites/img-with-wrapper"
+import { currencyFormat } from "@/utils/functionalUtils"
 
 export default function DataTable() {
   const router = useRouter()
@@ -121,7 +122,7 @@ export default function DataTable() {
                   <span className="line-clamp-1">{datum.productType?.name}</span>
                 </Table.Column>
 
-                <Table.Column className="p-2">$ {datum.productPrice}</Table.Column>
+                <Table.Column className="p-2">{currencyFormat(datum.productPrice)}</Table.Column>
 
                 <Table.Column className="p-2">{datum.productSku}</Table.Column>
 

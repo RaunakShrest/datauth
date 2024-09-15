@@ -77,6 +77,8 @@ export default function ProductsProvider({ children }) {
   const [selectedData, setSelectedData] = useState([])
 
   const sortData = (basis) => {
+    // console.log(basis)
+
     setIsAsc((prev) => !prev)
     const dataCopy = JSON.parse(JSON.stringify(products))
 
@@ -87,7 +89,7 @@ export default function ProductsProvider({ children }) {
 
   useEffect(() => {
     setProducts(productsFromApi.isFetched ? (productsFromApi.data?.data ?? []) : [])
-  }, [productsFromApi.isFetched])
+  }, [productsFromApi.data])
 
   return (
     <ProductsContext.Provider
