@@ -1,104 +1,24 @@
-"use client"
+"use client";
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
-const CompaniesContext = React.createContext()
+const CompaniesContext = React.createContext();
 
 export const useCompanies = () => {
-  const context = React.useContext(CompaniesContext)
+  const context = React.useContext(CompaniesContext);
 
   if (!context) {
-    throw new Error("use useCompanies within the scope of CompaniesProvider")
+    throw new Error("use useCompanies within the scope of CompaniesProvider");
   }
 
-  return context
-}
+  return context;
+};
 
 export default function CompaniesProvider({ children }) {
-  const [isAsc, setIsAsc] = useState(true)
+  const [isAsc, setIsAsc] = useState(true);
   const [data, setData] = useState({
-    data: [
-      {
-        status: "pending",
-        name: "John Doe",
-        companyName: "Tech Innovators",
-        companyProductType: "Softwares",
-        companyDescription:
-          "Lorem ipsum dolor sit amet consectetur adipisicing elit. At aliquid ad nostrum quia doloremque hic aliquam cum, est quae voluptatum atque repellat corrupti voluptatibus? Culpa possimus consequuntur eos fuga in!",
-      },
-      {
-        status: "approved",
-        name: "Jane Smith",
-        companyName: "Green Energy Corp",
-        companyProductType: "Paper Cup",
-        companyDescription:
-          "Lorem ipsum dolor sit amet consectetur adipisicing elit. At aliquid ad nostrum quia doloremque hic aliquam cum, est quae voluptatum atque repellat corrupti voluptatibus? Culpa possimus consequuntur eos fuga in!",
-      },
-      {
-        status: "approved",
-        name: "Alice Johnson",
-        companyName: "HealthWell Inc.",
-        companyProductType: "Medication",
-        companyDescription:
-          "Lorem ipsum dolor sit amet consectetur adipisicing elit. At aliquid ad nostrum quia doloremque hic aliquam cum, est quae voluptatum atque repellat corrupti voluptatibus? Culpa possimus consequuntur eos fuga in!",
-      },
-      {
-        status: "pending",
-        name: "Michael Brown",
-        companyName: "FinTech Solutions",
-        companyProductType: "Software Products",
-        companyDescription:
-          "Lorem ipsum dolor sit amet consectetur adipisicing elit. At aliquid ad nostrum quia doloremque hic aliquam cum, est quae voluptatum atque repellat corrupti voluptatibus? Culpa possimus consequuntur eos fuga in!",
-      },
-      {
-        status: "pending",
-        name: "Emily Davis",
-        companyName: "EduLearn",
-        companyProductType: "Online Courses",
-        companyDescription:
-          "Lorem ipsum dolor sit amet consectetur adipisicing elit. At aliquid ad nostrum quia doloremque hic aliquam cum, est quae voluptatum atque repellat corrupti voluptatibus? Culpa possimus consequuntur eos fuga in!",
-      },
-      {
-        status: "pending",
-        name: "Robert Wilson",
-        companyName: "AutoDrive Co.",
-        companyProductType: "Vehicles",
-        companyDescription:
-          "Lorem ipsum dolor sit amet consectetur adipisicing elit. At aliquid ad nostrum quia doloremque hic aliquam cum, est quae voluptatum atque repellat corrupti voluptatibus? Culpa possimus consequuntur eos fuga in!",
-      },
-      {
-        status: "rejected",
-        name: "Laura Miller",
-        companyName: "Urban Builders",
-        companyProductType: "Bricks",
-        companyDescription:
-          "Lorem ipsum dolor sit amet consectetur adipisicing elit. At aliquid ad nostrum quia doloremque hic aliquam cum, est quae voluptatum atque repellat corrupti voluptatibus? Culpa possimus consequuntur eos fuga in!",
-      },
-      {
-        status: "approved",
-        name: "Foodie Delights",
-        companyName: "Foodie Delights",
-        companyProductType: "Food",
-        companyDescription:
-          "Lorem ipsum dolor sit amet consectetur adipisicing elit. At aliquid ad nostrum quia doloremque hic aliquam cum, est quae voluptatum atque repellat corrupti voluptatibus? Culpa possimus consequuntur eos fuga in!",
-      },
-      {
-        status: "approved",
-        name: "Patricia Martinez",
-        companyName: "CloudNet Services",
-        companyProductType: "Servers",
-        companyDescription:
-          "Lorem ipsum dolor sit amet consectetur adipisicing elit. At aliquid ad nostrum quia doloremque hic aliquam cum, est quae voluptatum atque repellat corrupti voluptatibus? Culpa possimus consequuntur eos fuga in!",
-      },
-      {
-        status: "pending",
-        name: "Christopher Lee",
-        companyName: "SafeHome Security",
-        companyProductType: "CCTV Cameras",
-        companyDescription:
-          "Lorem ipsum dolor sit amet consectetur adipisicing elit. At aliquid ad nostrum quia doloremque hic aliquam cum, est quae voluptatum atque repellat corrupti voluptatibus? Culpa possimus consequuntur eos fuga in!",
-      },
-    ],
+    data: [],
     columns: [
       {
         id: "company-name",
@@ -107,13 +27,20 @@ export default function CompaniesProvider({ children }) {
         isSortable: true,
         width: "250px",
       },
-      { id: "company-owner-name", text: "Name", dataKey: "name", isSortable: true, width: "250px" },
+      { id: "company-owner-name", text: "Owner Name", dataKey: "name", isSortable: true, width: "150px" },
       {
-        id: "company-description",
-        text: "Company Description",
-        dataKey: "companyDescription",
+        id: "Phone number",
+        text: "Phone",
+        dataKey: "phone",
         isSortable: false,
-        width: "350px",
+        width: "150px",
+      },
+      {
+        id: "Email",
+        text: "Email",
+        dataKey: "email",
+        isSortable: false,
+        width: "250px",
       },
       {
         id: "company-product-type",
@@ -122,23 +49,38 @@ export default function CompaniesProvider({ children }) {
         isSortable: true,
         width: "150px",
       },
-      { id: "company-status", text: "Status", dataKey: "status", isSortable: true, width: "100px" },
+      { id: "company-status", text: "Status", dataKey: "status", isSortable: true, width: "120px" },
     ],
-  })
-  const [selectedData, setSelectedData] = useState([])
+  });
+  const [selectedData, setSelectedData] = useState([]);
+
+  const fetchCompanies = async () => {
+    try {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL_DEV}/users/get-companies`);
+      setData((prev) => ({ ...prev, data: response.data.data || [] })); 
+    } catch (error) {
+      console.error("Error fetching companies data:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCompanies();
+  }, []);
 
   const sortData = (basis) => {
-    setIsAsc((prev) => !prev)
+    setIsAsc((prev) => !prev);
 
-    const dataCopy = [...data.data]
-    const sortedData = dataCopy?.sort((a, b) => (isAsc ? (a[basis] > b[basis] ? 1 : -1) : a[basis] < b[basis] ? 1 : -1))
+    const dataCopy = [...data.data];
+    const sortedData = dataCopy?.sort((a, b) =>
+      isAsc ? (a[basis] > b[basis] ? 1 : -1) : a[basis] < b[basis] ? 1 : -1
+    );
 
-    setData((prev) => ({ ...prev, data: sortedData }))
-  }
+    setData((prev) => ({ ...prev, data: sortedData }));
+  };
 
   return (
-    <CompaniesContext.Provider value={{ data, setData, sortData, selectedData, setSelectedData }}>
+    <CompaniesContext.Provider value={{ data, setData, sortData, selectedData, setSelectedData, fetchCompanies }}>
       {children}
     </CompaniesContext.Provider>
-  )
+  );
 }
