@@ -4,6 +4,8 @@ import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { UserModel } from "../models/user.model.js"
 
+import {sendBulkEmail} from "../middlewares/sendEmail.middleware.js"
+
 const userTypes = () => [process.env.USER_TYPE_COMPANY, process.env.USER_TYPE_RETAILER]
 const userStatus = () => [
   process.env.USER_STATUS_PENDING,
@@ -100,34 +102,38 @@ const userSignup = async (req, res, next) => {
 
 const userSignin = async (req, res, next) => {
   try {
-    const { email, password } = req.body
+    const { email, password } = req.body;
 
-    const existingUser = await UserModel.findOne({ email: email })
+    const existingUser = await UserModel.findOne({ email: email });
 
     if (!existingUser) {
-      throw new ApiError(404, "user doesn't exist")
+      throw new ApiError(404, "User doesn't exist");
     }
-
-    const passwordMatch = await bcrypt.compare(password, existingUser.password)
+  
+    const passwordMatch = await bcrypt.compare(password, existingUser.password);
 
     if (!passwordMatch) {
-      throw new ApiError(401, "Email or Password does not match")
+      throw new ApiError(401, "Email or Password does not match");
+    }
+    if (existingUser.userType === "company" && existingUser.status !== "verified") {
+      throw new ApiError(403, "Company user must be verified to sign in");
     }
 
-    const { refreshToken, accessToken } = await generateRefreshAndAccessToken(existingUser._id)
+    const { refreshToken, accessToken } = await generateRefreshAndAccessToken(existingUser._id);
 
-    const signedInUser = await UserModel.findOne({ _id: existingUser._id }).select("-__v -password -refreshToken")
+    const signedInUser = await UserModel.findOne({ _id: existingUser._id }).select("-__v -password -refreshToken");
 
     return res
       .status(200)
-      .json(new ApiResponse(200, { user: signedInUser, refreshToken, accessToken }, "user logged in successfully"))
+      .json(new ApiResponse(200, { user: signedInUser, refreshToken, accessToken }, "User logged in successfully"));
   } catch (error) {
     if (!error.message) {
-      error.message = "something went wrong while signing user in"
+      error.message = "Something went wrong while signing user in";
     }
-    next(error)
+    next(error);
   }
-}
+};
+
 
 const userSignout = async (req, res, next) => {
   try {
@@ -259,6 +265,62 @@ const refreshAccessToken = async (req, res, next) => {
     }
     next(error)
   }
+
+
+}
+const getCompanies = async (req, res, next) => {
+  try {
+    const companies = await UserModel.find({ userType: 'company' }).select("-__v -password -refreshToken")
+    return res.status(200).json(new ApiResponse(200, companies, "companies fetched successfully"))
+  } catch (error) {
+    if (!error.message) {
+      error.message = "something went wrong while fetching companies"
+    }
+    next(error)
+  }
 }
 
-export { userSignup, userSignin, userSignout, getUsers, getCurrentUser, updateUser, refreshAccessToken }
+const updateCompanyStatus = async (req, res, next) => {
+  const { id } = req.params; 
+  const { status } = req.body; 
+
+  // Trim the ID to remove any leading or trailing whitespace/newline characters
+  const trimmedId = id.trim();
+  if (!trimmedId || !status) {
+    return res.status(400).json(new ApiResponse(400, null, "Company ID and status are required."));
+  }
+
+  try {
+    const updatedCompany = await UserModel.findByIdAndUpdate(
+      trimmedId, 
+      { status: status }, 
+      { new: true, select: "-__v -password -refreshToken" } 
+    );
+    if (!updatedCompany) {
+      return res.status(404).json(new ApiResponse(404, null, "Company not found."));
+    }
+    if (status.toLowerCase() === 'verified') {
+      const emailOptions = [{
+        from: process.env.SENDER_ADDRESS,
+        to: updatedCompany.email,  // Send email to the company
+        subject: 'Company Verified',
+        text: `Dear ${updatedCompany.companyName}, your company status has been  "verified" .`,
+        html: `<p>Dear ${updatedCompany.companyName},</p><p>Your company status has been updated to <strong>"verified"</strong>.</p>`,
+      }];
+
+      const emailResult = await sendBulkEmail(emailOptions);
+      console.log('Email sent: ', emailResult);
+    }
+
+    return res.status(200).json(new ApiResponse(200, updatedCompany, "Company status updated successfully."));
+  } catch (error) {
+    if (!error.message) {
+      error.message = "Something went wrong while updating the company status.";
+    }
+    next(error);
+  }
+};
+
+
+
+export { userSignup, userSignin, userSignout, getUsers, getCurrentUser, updateUser, refreshAccessToken, getCompanies, updateCompanyStatus }

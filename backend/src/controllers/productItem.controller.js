@@ -16,6 +16,51 @@ const acceptableStatus = () => [
 
 const getProductItems = async (req, res, next) => {
   try {
+    /* console.log(req.query)
+
+     const lookupPipeline = [
+      {
+        $lookup: {
+          from: "producttypes",
+          localField: "productType",
+          foreignField: "_id",
+          as: "productType",
+          pipeline: [
+            {
+              $project: {
+                name: 1,
+              },
+            },
+          ],
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "productManufacturer",
+          foreignField: "_id",
+          as: "productManufacturer",
+          pipeline: [
+            {
+              $project: {
+                companyName: 1,
+              },
+            },
+          ],
+        },
+      },
+      {
+        $addFields: {
+          productType: {
+            $arrayElemAt: ["$productType", 0],
+          },
+          productManufacturer: {
+            $arrayElemAt: ["$productManufacturer", 0],
+          },
+        },
+      },
+    ] */
+
     const userId = req.user?._id
     const isSuperAdmin = req.user?.userType === process.env.USER_TYPE_SUPER_ADMIN
 

@@ -46,5 +46,7 @@ app.use((error, _, res, __) => {
   }
   return res.status(error.statusCode).json(error)
 })
-
+app.all('*', (req, res) => {
+  return res.status(404).json({ error: 'Route not found!' });
+});
 export { server }

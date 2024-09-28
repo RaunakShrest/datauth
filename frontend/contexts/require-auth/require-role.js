@@ -22,11 +22,12 @@ export default function RequireRole({ roles = [], children }) {
     )
   }
 
-  if (!currentUser.isPending && !currentUser.data?.success) {
+  if (!currentUser.isPending && !currentUser.data?.success) { // can be used later
     redirect("/login")
   }
 
-  if (!roles.includes(currentUser.data?.data.userType)) {
+
+  if (currentUser.data?.data.userType !== "super-admin") {
     return redirect("/no-permission")
   }
 

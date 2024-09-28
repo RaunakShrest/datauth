@@ -47,6 +47,7 @@ export default function AddProdcutTypeFormTemplate() {
   const submitFn = (formData) => {
     addProductType.mutate({
       name: formData.productTypeName,
+      price:formData.productTypePrice,
       description: formData.productTypeDescription,
       status: productTypeStatus[formData.productTypeStatus],
       attributes: formData.productTypeAttributes,
@@ -69,6 +70,15 @@ export default function AddProdcutTypeFormTemplate() {
           register={register}
           errors={errors}
           name="productTypeName"
+          fieldRule={{ required: "This field is required" }}
+        />
+            <AnimatedInput
+          placeholder="Price"
+          getValues={getValues}
+          required
+          register={register}
+          errors={errors}
+          name="productTypePrice"
           fieldRule={{ required: "This field is required" }}
         />
 

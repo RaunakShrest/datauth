@@ -36,9 +36,9 @@ const getAllProductTypes = async (req, res, next) => {
 
 const createProductType = async (req, res, next) => {
   try {
-    const { name, description, status, attributes } = req.body
+    const { name,price, description, status, attributes } = req.body
 
-    if ([name, description, status].some((each) => each == null || each.trim() == "")) {
+    if ([name, price,description, status].some((each) => each == null || each.trim() == "")) {
       throw new ApiError(400, "Required Fields Empty")
     }
 
@@ -52,7 +52,7 @@ const createProductType = async (req, res, next) => {
       }
     }
 
-    const providedFields = { name, description, status, attributes }
+    const providedFields = { name, price, description, status, attributes }
     const createdProductType = await ProductTypeModel.create({ ...providedFields })
 
     return res.status(201).json(new ApiResponse(201, createdProductType, "product type successfully created"))
@@ -67,7 +67,7 @@ const createProductType = async (req, res, next) => {
 const updateProductType = async (req, res, next) => {
   try {
     const productTypeId = req.body?.id
-    const { name, description, status, attributes } = req.body
+    const { name,price, description, status, attributes } = req.body
 
     if (!productTypeId) {
       throw new ApiError(400, "product type id not provided")
@@ -79,7 +79,7 @@ const updateProductType = async (req, res, next) => {
       }
     }
 
-    const providedFields = { name, description, status, attributes }
+    const providedFields = { name, price, description, status, attributes }
     const updatedProductType = await ProductTypeModel.findOneAndUpdate({ _id: productTypeId }, providedFields, {
       new: true,
       runValidators: true,
