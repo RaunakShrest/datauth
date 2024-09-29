@@ -118,6 +118,9 @@ const userSignin = async (req, res, next) => {
     if (existingUser.userType === "company" && existingUser.status !== "verified") {
       throw new ApiError(403, "Company user must be verified to sign in");
     }
+    if(existingUser.userType==="retailer" && existingUser.status !=="verified"){
+      throw new ApiError(403, "Retailer must be verified to sign in");
+    }
 
     const { refreshToken, accessToken } = await generateRefreshAndAccessToken(existingUser._id);
 

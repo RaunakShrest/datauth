@@ -9,7 +9,7 @@ import RequireAuth from "@/contexts/require-auth/require-auth"
 export default function AfterLoginLayout({ children }) {
   return (
     <RequireAuth>
-      <div className="container">
+      <div className="container max-w-[1500vh]">
         <div className="sticky top-0 mt-8 flex gap-4">
           <MenuWrapper>
             <div className="sticky top-0 h-screen rounded-md bg-[#017082] px-2 pt-8 text-white shadow-md">

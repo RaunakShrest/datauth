@@ -10,7 +10,7 @@ import {
 
 const router = express.Router()
 
-router.get("/get-all", checkUserAuth, checkSuperAdmin, getAllProductTypes)
+router.get("/get-all", getAllProductTypes)
 router.get("/get-enabled", checkUserAuth, getEnabledProductTypes)
 router.post("/create", checkUserAuth, checkSuperAdmin, createProductType)
 router.patch("/update", checkUserAuth, checkSuperAdmin, updateProductType)

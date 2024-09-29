@@ -19,10 +19,6 @@ const getEnabledProductTypes = async (req, res, next) => {
 
 const getAllProductTypes = async (req, res, next) => {
   try {
-    if (!req.user) {
-      throw new Error(401, "unauthorized request")
-    }
-
     const productTypes = await ProductTypeModel.find({}).select("-__v")
 
     return res.status(200).json(new ApiResponse(200, productTypes, "product types fetched successfully"))
@@ -36,33 +32,36 @@ const getAllProductTypes = async (req, res, next) => {
 
 const createProductType = async (req, res, next) => {
   try {
-    const { name,price, description, status, attributes } = req.body
-
-    if ([name, price,description, status].some((each) => each == null || each.trim() == "")) {
-      throw new ApiError(400, "Required Fields Empty")
+    const { name, price, description, status, attributes } = req.body;
+    if ([name, price, description, status].some((each) => each == null || each.trim() === "")) {
+      throw new ApiError(400, "Required Fields Empty");
     }
-
     if (attributes?.length <= 0) {
-      throw new ApiError(400, "Required Fields Empty")
+      throw new ApiError(400, "Required Fields Empty");
     }
-
     if (status) {
-      if (!acceptableStatus().some((eachAccepatbleStatus) => status?.toLowerCase() === eachAccepatbleStatus)) {
-        throw new ApiError(406, "status value unacceptable")
+      if (!acceptableStatus().some((eachAcceptableStatus) => status?.toLowerCase() === eachAcceptableStatus)) {
+        throw new ApiError(406, "status value unacceptable");
       }
     }
-
-    const providedFields = { name, price, description, status, attributes }
-    const createdProductType = await ProductTypeModel.create({ ...providedFields })
-
-    return res.status(201).json(new ApiResponse(201, createdProductType, "product type successfully created"))
+    const sanitizedDescription = description.replace(/<\/?p>/g, ""); // Strips <p> and </p> tags
+    const providedFields = {
+      name,
+      price,
+      description: sanitizedDescription, 
+      status,
+      attributes,
+    };
+    const createdProductType = await ProductTypeModel.create({ ...providedFields });
+    return res.status(201).json(new ApiResponse(201, createdProductType, "product type successfully created"));
   } catch (error) {
     if (!error.message) {
-      error.message = "something went wrong while creating product type"
+      error.message = "Something went wrong while creating product type";
     }
-    next(error)
+    next(error);
   }
-}
+};
+
 
 const updateProductType = async (req, res, next) => {
   try {

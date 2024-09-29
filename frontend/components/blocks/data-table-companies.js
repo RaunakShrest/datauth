@@ -140,8 +140,17 @@ export default function DataTable() {
                 </Table.Column>
                 <Table.Column className="overflow-hidden p-2">
                   <span className="line-clamp-1">{datum.productType.join(', ')}</span>
+                </Table.Column><Table.Column className="p-2">
+                  <span
+                    className={twMerge(
+                      "px-2 py-1 rounded-full text-white",
+                      datum.status === "pending" ? "bg-red-500" : datum.status === "verified" ? "bg-green-600" : "bg-gray-500"
+                    )}
+                  >
+                    {datum.status}
+                  </span>
                 </Table.Column>
-                <Table.Column className="p-2">{datum.status}</Table.Column>
+
                 <Table.Column className="p-2">
                   <ContextMenu className="relative" tableRef={tableRef} contextMenuRef={contextMenuRef}>
                     <ContextMenu.Trigger>

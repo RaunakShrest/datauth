@@ -26,5 +26,5 @@ router.post("/refresh-access-token", refreshAccessToken)
 router.patch("/update-user", checkUserAuth, checkSuperAdmin, updateUser)
 router.get('/get-companies', getCompanies);
 router.patch('/get-companies/:id', updateCompanyStatus);
-router.delete('/delete-company/:id', deleteCompany);
+router.delete('/delete-company/:id', deleteCompany,checkSuperAdmin,checkUserAuth);
 export default router
