@@ -8,7 +8,8 @@ import {
   getCurrentUser,
   updateUser,
   getCompanies,
-  updateCompanyStatus
+  updateCompanyStatus,
+  deleteCompany
 } from "../controllers/user.controller.js"
 import { checkSuperAdmin, checkUserAuth } from "../middlewares/auth.middleware.js"
 
@@ -25,5 +26,5 @@ router.post("/refresh-access-token", refreshAccessToken)
 router.patch("/update-user", checkUserAuth, checkSuperAdmin, updateUser)
 router.get('/get-companies', getCompanies);
 router.patch('/get-companies/:id', updateCompanyStatus);
-
+router.delete('/delete-company/:id', deleteCompany);
 export default router

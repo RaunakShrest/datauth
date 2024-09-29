@@ -320,7 +320,29 @@ const updateCompanyStatus = async (req, res, next) => {
     next(error);
   }
 };
+const deleteCompany = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const trimmedId = id.trim();
+    if (!trimmedId) {
+      return res.status(400).json(new ApiResponse(400, null, "Company ID is required."));
+    }
+    const deletedCompany = await UserModel.findByIdAndDelete(trimmedId).select("-__v -password -refreshToken");
+
+    if (!deletedCompany) {
+      return res.status(404).json(new ApiResponse(404, null, "Company not found."));
+    }
+
+    return res.status(200).json(new ApiResponse(200, deletedCompany, "Company deleted successfully."));
+  } catch (error) {
+    if (!error.message) {
+      error.message = "Something went wrong while deleting the company.";
+    }
+    next(error);
+  }
+};
 
 
 
-export { userSignup, userSignin, userSignout, getUsers, getCurrentUser, updateUser, refreshAccessToken, getCompanies, updateCompanyStatus }
+
+export { userSignup, userSignin, userSignout, getUsers, getCurrentUser, updateUser, refreshAccessToken, getCompanies, updateCompanyStatus, deleteCompany }
