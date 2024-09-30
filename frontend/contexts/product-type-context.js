@@ -32,10 +32,11 @@ export default function ProductTypeProvider({ children }) {
     ],
   });
   const [selectedData, setSelectedData] = useState([]);
+
   const fetchProductTypes = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL_DEV}/product-types/get-all`); 
-      setData((prev) => ({ ...prev, data: response.data.data || [] })); 
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL_DEV}/product-types/get-all`);
+      setData((prev) => ({ ...prev, data: response.data.data || [] }));
     } catch (error) {
       console.error("Error fetching product types data:", error);
     }
@@ -59,7 +60,7 @@ export default function ProductTypeProvider({ children }) {
 
   return (
     <ProductTypeContext.Provider
-      value={{ data, setData, sortData, selectedData, setSelectedData }}
+      value={{ data, setData, sortData, selectedData, setSelectedData, fetchProductTypes }} // Include fetchProductTypes
     >
       {children}
     </ProductTypeContext.Provider>

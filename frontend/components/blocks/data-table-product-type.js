@@ -10,13 +10,14 @@ import Pagination from "../composites/pagination";
 import Checkbox from "../elements/checkbox";
 import ContextMenu from "./context-menu";
 import { useRouter } from "next/navigation";
+import axios from "axios"; 
 
 export default function DataTable() {
   const router = useRouter();
   const tableRef = useRef();
   const contextMenuRef = useRef();
 
-  const { data, selectedData, sortData, setSelectedData } = useProductType();
+  const { data, selectedData, sortData, setSelectedData, fetchProductTypes} = useProductType();
 
   const isTableDataSelected = (dataToVerify) => {
     return selectedData.some(
@@ -44,6 +45,25 @@ export default function DataTable() {
         : [...prev, clickedData],
     )
   }
+  const handleChangeStatus = async (productTypeId, currentStatus) => {
+    try {
+      const newStatus = currentStatus === "enabled" ? "disabled" : "enabled";
+      const response = await axios.patch(
+        `${process.env.NEXT_PUBLIC_BASE_URL_DEV}/product-types/changeStatus/${productTypeId}`, 
+        { status: newStatus }
+      );
+
+      if (response.status === 200) {
+
+        fetchProductTypes();
+      } else {
+        alert("Failed to update status");
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+      alert("Error updating status");
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -144,9 +164,9 @@ export default function DataTable() {
 
                       <ContextMenu.Item
                         className="rounded-md bg-[#017082]"
-                        onClick={() => null}
+                        onClick={() => handleChangeStatus(datum._id, datum.status)} // Call handleChangeStatus
                       >
-                        Delete
+                        ChangeStatus
                       </ContextMenu.Item>
 
                       <ContextMenu.Item

@@ -119,5 +119,43 @@ const deleteProductType = async (req, res, next) => {
     next(error)
   }
 }
+const updateProductTypeStatus = async (req, res, next) => {
+  try {
+    const productTypeId = req.params.id; 
+    const { status } = req.body;
 
-export { getAllProductTypes, getEnabledProductTypes, createProductType, updateProductType, deleteProductType }
+    if (!productTypeId) {
+      throw new ApiError(400, "Product type ID not provided");
+    }
+
+    if (!status) {
+      throw new ApiError(400, "Status not provided");
+    }
+    // Check if the provided status is acceptable (enabled/disabled)
+    if (!acceptableStatus().some((acceptableStatus) => status.toLowerCase() === acceptableStatus.toLowerCase())) {
+      throw new ApiError(406, "Status value unacceptable");
+    }
+    const updatedProductType = await ProductTypeModel.findOneAndUpdate(
+      { _id: productTypeId },
+      { status: status.toLowerCase() },
+      {
+        new: true,
+        runValidators: true,
+      }
+    ).select("-__v");
+
+    if (!updatedProductType) {
+      throw new ApiError(404, "Product type doesn't exist");
+    }
+
+    return res.status(200).json(new ApiResponse(200, updatedProductType, "Product type status updated successfully"));
+  } catch (error) {
+    if (!error.message) {
+      error.message = "Something went wrong while updating product type status";
+    }
+    next(error);
+  }
+};
+
+
+export { getAllProductTypes, getEnabledProductTypes, createProductType, updateProductType, deleteProductType, updateProductTypeStatus }
