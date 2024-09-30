@@ -27,12 +27,12 @@ import usersRoute from "./routes/user.route.js"
 import productTypesRoute from "./routes/productType.router.js"
 import productItemsRoute from "./routes/productItem.router.js"
 import customerInfoRoute from "./routes/customerInfo.router.js"
-
+import retailerRoute from "./routes/retailer.route.js"
 app.use("/api/v1/users", usersRoute)
 app.use("/api/v1/product-types", productTypesRoute)
 app.use("/api/v1/products", productItemsRoute)
 app.use("/api/v1/customer-info", customerInfoRoute)
-
+app.use("/api/v1/retailers",retailerRoute)
 // Global Error Handler
 app.use((error, _, res, __) => {
   console.log(error)
