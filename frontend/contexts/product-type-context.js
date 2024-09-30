@@ -46,9 +46,8 @@ export default function ProductTypeProvider({ children }) {
     fetchProductTypes();
   }, []);
 
-  // Sort data based on the provided basis
   const sortData = (basis) => {
-    setIsAsc((prev) => !prev); // Toggle sort direction
+    setIsAsc((prev) => !prev);
 
     const dataCopy = [...data.data];
     const sortedData = dataCopy?.sort((a, b) =>
