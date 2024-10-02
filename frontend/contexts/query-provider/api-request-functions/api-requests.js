@@ -67,6 +67,15 @@ export const fetchProductTypes = async () => {
     throw error.response
   }
 }
+export const fetchBatchIds = async () => {
+  try {
+    const response = await api.get("/batch/getAllBatchIds")
+
+    return response.data
+  } catch (error) {
+    throw error.response
+  }
+}
 
 export const createNewProduct = async (data) => {
   try {

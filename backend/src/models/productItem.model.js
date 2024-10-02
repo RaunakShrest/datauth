@@ -21,6 +21,11 @@ const productItemSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+      batchId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Batch",
+      required: true,
+    },
     productStatus: {
       type: String,
       enum: [

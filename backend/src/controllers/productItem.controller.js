@@ -7,6 +7,7 @@ import { slugSortingQuery } from "../utils/aggregations/slug-sorting-query.js"
 import { generateUniqueSlug } from "../utils/aggregations/unique-slug-generator.js"
 import { generateQr } from "../middlewares/qr-generator.middeware.js"
 import { uploadFile } from "../middlewares/cloudinary.middleware.js"
+import { BatchIdModal } from "../models/batchId.modal.js"
 
 const acceptableStatus = () => [
   process.env.PRODUCT_ITEM_STATUS_PENDING,
@@ -14,73 +15,50 @@ const acceptableStatus = () => [
   process.env.PRODUCT_ITEM_STATUS_CANCELLED,
 ]
 
+// const getProductItems = async (req, res, next) => {
+//   try {
+//      const userId = req.user?._id
+//     const isSuperAdmin = req.user?.userType === process.env.USER_TYPE_SUPER_ADMIN
+
+//     if (!userId) {
+//       throw new ApiError(404, "unauthorized request")
+//     }
+
+//     const productItems = await ProductItemModel.find(isSuperAdmin ? {} : { productManufacturer: userId })
+//       .populate("productManufacturer", "companyName")
+//       .populate("productType", "name")
+//       .select("-__v")
+
+//     return res.status(200).json(new ApiResponse(200, productItems, "product items fetched successfully"))
+//   } catch (error) {
+//     if (!error.message) {
+//       error.message = "something went wrong while getting products"
+//     }
+//     next(error)
+//   }
+// }
 const getProductItems = async (req, res, next) => {
   try {
-    /* console.log(req.query)
-
-     const lookupPipeline = [
-      {
-        $lookup: {
-          from: "producttypes",
-          localField: "productType",
-          foreignField: "_id",
-          as: "productType",
-          pipeline: [
-            {
-              $project: {
-                name: 1,
-              },
-            },
-          ],
-        },
-      },
-      {
-        $lookup: {
-          from: "users",
-          localField: "productManufacturer",
-          foreignField: "_id",
-          as: "productManufacturer",
-          pipeline: [
-            {
-              $project: {
-                companyName: 1,
-              },
-            },
-          ],
-        },
-      },
-      {
-        $addFields: {
-          productType: {
-            $arrayElemAt: ["$productType", 0],
-          },
-          productManufacturer: {
-            $arrayElemAt: ["$productManufacturer", 0],
-          },
-        },
-      },
-    ] */
-
-    const userId = req.user?._id
-    const isSuperAdmin = req.user?.userType === process.env.USER_TYPE_SUPER_ADMIN
+    const userId = req.user?._id;
+    const isSuperAdmin = req.user?.userType === process.env.USER_TYPE_SUPER_ADMIN;
 
     if (!userId) {
-      throw new ApiError(404, "unauthorized request")
+      throw new ApiError(404, "unauthorized request");
     }
-
     const productItems = await ProductItemModel.find(isSuperAdmin ? {} : { productManufacturer: userId })
-      .populate("productManufacturer", "companyName")
-      .populate("productType", "name")
-      .select("-__v")
+      .populate("productManufacturer", "companyName")  
+      .populate("productType", "name")                 
+      .populate("batchId", "batchId")      
+      .select("-__v");                             
 
-    return res.status(200).json(new ApiResponse(200, productItems, "product items fetched successfully"))
+    return res.status(200).json(new ApiResponse(200, productItems, "product items fetched successfully"));
   } catch (error) {
     if (!error.message) {
-      error.message = "something went wrong while getting products"
+      error.message = "something went wrong while getting products";
     }
-    next(error)
+    next(error);
   }
-}
+};
 
 const getSingleProduct = async (req, res, next) => {
   try {
@@ -117,54 +95,61 @@ const getSingleProduct = async (req, res, next) => {
 }
 
 const createProductItem = async (req, res, next) => {
-  const productItemAcceptableStatus = acceptableStatus()
+  const productItemAcceptableStatus = acceptableStatus();
 
   try {
-    const userId = req.user?._id
+    const userId = req.user?._id;
 
     if (!userId) {
-      throw new ApiError(404, "unauthorized request")
+      throw new ApiError(404, "unauthorized request");
     }
-    const { productName, productType, productSku, productDescription, productStatus, productPrice } = req.body
+    const { productName, productType, productSku, productDescription, productStatus, productPrice, batchId } = req.body;
 
-    const requiredFields = [productName, productType, productSku, productPrice, productDescription, productStatus]
+    const requiredFields = [productName, productType, productSku, productPrice, productDescription, productStatus, batchId];
 
     // requirement checker
     if (requiredFields.some((eachField) => eachField?.trim() == null || eachField?.trim() == "")) {
-      throw new ApiError(404, "required fields empty")
+      throw new ApiError(404, "required fields empty");
     }
 
     const requestedProductType = await ProductTypeModel.findOne({
       _id: productType,
       status: process.env.PRODUCT_TYPE_STATUS_ENABLED,
-    })
+    });
 
     if (!requestedProductType) {
-      throw new ApiError(404, "requested product type does not exist")
+      throw new ApiError(404, "requested product type does not exist");
+    }
+    const batchString = batchId; // This can be a batch name, code, etc.
+    const requestedBatch = await BatchIdModal.findOne({ batchId: batchString });
+
+    if (!requestedBatch) {
+      throw new ApiError(404, "requested batch does not exist");
     }
 
-    // status checker
+    const batchObjectId = requestedBatch._id; // Extract the ObjectId from the found batch
+
     if (productStatus) {
       if (
         !productItemAcceptableStatus.some(
           (eachAccepatbleStatus) => productStatus.toLowerCase() === eachAccepatbleStatus
         )
       ) {
-        throw new ApiError(406, "product status unacceptable")
+        throw new ApiError(406, "product status unacceptable");
       }
     }
 
     // generate unique slug
-    const wouldBeSlug = slugify(productName.toLowerCase())
-    const existingSortedSimilarSlugs = await ProductItemModel.aggregate(slugSortingQuery(wouldBeSlug))
-    const uniqueSlug = await generateUniqueSlug(existingSortedSimilarSlugs, wouldBeSlug)
+    const wouldBeSlug = slugify(productName.toLowerCase());
+    const existingSortedSimilarSlugs = await ProductItemModel.aggregate(slugSortingQuery(wouldBeSlug));
+    const uniqueSlug = await generateUniqueSlug(existingSortedSimilarSlugs, wouldBeSlug);
 
     // generate qr code based off of above unique slug
-    const FRONTEND_URL = process.env.NODE_ENV === "DEV" ? process.env.FRONTEND_URL_DEV : process.env.FRONTEND_URL_PROD
-    const qrFilePath = await generateQr(`${FRONTEND_URL}/products/${uniqueSlug}`)
+    const FRONTEND_URL = process.env.NODE_ENV === "DEV" ? process.env.FRONTEND_URL_DEV : process.env.FRONTEND_URL_PROD;
+    const qrFilePath = await generateQr(`${FRONTEND_URL}/products/${uniqueSlug}`);
 
     // upload the qr to the storage bucket
-    const response = await uploadFile(qrFilePath)
+    const response = await uploadFile(qrFilePath);
 
     const createdProductItem = await ProductItemModel.create({
       productName,
@@ -177,16 +162,17 @@ const createProductItem = async (req, res, next) => {
       productAttributes: req.body.productAttributes,
       slug: uniqueSlug,
       qrUrl: response.secure_url,
-    })
+      batchId: batchObjectId, // Store the ObjectId from the Batch lookup
+    });
 
-    return res.status(201).json(new ApiResponse(201, createdProductItem, "product created successfully"))
+    return res.status(201).json(new ApiResponse(201, createdProductItem, "product created successfully"));
   } catch (error) {
     if (!error.message) {
-      error.message = "something went wrong while getting products"
+      error.message = "something went wrong while getting products";
     }
-    next(error)
+    next(error);
   }
-}
+};
 
 const updateProductItem = async (req, res, next) => {
   try {
@@ -200,8 +186,8 @@ const updateProductItem = async (req, res, next) => {
       throw new ApiError(401, "product id not provided")
     }
 
-    const { productName, productType, productSku, productDescription, productStatus } = req.body
-    const fieldPassed = { productName, productType, productSku, productDescription, productStatus }
+    const { productName, productType, productSku, productDescription, productStatus, batchId } = req.body
+    const fieldPassed = { productName, productType, productSku, productDescription, productStatus, batchId }
 
     // status checker
     if (productStatus) {

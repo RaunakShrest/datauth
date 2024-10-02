@@ -21,12 +21,6 @@ export default function DataTable() {
 
   const { products, columns, sortData, selectedData, setSelectedData } = useProducts()
 
-  /* const productsFromApi = useQuery({
-    queryKey: ["fetchProducts"],
-    queryFn: () => fetchProducts(),
-    staleTime: reactQueryStaleTime,
-  }) */
-
   const isTableDataSelected = (dataToVerify) => {
     return selectedData.some((eachSelected) => eachSelected._id === dataToVerify._id)
   }
@@ -85,7 +79,7 @@ export default function DataTable() {
 
               <Table.Heading
                 className="pl-4"
-                style={{ width: "100px" }}
+                style={{ width: "5rem" }}
               >
                 Action
               </Table.Heading>
@@ -125,15 +119,19 @@ export default function DataTable() {
                 <Table.Column className="p-2">{currencyFormat(datum.productPrice)}</Table.Column>
 
                 <Table.Column className="p-2">{datum.productSku}</Table.Column>
+                
+                <Table.Column className="p-2">{datum.batchId?.batchId}</Table.Column>
 
                 <Table.Column className="p-2">{datum.productStatus}</Table.Column>
 
-                <Table.Column className="p-2">
+                            <Table.Column className="p-2">
+                <a href={datum.qrUrl} target="_blank" rel="noopener noreferrer">
                   <ImgWithWrapper
                     wrapperClassName="size-10 mx-auto"
                     imageAttributes={{ src: datum.qrUrl, alt: "product-qr" }}
                   />
-                </Table.Column>
+              </a>
+            </Table.Column>
 
                 <Table.Column className="p-2">
                   <ContextMenu
