@@ -76,7 +76,7 @@ const handleSaveBatchId = async () => {
           </Button>
 
           <Button
-            onClick={handleOpenModal} 
+            onClick={handleOpenModal}
             className="flex items-center bg-[#017082] px-4 py-2 text-white"
           >
             <svg

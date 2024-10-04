@@ -37,27 +37,6 @@ export default function ProductsProvider({ children }) {
       width: "150px",
     },
     {
-      id: "product-manufacturer",
-      text: "Manufacturer",
-      dataKey: "productManufacturer.companyName",
-      isSortable: true,
-      width: "150px",
-    },
-    {
-      id: "product-description",
-      text: "Product Description",
-      dataKey: "productDescription",
-      isSortable: false,
-      width: "350px",
-    },
-    {
-      id: "product-type",
-      text: "Product Type",
-      dataKey: "productType",
-      isSortable: true,
-      width: "150px",
-    },
-    {
       id: "product-price",
       text: "Price",
       dataKey: "productPrice",
@@ -76,10 +55,11 @@ export default function ProductsProvider({ children }) {
       text: "Batch",
       dataKey: "batchid",
       isSortable: true,
-      width: "100px",
+      width: "150px",
     },
-    { id: "product-status", text: "Status", dataKey: "status", isSortable: true, width: "100px" },
-    { id: "qr-code", text: "QR Code", dataKey: "qr-code", isSortable: false, width: "100px" },
+    { id: "product-status", text: "Status", dataKey: "status", isSortable: true, width: "80px" },
+    { id: "createdAt", text: "Created Date", dataKey: "createdAt", isSortable: true, width: "150px" },
+    { id: "qr-code", text: "QR Code", dataKey: "qr-code", isSortable: false, width: "40px" },
   ])
   const [selectedData, setSelectedData] = useState([])
 

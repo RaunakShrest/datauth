@@ -38,7 +38,7 @@ app.use("/api/v1/batch",batchIdRoute)
 
 // Global Error Handler
 app.use((error, _, res, __) => {
-  console.log(error)
+  console.log("global handle",error)
   if (!error.statusCode) {
     error.statusCode = 500
     error.success = false
