@@ -66,7 +66,30 @@ export default function DataTable() {
       throw new Error('Failed to update company status');
     }
   };
+ const handleDelete = async (companyId) => {
+    if (window.confirm("Are you sure you want to delete this company?")) {
+      try {
+        await deleteCompany(companyId);
+        await fetchCompanies();  
+      } catch (error) {
+        console.error("Failed to delete company:", error);
+      }
+    }
+  };
 
+  const deleteCompany = async (id) => {
+    try {
+      const response = await axios.delete(`${process.env.NEXT_PUBLIC_BASE_URL_DEV}/users/delete-company/${id}`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error deleting company:", error.response?.data || error.message);
+      throw new Error('Failed to delete company');
+    }
+  };
   return (
     <div className="space-y-4">
       <div className="overflow-x-auto">
@@ -117,8 +140,17 @@ export default function DataTable() {
                 </Table.Column>
                 <Table.Column className="overflow-hidden p-2">
                   <span className="line-clamp-1">{datum.productType.join(', ')}</span>
+                </Table.Column><Table.Column className="p-2">
+                  <span
+                    className={twMerge(
+                      "px-2 py-1 rounded-full text-white",
+                      datum.status === "pending" ? "bg-red-500" : datum.status === "verified" ? "bg-green-600" : "bg-gray-500"
+                    )}
+                  >
+                    {datum.status}
+                  </span>
                 </Table.Column>
-                <Table.Column className="p-2">{datum.status}</Table.Column>
+
                 <Table.Column className="p-2">
                   <ContextMenu className="relative" tableRef={tableRef} contextMenuRef={contextMenuRef}>
                     <ContextMenu.Trigger>
@@ -142,7 +174,7 @@ export default function DataTable() {
                       </ContextMenu.Item>
                       <ContextMenu.Item
                         className="rounded-md bg-[#017082]"
-                        onClick={() => null}
+                        onClick={() => handleDelete(datum._id)} 
                       >
                         Delete
                       </ContextMenu.Item>

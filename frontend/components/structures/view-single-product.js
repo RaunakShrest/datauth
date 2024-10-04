@@ -73,7 +73,10 @@ export default function ViewSingleProduct() {
             <p className="font-bold">Product SKU</p>
             <p className="text-[#7f7f7f]">{singleProductQuery.data?.data.productSku}</p>
           </div>
-
+   <div>
+            <p className="font-bold">Batch Id</p>
+            <p className="text-[#7f7f7f]">{singleProductQuery.data?.data.batchId}</p>
+          </div>
           <div>
             <p className="font-bold">Manufacturer</p>
             <p className="text-[#7f7f7f]">{singleProductQuery.data?.data.productManufacturer.companyName}</p>

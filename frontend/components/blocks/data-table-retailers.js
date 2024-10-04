@@ -10,6 +10,7 @@ import Checkbox from "../elements/checkbox"
 import { twMerge } from "tailwind-merge"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faEllipsisVertical } from "@fortawesome/free-solid-svg-icons"
+import axios from "axios"
 
 export default function DataTable() {
   const router = useRouter()
@@ -17,15 +18,15 @@ export default function DataTable() {
   const tableRef = useRef()
   const contextMenuRef = useRef()
 
-  const { data, sortData, selectedData, setSelectedData } = useRetailers()
+  const { data, sortData, selectedData, setSelectedData, fetchRetailers } = useRetailers()
 
   const isTableDataSelected = (dataToVerify) => {
-    return selectedData.some((eachSelected) => eachSelected.retailerName === dataToVerify.retailerName) ? true : false
+    return selectedData.some((eachSelected) => eachSelected.companyName === dataToVerify.companyName) ? true : false
   }
 
   const isTableHeadingSelected = () => {
     const isAllDataSelected = data.data?.every((datum) =>
-      selectedData.some((eachSelected) => eachSelected.retailerName === datum.retailerName),
+      selectedData.some((eachSelected) => eachSelected.companyName === datum.companyName),
     )
 
     return isAllDataSelected
@@ -42,11 +43,34 @@ export default function DataTable() {
 
     setSelectedData((prev) =>
       isTableDataSelected(clickedData)
-        ? prev.filter((eachPrev) => eachPrev.retailerName !== clickedData.retailerName)
+        ? prev.filter((eachPrev) => eachPrev.companyName !== clickedData.companyName)
         : [...prev, clickedData],
     )
   }
+  const handleApprove= async(retailer)=>{
+const updatedRetailer= {...retailer, status:'verified'};
+try {
+  await updateRetailerStatus(retailer._id,updatedRetailer)
+  await fetchRetailers();
+} catch (error) {
+  console.error("Failed to approve retailer", error)
+}
+  }
 
+  const updateRetailerStatus= async(id, updatedRetailer)=>{
+    try {
+      const response= await axios.patch(`${process.env.NEXT_PUBLIC_BASE_URL_DEV}/retailers/updateRetailerStatus/${id}`,updatedRetailer,{
+  headers:{
+  'Content-Type':'application/json'
+}
+      })
+      return response.data
+    } catch (error) {
+      console.error("Error updating retailer status",error.response?.data||error.message)
+      throw new Error('Failed to update retailer status')
+      
+    }
+  }
   return (
     <div className="space-y-4">
       <div className="overflow-x-auto">
@@ -101,21 +125,28 @@ export default function DataTable() {
                   />
                 </Table.Column>
 
-                <Table.Column className="px-2">{datum.retailerName}</Table.Column>
+                <Table.Column className="px-2">{datum.companyName}</Table.Column>
 
                 <Table.Column className="p-2">
-                  <span className="line-clamp-1">{datum.name}</span>
+                  <span className="line-clamp-1">{datum.firstName} {datum.lastName}</span>
                 </Table.Column>
 
                 <Table.Column className="overflow-hidden p-2">
-                  <span className="line-clamp-1">{datum.retailerDescription}</span>
+                  <span className="line-clamp-1">{datum.phoneNumber}</span>
                 </Table.Column>
 
                 <Table.Column className="overflow-hidden p-2">
-                  <span className="line-clamp-1">{datum.retailerProductType}</span>
+                  <span className="line-clamp-1">{datum.email}</span>
                 </Table.Column>
 
-                <Table.Column className="p-2">{datum.status}</Table.Column>
+                <Table.Column className="p-2">   <span
+                    className={twMerge(
+                      "px-2 py-1 rounded-full text-white",
+                      datum.status === "pending" ? "bg-red-500" : datum.status === "verified" ? "bg-green-600" : "bg-gray-500"
+                    )}
+                  >
+                    {datum.status}
+                  </span></Table.Column>
 
                 <Table.Column className="p-2">
                   <ContextMenu
@@ -150,9 +181,9 @@ export default function DataTable() {
 
                       <ContextMenu.Item
                         className="rounded-md bg-[#017082]"
-                        onClick={() => null}
+                        onClick={() => handleApprove(datum)}
                       >
-                        Delete
+                        Approve
                       </ContextMenu.Item>
 
                       <ContextMenu.Item

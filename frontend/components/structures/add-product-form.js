@@ -2,7 +2,6 @@
 
 import { useAddProductForm } from "@/contexts/add-product-form-context"
 import React, { useCallback, useState } from "react"
-import Switch from "../elements/switch"
 import AnimatedInput from "../composites/animated-input"
 import Richtext from "../blocks/richtext"
 import Button from "../elements/button"
@@ -11,36 +10,42 @@ import { twMerge } from "tailwind-merge"
 import InputGroupWithLabel from "../blocks/input-group-with-label"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { reactQueryStaleTime } from "@/utils/staticUtils"
-import { createNewProduct, fetchProductTypes } from "@/contexts/query-provider/api-request-functions/api-requests"
+import { createNewProduct, fetchProductTypes, fetchBatchIds } from "@/contexts/query-provider/api-request-functions/api-requests"
 import { capitalize, selectOptionWithHeading } from "@/utils/functionalUtils"
 import { useRouter } from "next/navigation"
 import toast from "react-hot-toast"
 import RadioGroup from "../blocks/radio-group"
 import Radio from "../elements/radio"
+import InputBatch from "../elements/inputbatch"
 
 export default function AddProductFormTemplate() {
   const router = useRouter()
-  const { handleSubmit, register, getValues, errors, watch } = useAddProductForm()
+  const { handleSubmit, register, getValues, errors, } = useAddProductForm()
 
   const queryClient = useQueryClient()
-
-  // this is to store what product type is being selected
   const [selectedProductType, setSelectedProductType] = useState({})
 
+  // Fetch product types
   const productTypes = useQuery({
     queryKey: ["fetchProductTypes"],
-    queryFn: () => fetchProductTypes(),
+    queryFn: fetchProductTypes,
     staleTime: reactQueryStaleTime,
   })
   const productTypeOptions = selectOptionWithHeading(productTypes.data?.data)
 
+  // Fetch batch IDs
+const batchIdsQuery = useQuery({
+  queryKey: ["fetchBatchIds"],
+  queryFn: fetchBatchIds,
+  staleTime: reactQueryStaleTime,
+});
+
+  const batchIdOptions = batchIdsQuery.data?.data || []; // Assuming response.data contains an array of batch IDs
+
   const handleProductTypeChange = useCallback((e) => {
     const productTypeObject = productTypes.data?.data.find((productType) => productType._id === e.target.value)
-
     setSelectedProductType(productTypeObject)
-
-    return
-  })
+  }, [productTypes.data?.data])
 
   const addProductMutation = useMutation({
     mutationFn: (dataToPost) => createNewProduct(dataToPost),
@@ -52,18 +57,8 @@ export default function AddProductFormTemplate() {
     onError: (error) => toast.error(error.data.message),
   })
 
+  // Function to handle form submission
   const submitFn = (formData) => {
-    /* console.log({
-      asForm: formData,
-      modified: {
-        ...formData,
-        productAttributes: Object.keys(formData.productAttributes).map((eachAttribute) => ({
-          attributeName: eachAttribute,
-          attributeValue: formData.productAttributes[eachAttribute],
-        })),
-      },
-    }) */
-
     addProductMutation.mutate({
       ...formData,
       productAttributes: Object.keys(formData.productAttributes).map((eachAttribute) => ({
@@ -90,25 +85,13 @@ export default function AddProductFormTemplate() {
             errors={errors}
             wrapperClassName="-my-3"
           >
-            <Radio
-              label="Pending"
-              value="pending"
-            />
-            <Radio
-              label="Completed"
-              value="completed"
-            />
-            <Radio
-              label="Cancelled"
-              value="cancelled"
-            />
+            <Radio label="Pending" value="pending" />
+            <Radio label="Completed" value="completed" />
+            <Radio label="Cancelled" value="cancelled" />
           </RadioGroup>
         </div>
 
-        <InputGroupWithLabel
-          wrapperClassName="p-0"
-          cols={2}
-        >
+        <InputGroupWithLabel wrapperClassName="p-0" cols={2}>
           <AnimatedInput
             placeholder="Company Name"
             required
@@ -130,10 +113,7 @@ export default function AddProductFormTemplate() {
           />
         </InputGroupWithLabel>
 
-        <InputGroupWithLabel
-          wrapperClassName="p-0"
-          cols={2}
-        >
+        <InputGroupWithLabel wrapperClassName="p-0" cols={2}>
           <AnimatedInput
             type="number"
             placeholder="Price"
@@ -166,7 +146,24 @@ export default function AddProductFormTemplate() {
           name="productSku"
           fieldRule={{ required: "This field is required" }}
         />
+<InputGroupWithLabel wrapperClassName="p-0" cols={2}>
+  <InputBatch
+    type="select"
+    className={twMerge("rounded-md border-2 border-[#bbb]", errors.batchId ? "border-red-600" : "")}
+    options={batchIdOptions.map(batchId => (
+      {
+        key: batchId.batchId,  
+        value: batchId.batchId,
+        label: batchId.batchId
+      }
+    ))}
 
+    register={register}
+    name="batchId"
+    fieldRule={{ required: { value: true, message: "Batch ID required" } }}
+    defaultValue=""
+  />
+</InputGroupWithLabel>
         <Richtext
           name="productDescription"
           placeholder="Description"
@@ -178,10 +175,7 @@ export default function AddProductFormTemplate() {
       {/* Attributes Section */}
       <div className="space-y-6 rounded-md border-2 border-gray-200 bg-white p-6">
         {selectedProductType.attributes?.map((attribute, idx) => (
-          <div
-            className="flex items-center gap-8"
-            key={idx}
-          >
+          <div className="flex items-center gap-8" key={idx}>
             <span className="w-48">{capitalize(attribute.attributeName)}</span>
 
             <Input
@@ -194,7 +188,6 @@ export default function AddProductFormTemplate() {
           </div>
         ))}
       </div>
-
       <div>
         <div>
           <Button
