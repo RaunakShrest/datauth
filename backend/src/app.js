@@ -29,12 +29,14 @@ import productItemsRoute from "./routes/productItem.router.js"
 import customerInfoRoute from "./routes/customerInfo.router.js"
 import retailerRoute from "./routes/retailer.route.js"
 import batchIdRoute from "./routes/batch.route.js"
+import companyRoute from "./routes/company.route.js"
 app.use("/api/v1/users", usersRoute)
 app.use("/api/v1/product-types", productTypesRoute)
 app.use("/api/v1/products", productItemsRoute)
 app.use("/api/v1/customer-info", customerInfoRoute)
 app.use("/api/v1/retailers",retailerRoute)
 app.use("/api/v1/batch",batchIdRoute)
+app.use("/api/v1/company",companyRoute)
 
 // Global Error Handler
 app.use((error, _, res, __) => {

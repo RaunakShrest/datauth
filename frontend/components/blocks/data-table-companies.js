@@ -140,7 +140,8 @@ export default function DataTable() {
                 </Table.Column>
                 <Table.Column className="overflow-hidden p-2">
                   <span className="line-clamp-1">{datum.productType.join(', ')}</span>
-                </Table.Column><Table.Column className="p-2">
+                </Table.Column>
+                <Table.Column className="p-2">
                   <span
                     className={twMerge(
                       "px-2 py-1 rounded-full text-white",
@@ -149,6 +150,19 @@ export default function DataTable() {
                   >
                     {datum.status}
                   </span>
+                </Table.Column>
+                <Table.Column className="p-2">
+                            {new Date(datum.createdAt).toLocaleString("eng-US",{
+                              year:"numeric",
+                              month:"short",
+                              day:"numeric",
+                              hour:"numeric",
+                              minute:"numeric",
+                              second:"numeric",
+                              hour12:true,                      
+                            })}
+
+
                 </Table.Column>
 
                 <Table.Column className="p-2">
@@ -168,7 +182,8 @@ export default function DataTable() {
                       </ContextMenu.Item>
                       <ContextMenu.Item
                         className="rounded-md bg-[#017082]"
-                        onClick={() => router.push("/companies/edit-company")}
+                        // onClick={() => router.push("/companies/edit-company")}
+                        onClick={() => router.push(`/companies/${datum._id}/edit`)}
                       >
                         Edit
                       </ContextMenu.Item>
