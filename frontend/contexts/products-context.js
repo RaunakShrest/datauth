@@ -36,6 +36,13 @@ export default function ProductsProvider({ children }) {
       isSortable: true,
       width: "150px",
     },
+        {
+      id: "company-manufacturer",
+      text: "Manufacturer",
+      dataKey: "companymanufacturer",
+      isSortable: true,
+      width: "150px",
+    },
     {
       id: "product-price",
       text: "Price",

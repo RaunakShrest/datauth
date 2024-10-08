@@ -1,8 +1,11 @@
-import EditCompanyForm from "@/components/structures/company-edit-form"
-import EditSingleCompanyProvider from "@/contexts/edit-single-company-form"
-import React from "react"
+"use client"; 
+import EditCompanyForm from "@/components/structures/company-edit-form";
+import EditSingleCompanyProvider from "@/contexts/edit-single-company-form";
+import EditCompany from "@/components/structures/company-single-page";
+import React from "react";
 
-export default function SingleCompanyEdit() {
+export default function SingleCompanyEdit({params}) {
+  console.log("Parms from context", params)
   return (
     <div className="space-y-6">
       <div>
@@ -11,9 +14,9 @@ export default function SingleCompanyEdit() {
 
       <div>
         <EditSingleCompanyProvider>
-          <EditCompanyForm />
+        <EditCompany params={params} />
         </EditSingleCompanyProvider>
       </div>
     </div>
-  )
+  );
 }

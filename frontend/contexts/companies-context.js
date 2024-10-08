@@ -50,6 +50,14 @@ export default function CompaniesProvider({ children }) {
         width: "150px",
       },
       { id: "company-status", text: "Status", dataKey: "status", isSortable: true, width: "120px" },
+    {
+      id:"createdDate",
+      text:"Created Date",
+      dataKey:"createdDate",
+      isSortable:true,
+      width:"200px"
+    }
+    
     ],
   });
   const [selectedData, setSelectedData] = useState([]);
