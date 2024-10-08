@@ -1,6 +1,7 @@
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { UserModel } from "../models/user.model.js"
 import {sendBulkEmail} from "../middlewares/sendEmail.middleware.js"
+import mongoose from "mongoose"
 
 const getRetailers= async(req,res,next)=>{
     try {
@@ -52,4 +53,47 @@ const updateRetailerStatus = async (req, res, next) => {
     next(error);
   }
 };
-export{getRetailers,updateRetailerStatus}
+const getRetailerById = async (req, res, next) => {
+  try {
+    const { id } = req.params; 
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json(new ApiResponse(400, null, "Invalid retailer ID format"));
+    }
+
+    const retailer = await UserModel.findById(id).select("-__v -password -refreshToken");
+    if (!retailer) {
+      return res.status(404).json(new ApiResponse(404, null, "Retailer not found"));
+    }
+
+    return res.status(200).json(new ApiResponse(200, retailer, "Retailer details fetched successfully"));
+  } catch (error) {
+    console.error(error); 
+    if (!error.message) {
+      error.message = "Something went wrong while fetching retailer details";
+    }
+    next(error); 
+  }
+};
+const editRetailerInfo = async (req, res, next) => {
+  try {
+    const { retailerId } = req.params; // Get retailerId from the URL params
+    const updateData = req.body; 
+    const updatedRetailer = await UserModel.findByIdAndUpdate(
+      retailerId, 
+      { $set: updateData }, // Apply updates from the body
+      { new: true, runValidators: true, select: "-__v -password -refreshToken" } 
+    );
+
+    if (!updatedRetailer) {
+      return next(new ApiError(404, "Retailer not found"));
+    }
+    return res.status(200).json(new ApiResponse(200, updatedRetailer, "Retailer info updated successfully"));
+  } catch (error) {
+    if (!error.message) {
+      error.message = "something went wrong while retailer retailer info";
+    }
+    next(error);
+  }
+};
+
+export{getRetailers,updateRetailerStatus, getRetailerById, editRetailerInfo}

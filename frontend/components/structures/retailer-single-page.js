@@ -1,122 +1,266 @@
-"use client"
+"use client";
 
-import React from "react"
-import Button from "../elements/button"
-import { useRouter } from "next/navigation"
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Button from "../elements/button";
+import axios from "axios";
+import toast from "react-hot-toast";
 
-export default function RetailerSinglePage({ params }) {
-  const router = useRouter()
+export default function EditRetailer({ params }) {
+  const { 'single-retailer': retailerId } = params;
+  const router = useRouter();
+
+  const [retailer, setRetailer] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
+  const [formData, setFormData] = useState({
+    fullName: "",
+    companyName: "",
+    userType: "",
+    productType: "",
+    address: {
+      country: "",
+      state: "",
+      zip: "",
+      city: "",
+      addressLine: "",
+    },
+    phoneNumber: "",
+    email: "",
+  });
+
+  useEffect(() => {
+    async function fetchRetailerDetails() {
+      if (!retailerId) return;
+
+      try {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL_DEV}/retailers/getSingleRetailer/${retailerId}`);
+        const retailerData = response.data.data;
+        setRetailer(retailerData);
+        setFormData({
+          fullName: `${retailerData.firstName || ""} ${retailerData.lastName || ""}`,
+          companyName: retailerData.companyName || "",
+          userType: retailerData.userType || "",
+          productType: retailerData.productType || "",
+          address: {
+            country: retailerData.address?.country || "",
+            state: retailerData.address?.state || "",
+            zip: retailerData.address?.zip || "",
+            city: retailerData.address?.city || "",
+            addressLine: retailerData.address?.addressLine || "",
+          },
+          phoneNumber: retailerData.phoneNumber || "",
+          email: retailerData.email || "",
+        });
+      } catch (err) {
+        console.error("Error fetching retailer details:", err);
+        setError("Failed to fetch retailer details");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchRetailerDetails();
+  }, [retailerId]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: value,
+    }));
+  };
+
+  const handleAddressChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      address: {
+        ...prevFormData.address,
+        [name]: value,
+      },
+    }));
+  };
+
+  const getChangedFields = () => {
+    const updatedFields = {};
+
+    for (const key in formData) {
+      if (key === "address") {
+        const mergedAddress = {
+          ...retailer?.address,
+          ...formData.address,
+        };
+
+        const updatedAddress = {};
+        for (const addressKey in mergedAddress) {
+          if (mergedAddress[addressKey] !== retailer?.address?.[addressKey] && mergedAddress[addressKey] !== "") {
+            updatedAddress[addressKey] = mergedAddress[addressKey];
+          }
+        }
+
+        if (Object.keys(updatedAddress).length > 0) {
+          updatedFields.address = updatedAddress;
+        }
+      } else if (formData[key] !== retailer?.[key] && formData[key] !== "") {
+        updatedFields[key] = formData[key];
+      }
+    }
+
+    return updatedFields;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const updatedData = getChangedFields();
+
+    const [firstName, lastName] = formData.fullName.split(" ");
+
+    if (formData.fullName !== `${retailer?.firstName} ${retailer?.lastName}`) {
+      updatedData.firstName = firstName || "";
+      updatedData.lastName = lastName || "";
+    }
+
+    updatedData.address = {
+      ...retailer?.address,
+      ...updatedData.address,
+    };
+
+    try {
+      await axios.patch(
+        `${process.env.NEXT_PUBLIC_BASE_URL_DEV}/retailers/editRetailerDetails/${retailerId}`,
+        updatedData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      toast.success("Retailer edited successfully");
+      router.push(`/retailers`);
+    } catch (error) {
+      setError("Failed to update retailer");
+    }
+  };
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>{error}</div>;
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-center text-3xl font-bold text-[#3f3f3f]">Oliz Store</h2>
-
-      <div className="space-y-4 rounded-sm border-2 border-[#d2d2d2] bg-white p-10">
-        <div className="flex gap-8 border-b-2 border-[#d2d2d2] py-6">
-          <div className="min-w-[300px] px-4 font-bold">
-            <span>Full Name:</span>
-          </div>
-          <div className="px-4 text-[#7f7f7f]">
-            <span>James Mid Olsen</span>
-          </div>
+    <div>
+      {successMessage && (
+        <div className="bg-green-200 text-green-800 p-2 rounded mb-4">
+          {successMessage}
         </div>
-
-        <div className="flex gap-8 border-b-2 border-[#d2d2d2] py-6">
-          <div className="min-w-[300px] px-4 font-bold">
-            <span>Retailer Name:</span>
-          </div>
-          <div className="px-4 text-[#7f7f7f]">
-            <span>Oliz Store</span>
-          </div>
+      )}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label>Full Name</label>
+          <input
+            type="text"
+            name="fullName"
+            value={formData.fullName}
+            onChange={handleChange}
+            className="border px-2 py-1 w-full"
+          />
         </div>
-
-        <div className="flex gap-8 border-b-2 border-[#d2d2d2] py-6">
-          <div className="min-w-[300px] px-4 font-bold">
-            <span>User Type:</span>
-          </div>
-          <div className="px-4 text-[#7f7f7f]">
-            <span>Company</span>
-          </div>
+        <div>
+          <label>Retailer Name</label>
+          <input
+            type="text"
+            name="companyName"
+            value={formData.companyName}
+            onChange={handleChange}
+            className="border px-2 py-1 w-full"
+          />
         </div>
-
-        <div className="flex gap-8 border-b-2 border-[#d2d2d2] py-6">
-          <div className="min-w-[300px] px-4 font-bold">
-            <span>Product Type:</span>
-          </div>
-          <div className="px-4 text-[#7f7f7f]">
-            <span>Watch</span>
-          </div>
+        <div>
+          <label>User Type</label>
+          <input
+            type="text"
+            name="userType"
+            value={formData.userType}
+            onChange={handleChange}
+            className="border px-2 py-1 w-full"
+          />
         </div>
-
-        <div className="flex gap-8 border-b-2 border-[#d2d2d2] py-6">
-          <div className="min-w-[300px] px-4 font-bold">
-            <span>Address:</span>
-          </div>
-
-          <div className="space-x-16 px-4 text-[#7f7f7f]">
-            <div className="inline-block space-y-4">
-              <div className="font-bold text-black">
-                <span>Country:</span>
-              </div>
-              <div className="">
-                <span>United States</span>
-              </div>
-            </div>
-
-            <div className="inline-block space-y-4">
-              <div className="font-bold text-black">
-                <span>State:</span>
-              </div>
-              <div className="">
-                <span>California</span>
-              </div>
-            </div>
-
-            <div className="inline-block space-y-4">
-              <div className="font-bold text-black">
-                <span>Postal / Zip Code:</span>
-              </div>
-              <div className="">
-                <span>90213</span>
-              </div>
-            </div>
-          </div>
+        <div>
+          <label>Product Type</label>
+          <input
+            type="text"
+            name="productType"
+            value={formData.productType}
+            onChange={handleChange}
+            className="border px-2 py-1 w-full"
+          />
         </div>
-
-        <div className="flex gap-8 border-b-2 border-[#d2d2d2] py-6">
-          <div className="min-w-[300px] px-4 font-bold">
-            <span>Phone Number:</span>
-          </div>
-          <div className="px-4 text-[#7f7f7f]">
-            <span>9801234567</span>
-          </div>
+        <div>
+          <label>Country</label>
+          <input
+            type="text"
+            name="country"
+            value={formData.address.country}
+            onChange={handleAddressChange}
+            className="border px-2 py-1 w-full"
+          />
         </div>
-
-        <div className="flex gap-8 border-b-2 border-[#d2d2d2] py-6">
-          <div className="min-w-[300px] px-4 font-bold">
-            <span>Email:</span>
-          </div>
-          <div className="px-4 text-[#7f7f7f]">
-            <span>myemail@example.com</span>
-          </div>
+        <div>
+          <label>City</label>
+          <input
+            type="text"
+            name="city"
+            value={formData.address.city}
+            onChange={handleAddressChange}
+            className="border px-2 py-1 w-full"
+          />
         </div>
-      </div>
-
-      <div className="flex justify-between">
-        <Button
-          className="bg-[#017082] px-16 py-4 text-white"
-          onClick={() => router.push(`/retailers/single-retailer/edit`)}
-        >
-          Edit Profile
-        </Button>
-
-        <Button
-          className="bg-[#017082] px-16 py-4 text-white"
-          onClick={() => router.push(`/retailers/single-retailer/edit`)}
-        >
-          View Products
-        </Button>
-      </div>
+        <div>
+          <label>Address Line</label>
+          <input
+            type="text"
+            name="addressLine"
+            value={formData.address.addressLine}
+            onChange={handleAddressChange}
+            className="border px-2 py-1 w-full"
+          />
+        </div>
+        <div>
+          <label>Zip Code</label>
+          <input
+            type="text"
+            name="zip"
+            value={formData.address.zip}
+            onChange={handleAddressChange}
+            className="border px-2 py-1 w-full"
+          />
+        </div>
+        <div>
+          <label>Phone Number</label>
+          <input
+            type="text"
+            name="phoneNumber"
+            value={formData.phoneNumber}
+            onChange={handleChange}
+            className="border px-2 py-1 w-full"
+          />
+        </div>
+        <div>
+          <label>Email</label>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            className="border px-2 py-1 w-full"
+          />
+        </div>
+        <div>
+          <Button type="submit" className="bg-[#017082] px-8 py-2 text-white">
+            Save Changes
+          </Button>
+        </div>
+      </form>
     </div>
-  )
+  );
 }
