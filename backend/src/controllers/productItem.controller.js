@@ -8,6 +8,7 @@ import { generateUniqueSlug } from "../utils/aggregations/unique-slug-generator.
 import { generateQr } from "../middlewares/qr-generator.middeware.js"
 import { uploadFile } from "../middlewares/cloudinary.middleware.js"
 import { BatchIdModal } from "../models/batchId.modal.js"
+import mongoose from "mongoose"
 
 const acceptableStatus = () => [
   process.env.PRODUCT_ITEM_STATUS_PENDING,
@@ -223,5 +224,46 @@ const deleteProductItem = async (req, res, next) => {
     next(error)
   }
 }
+const getProductById = async (req, res, next) => {
+  try {
+    const { id } = req.params; 
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json(new ApiResponse(400, null, "Invalid product ID format"));
+    }
 
-export { getProductItems, getSingleProduct, createProductItem, updateProductItem, deleteProductItem }
+    const product = await ProductItemModel.findById(id).select("-__v -password -refreshToken");
+    if (!product) {
+      return res.status(404).json(new ApiResponse(404, null, "product not found"));
+    }
+
+    return res.status(200).json(new ApiResponse(200, product, "product details fetched successfully"));
+  } catch (error) {
+    console.error(error); 
+    if (!error.message) {
+      error.message = "Something went wrong while fetching product details";
+    }
+    next(error); 
+  }
+};
+const editProductInfo = async (req, res, next) => {
+  try {
+    const { productId } = req.params; 
+    const updateData = req.body; 
+    const updatedProduct = await ProductItemModel.findByIdAndUpdate(
+      productId, 
+      { $set: updateData }, // Apply updates from the body
+      { new: true, runValidators: true, select: "-__v -password -refreshToken" } 
+    );
+
+    if (!updatedProduct) {
+      return next(new ApiError(404, "Product not found"));
+    }
+    return res.status(200).json(new ApiResponse(200, updatedProduct, "Product info updated successfully"));
+  } catch (error) {
+    if (!error.message) {
+      error.message = "something went wrong while updating product info";
+    }
+    next(error);
+  }
+};
+export { getProductItems, getSingleProduct, createProductItem, updateProductItem, deleteProductItem , getProductById,editProductInfo}

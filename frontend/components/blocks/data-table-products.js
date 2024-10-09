@@ -11,6 +11,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faEllipsisVertical } from "@fortawesome/free-solid-svg-icons"
 import { useProducts } from "@/contexts/products-context"
 import ImgWithWrapper from "../composites/img-with-wrapper"
+import QrModal from "../elements/qrmodal"
 
 export default function DataTable() {
   const router = useRouter()
@@ -21,30 +22,19 @@ export default function DataTable() {
   const { products, columns, sortData, selectedData, setSelectedData } = useProducts()
 
   const [searchTerm, setSearchTerm] = useState("")
-  const [currentPage, setCurrentPage] = useState(1)  // Add currentPage state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [showModal, setShowModal] = useState(false) // Add modal state
+  const [qrImageUrl, setQrImageUrl] = useState("")  // Store QR image URL for the modal
+
   const numberOfDataPerPage = 8
 
-  // Filter products based on batchId search
   const filteredProducts = products.filter((product) => {
     return product.batchId?.batchId.toLowerCase().includes(searchTerm.toLowerCase())
   })
 
-  // Paginate the filtered products
   const indexOfLastData = currentPage * numberOfDataPerPage
   const indexOfFirstData = indexOfLastData - numberOfDataPerPage
   const currentData = filteredProducts.slice(indexOfFirstData, indexOfLastData)
-
-  const isTableDataSelected = (dataToVerify) => {
-    return selectedData.some((eachSelected) => eachSelected._id === dataToVerify._id)
-  }
-
-  const isTableHeadingSelected = () => {
-    const isAllDataSelected = products?.every((datum) =>
-      selectedData.some((eachSelected) => eachSelected._id === datum._id),
-    )
-
-    return isAllDataSelected
-  }
 
   const handleTableHeadingCheckboxChange = () => {
     setSelectedData((prev) =>
@@ -54,62 +44,65 @@ export default function DataTable() {
 
   const handleTableDataCheckboxChange = (clickedData) => {
     setSelectedData((prev) =>
-      isTableDataSelected(clickedData)
+      selectedData.some((eachSelected) => eachSelected._id === clickedData._id)
         ? prev.filter((eachPrev) => eachPrev._id !== clickedData._id)
         : [...prev, clickedData],
     )
   }
 
   const handlePrint = () => {
-  const printWindow = window.open("", "_blank");
-  const printableContent = selectedData
-    .map(
-      (item, index) => `
+    const printWindow = window.open("", "_blank")
+    const printableContent = selectedData
+      .map(
+        (item, index) => `
         <div style="margin-bottom: 20px;">
           <img src="${item.qrUrl}" alt="QR Code" style="width: 150px; height: 150px;"/>
           <p>SKU: ${item.productSku}</p>
         </div>
-        ${index < selectedData.length - 1 ? '<hr style="border: 1px solid #000; margin: 20px 0;" />' : ''}
-      `
-    )
-    .join("");
+        ${index < selectedData.length - 1 ? '<hr style="border: 1px solid #000; margin: 20px 0;" />' : ''}`,
+      )
+      .join("")
 
-  printWindow.document.write(`
-    <html>
-      <head>
-        <title>Print QR and SKU</title>
-        <style>
-          body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-          }
-          img {
-            display: block;
-            margin-bottom: 10px;
-          }
-          p {
-            font-size: 16px;
-          }
-          hr {
-            border: 1px solid #000;
-            margin: 20px 0;
-          }
-        </style>
-      </head>
-      <body>
-        ${printableContent}
-      </body>
-    </html>
-  `);
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Print QR and SKU</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              padding: 20px;
+            }
+            img {
+              display: block;
+              margin-bottom: 10px;
+            }
+            p {
+              font-size: 16px;
+            }
+            hr {
+              border: 1px solid #000;
+              margin: 20px 0;
+            }
+          </style>
+        </head>
+        <body>
+          ${printableContent}
+        </body>
+      </html>
+    `)
 
-  printWindow.document.close();
-  printWindow.print();
-};
+    printWindow.document.close()
+    printWindow.print()
+  }
 
+  const handleQrClick = (qrUrl) => {
+    setQrImageUrl(qrUrl) // Set the clicked QR image URL
+    setShowModal(true) // Show the modal
+  }
 
   return (
     <div className="space-y-4">
-      {/* Search Field and Print Button in the Same Row */}
+      {/* Search Field and Print Button */}
       <div className="mb-6 flex items-start justify-between">
         <input
           type="text"
@@ -119,13 +112,12 @@ export default function DataTable() {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
 
-        {/* Print Button */}
         <button
           onClick={handlePrint}
           disabled={selectedData.length === 0}
           className={twMerge(
             "bg-[#017082] text-white px-4 py-2 rounded-md ml-4",
-            selectedData.length === 0 ? "opacity-50 cursor-not-allowed" : ""
+            selectedData.length === 0 ? "opacity-50 cursor-not-allowed" : "",
           )}
         >
           Print Selected QR
@@ -137,7 +129,7 @@ export default function DataTable() {
           <Table.Head className="bg-[#017082] text-left text-white">
             <Table.Row className="h-16">
               <Table.Heading className="pl-4" style={{ width: "50px" }}>
-                <Checkbox onChange={handleTableHeadingCheckboxChange} checked={isTableHeadingSelected()} />
+                <Checkbox onChange={handleTableHeadingCheckboxChange} />
               </Table.Heading>
 
               {columns?.map((column) => (
@@ -165,18 +157,14 @@ export default function DataTable() {
                 <Table.Column className="px-4 py-2">
                   <Checkbox
                     onChange={() => handleTableDataCheckboxChange(datum)}
-                    checked={isTableDataSelected(datum)}
                   />
                 </Table.Column>
 
                 <Table.Column className="px-2">{datum.productName}</Table.Column>
                 <Table.Column className="px-2">{datum.productManufacturer.companyName}</Table.Column>
                 <Table.Column className="p-2">{datum.productPrice}</Table.Column>
-
                 <Table.Column className="p-2">{datum.productSku}</Table.Column>
-
                 <Table.Column className="p-2">{datum.batchId?.batchId}</Table.Column>
-
                 <Table.Column className="p-2">{datum.productStatus}</Table.Column>
                 <Table.Column className="p-2">
                   {new Date(datum.createdAt).toLocaleString("en-US", {
@@ -191,12 +179,12 @@ export default function DataTable() {
                 </Table.Column>
 
                 <Table.Column className="p-2">
-                  <a href={datum.qrUrl} target="_blank" rel="noopener noreferrer">
+                  <button onClick={() => handleQrClick(datum.qrUrl)}>
                     <ImgWithWrapper
                       wrapperClassName="size-10 mx-auto"
                       imageAttributes={{ src: datum.qrUrl, alt: "product-qr" }}
                     />
-                  </a>
+                  </button>
                 </Table.Column>
 
                 <Table.Column className="p-2">
@@ -205,10 +193,7 @@ export default function DataTable() {
                       <FontAwesomeIcon icon={faEllipsisVertical} className="fa-fw" />
                     </ContextMenu.Trigger>
 
-                    <ContextMenu.Menu
-                      className="absolute z-10 w-[175px] space-y-1 bg-white/80 p-2 text-white"
-                      contextMenuRef={contextMenuRef}
-                    >
+                    <ContextMenu.Menu className="absolute z-10 w-[175px] space-y-1 bg-white/80 p-2 text-white">
                       <ContextMenu.Item
                         className="rounded-md bg-[#017082]"
                         onClick={() => router.push(`/products/${datum.slug}`)}
@@ -218,17 +203,13 @@ export default function DataTable() {
 
                       <ContextMenu.Item
                         className="rounded-md bg-[#017082]"
-                        onClick={() => router.push(`/products/${datum.slug}/edit`)}
+                        onClick={() => router.push(`/products/${datum._id}/edit`)}
                       >
                         Edit
                       </ContextMenu.Item>
 
                       <ContextMenu.Item className="rounded-md bg-[#017082]" onClick={() => null}>
                         Delete
-                      </ContextMenu.Item>
-
-                      <ContextMenu.Item className="rounded-md bg-[#017082]" onClick={() => {}}>
-                        Blockchain View
                       </ContextMenu.Item>
                     </ContextMenu.Menu>
                   </ContextMenu>
@@ -239,7 +220,8 @@ export default function DataTable() {
         </Table>
       </div>
 
-      <div className="text-right">
+      {/* Pagination */}
+       <div className="text-right">
         <Pagination
           totalNumberOfData={filteredProducts.length}
           numberOfDataPerPage={numberOfDataPerPage}
@@ -247,6 +229,14 @@ export default function DataTable() {
           onPageChange={setCurrentPage}  // handle page change
         />
       </div>
+
+      {/* Modal for QR Image */}
+      <QrModal show={showModal} onClose={() => setShowModal(false)}>
+        <img src={qrImageUrl} alt="QR Code"
+   className="w-full h-auto max-h-[350px] object-contain"
+        
+        />
+      </QrModal>
     </div>
   )
 }

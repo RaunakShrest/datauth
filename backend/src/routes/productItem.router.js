@@ -6,6 +6,8 @@ import {
   createProductItem,
   updateProductItem,
   deleteProductItem,
+  getProductById,
+  editProductInfo
 } from "../controllers/productItem.controller.js"
 
 const router = express.Router()
@@ -15,5 +17,7 @@ router.post("/create-product-item", checkUserAuth, checkCompany, createProductIt
 router.patch("/update-product-item", checkUserAuth, checkCompany, updateProductItem)
 router.delete("/delete-product-item", checkUserAuth, checkCompany, deleteProductItem)
 router.get("/:slug", checkUserAuth, getSingleProduct)
+router.get("/getSingleProduct/:id", getProductById);
+router.patch("/editProductDetails/:productId", editProductInfo);
 
 export default router
