@@ -174,7 +174,7 @@ try {
 
                       <ContextMenu.Item
                         className="rounded-md bg-[#017082]"
-                        onClick={() => router.push("/retailers/edit-retailer")}
+                        onClick={() => router.push(`/retailers/${datum._id}/edit`)}
                       >
                         Edit
                       </ContextMenu.Item>

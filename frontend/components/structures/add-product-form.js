@@ -159,7 +159,7 @@ const batchIdsQuery = useQuery({
     ))}
 
     register={register}
-    name="batchId"
+        name="batchId"
     fieldRule={{ required: { value: true, message: "Batch ID required" } }}
     defaultValue=""
   />

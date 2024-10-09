@@ -13,7 +13,6 @@ export default function EditCompany({ params }) {
   const [company, setCompany] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [successMessage, setSuccessMessage] = useState(null); // State for success message
   const [formData, setFormData] = useState({
     fullName: "",
     companyName: "",
@@ -147,11 +146,6 @@ export default function EditCompany({ params }) {
 
   return (
     <div>
-      {successMessage && (
-        <div className="bg-green-200 text-green-800 p-2 rounded mb-4">
-          {successMessage}
-        </div>
-      )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label>Full Name</label>
