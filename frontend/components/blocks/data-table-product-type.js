@@ -156,7 +156,7 @@ export default function DataTable() {
                       <ContextMenu.Item
                         className="rounded-md bg-[#017082]"
                         onClick={() =>
-                          router.push("/product-types/edit-product-type")
+                          router.push(`/product-types/${datum._id}/edit`)
                         }
                       >
                         Edit

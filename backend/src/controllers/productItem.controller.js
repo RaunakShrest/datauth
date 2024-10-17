@@ -104,11 +104,12 @@ const createProductItem = async (req, res, next) => {
     if (!userId) {
       throw new ApiError(404, "unauthorized request");
     }
-    const { productName, productType, productSku, productDescription, productStatus, productPrice, batchId } = req.body;
+    
+    const { productName, productType, productSku, productDescription, productPrice, batchId } = req.body;
 
-    const requiredFields = [productName, productType, productSku, productPrice, productDescription, productStatus, batchId];
+    const productStatus = req.body.productStatus || "pending";
 
-    // requirement checker
+    const requiredFields = [productName, productType, productSku, productPrice, productDescription, batchId];
     if (requiredFields.some((eachField) => eachField?.trim() == null || eachField?.trim() == "")) {
       throw new ApiError(404, "required fields empty");
     }
@@ -121,7 +122,7 @@ const createProductItem = async (req, res, next) => {
     if (!requestedProductType) {
       throw new ApiError(404, "requested product type does not exist");
     }
-    const batchString = batchId; // This can be a batch name, code, etc.
+        const batchString = batchId; // This can be a batch name, code, etc.
     const requestedBatch = await BatchIdModal.findOne({ batchId: batchString });
 
     if (!requestedBatch) {
@@ -130,26 +131,25 @@ const createProductItem = async (req, res, next) => {
 
     const batchObjectId = requestedBatch._id; // Extract the ObjectId from the found batch
 
-    if (productStatus) {
-      if (
-        !productItemAcceptableStatus.some(
-          (eachAccepatbleStatus) => productStatus.toLowerCase() === eachAccepatbleStatus
-        )
-      ) {
-        throw new ApiError(406, "product status unacceptable");
-      }
+    // Check for acceptable product status
+    if (
+      !productItemAcceptableStatus.some(
+        (eachAcceptableStatus) => productStatus.toLowerCase() === eachAcceptableStatus
+      )
+    ) {
+      throw new ApiError(406, "product status unacceptable");
     }
 
-    // generate unique slug
+    // Generate unique slug
     const wouldBeSlug = slugify(productName.toLowerCase());
     const existingSortedSimilarSlugs = await ProductItemModel.aggregate(slugSortingQuery(wouldBeSlug));
     const uniqueSlug = await generateUniqueSlug(existingSortedSimilarSlugs, wouldBeSlug);
 
-    // generate qr code based off of above unique slug
+    // Generate QR code based on the unique slug
     const FRONTEND_URL = process.env.NODE_ENV === "DEV" ? process.env.FRONTEND_URL_DEV : process.env.FRONTEND_URL_PROD;
     const qrFilePath = await generateQr(`${FRONTEND_URL}/products/${uniqueSlug}`);
 
-    // upload the qr to the storage bucket
+    // Upload the QR code to the storage bucket
     const response = await uploadFile(qrFilePath);
 
     const createdProductItem = await ProductItemModel.create({
@@ -158,7 +158,7 @@ const createProductItem = async (req, res, next) => {
       productPrice,
       productSku,
       productDescription,
-      productStatus,
+      productStatus, // This will default to "pending" if not provided
       productManufacturer: userId,
       productAttributes: req.body.productAttributes,
       slug: uniqueSlug,
@@ -169,7 +169,7 @@ const createProductItem = async (req, res, next) => {
     return res.status(201).json(new ApiResponse(201, createdProductItem, "product created successfully"));
   } catch (error) {
     if (!error.message) {
-      error.message = "something went wrong while getting products";
+      error.message = "something went wrong while creating the product";
     }
     next(error);
   }
@@ -248,7 +248,7 @@ const getProductById = async (req, res, next) => {
 const editProductInfo = async (req, res, next) => {
   try {
     const { productId } = req.params; 
-    const updateData = req.body; 
+        const updateData = req.body; 
     const updatedProduct = await ProductItemModel.findByIdAndUpdate(
       productId, 
       { $set: updateData }, // Apply updates from the body

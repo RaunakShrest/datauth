@@ -1,6 +1,7 @@
 import { ProductTypeModel } from "../models/productType.model.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
+import mongoose from "mongoose"
 
 const acceptableStatus = () => [process.env.PRODUCT_TYPE_STATUS_ENABLED, process.env.PRODUCT_TYPE_STATUS_DISABLED]
 
@@ -156,6 +157,47 @@ const updateProductTypeStatus = async (req, res, next) => {
     next(error);
   }
 };
+const getProductTypeById = async (req, res, next) => {
+  try {
+    const { id } = req.params; 
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json(new ApiResponse(400, null, "Invalid productType ID format"));
+    }
 
+    const productType = await ProductTypeModel.findById(id).select("-__v -password -refreshToken");
+    if (!productType) {
+      return res.status(404).json(new ApiResponse(404, null, "productType not found"));
+    }
 
-export { getAllProductTypes, getEnabledProductTypes, createProductType, updateProductType, deleteProductType, updateProductTypeStatus }
+    return res.status(200).json(new ApiResponse(200, productType, "productType details fetched successfully"));
+  } catch (error) {
+    console.error(error); 
+    if (!error.message) {
+      error.message = "Something went wrong while fetching productType details";
+    }
+    next(error); 
+  }
+};
+const editProductTypeInfo = async (req, res, next) => {
+  try {
+    const { productTypeId } = req.params; 
+    const updateData = req.body; 
+    const updatedProductType = await ProductTypeModel.findByIdAndUpdate(
+      productTypeId, 
+      { $set: updateData }, // Apply updates from the body
+      { new: true, runValidators: true, select: "-__v -password -refreshToken" } 
+    );
+
+    if (!updatedProductType) {
+      return next(new ApiError(404, "ProductType not found"));
+    }
+    return res.status(200).json(new ApiResponse(200, updatedProductType, "Product info updated successfully"));
+  } catch (error) {
+    if (!error.message) {
+      error.message = "something went wrong while updating product info";
+    }
+    next(error);
+  }
+};
+
+export { getAllProductTypes, editProductTypeInfo, getEnabledProductTypes, createProductType, updateProductType, deleteProductType, updateProductTypeStatus, getProductTypeById }

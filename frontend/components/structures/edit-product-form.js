@@ -18,6 +18,7 @@ export default function EditSingleProductForm({ params }) {
     productSku: "",
     productPrice: "",
     productDescription: "",
+    productAttributes: [],
   });
 
   // Fetch the product details
@@ -34,6 +35,7 @@ export default function EditSingleProductForm({ params }) {
           productPrice: productData.productPrice || "",
           productDescription: productData.productDescription || "",
           productSku: productData.productSku || "",
+          productAttributes: productData.productAttributes || [],
         });
       } catch (err) {
         console.error("Error fetching product details:", err);
@@ -54,15 +56,37 @@ export default function EditSingleProductForm({ params }) {
     }));
   };
 
+  const handleAttributeChange = (index, e) => {
+    const { name, value } = e.target;
+    setFormData((prevFormData) => {
+      const updatedAttributes = [...prevFormData.productAttributes];
+      updatedAttributes[index] = {
+        ...updatedAttributes[index],
+        [name]: value,
+      };
+      return {
+        ...prevFormData,
+        productAttributes: updatedAttributes,
+      };
+    });
+  };
+
   const getChangedFields = () => {
     const updatedFields = {};
-
     for (const key in formData) {
-      if (formData[key] !== product?.[key] && formData[key] !== "") {
+      if (key === "productAttributes") {
+        const updatedAttributes = formData.productAttributes.map((attr, index) => 
+          (attr.attributeName !== product.productAttributes[index]?.attributeName || 
+           attr.attributeValue !== product.productAttributes[index]?.attributeValue)
+        );
+
+        if (updatedAttributes.includes(true)) {
+          updatedFields.productAttributes = formData.productAttributes;
+        }
+      } else if (formData[key] !== product?.[key] && formData[key] !== "") {
         updatedFields[key] = formData[key];
       }
     }
-
     return updatedFields;
   };
 
@@ -131,6 +155,30 @@ export default function EditSingleProductForm({ params }) {
             onChange={handleChange}
             className="border px-2 py-1 w-full"
           />
+        </div>
+        <div>
+          <label>Attributes</label>
+          {formData.productAttributes.map((attribute, index) => (
+            <div key={attribute._id} className="flex space-x-2">
+              <input
+                type="text"
+                name="attributeName"
+                value={attribute.attributeName}
+                onChange={(e) => handleAttributeChange(index, e)}
+                placeholder="Attribute Name"
+                className="border px-2 py-1 w-1/2"
+                disabled
+              />
+              <input
+                type="text"
+                name="attributeValue"
+                value={attribute.attributeValue}
+                onChange={(e) => handleAttributeChange(index, e)}
+                placeholder="Attribute Value"
+                className="border px-2 py-1 w-1/2"
+              />
+            </div>
+          ))}
         </div>
         <div>
           <Button type="submit" className="bg-[#017082] px-8 py-2 text-white">

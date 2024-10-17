@@ -2,15 +2,23 @@ import { api } from "@/lib/api"
 
 export const getCurrentUser = async () => {
   try {
-    const response = await api.get("/users/get-current-user")
+    const accessToken = localStorage.getItem("accessToken");
 
-    return response.data
+    if (!accessToken) {
+      throw new Error("Access token not found");
+    }
+
+    const response = await api.get("/users/get-current-user", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    return response.data;
   } catch (error) {
-    // console.error(error.response.data.message)
-
-    throw error.response
+    throw error.response;
   }
-}
+};
 
 export const signInUser = async (formData) => {
   try {

@@ -347,5 +347,40 @@ const deleteCompany = async (req, res, next) => {
 
 
 
+const uploadProfilePicture = async (req, res) => {
+  try {
+    const user = req.user;
 
-export { userSignup, userSignin, userSignout, getUsers, getCurrentUser, updateUser, refreshAccessToken, getCompanies, updateCompanyStatus, deleteCompany }
+    if (!user || !user._id) {
+      return res.status(401).json({ message: "Unauthorized. User not found." });
+    }
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const filePath = req.file.path;
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      user._id,
+      { profilePic: filePath },
+      { new: true, select: '-__v -password -refreshToken' } // Select non-sensitive fields
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.status(200).json({
+      message: "Profile picture uploaded successfully",
+      user: updatedUser,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error uploading profile picture",
+      error: error.message,
+    });
+  }
+};
+
+
+
+export { userSignup, uploadProfilePicture, userSignin, userSignout, getUsers, getCurrentUser, updateUser, refreshAccessToken, getCompanies, updateCompanyStatus, deleteCompany }
