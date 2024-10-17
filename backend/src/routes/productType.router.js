@@ -6,7 +6,9 @@ import {
   createProductType,
   updateProductType,
   deleteProductType,
-  updateProductTypeStatus
+  updateProductTypeStatus,
+  getProductTypeById,
+  editProductTypeInfo
 } from "../controllers/productType.controller.js"
 
 const router = express.Router()
@@ -17,6 +19,7 @@ router.post("/create", checkUserAuth, checkSuperAdmin, createProductType)
 router.patch("/update", checkUserAuth, checkSuperAdmin, updateProductType)
 router.delete("/delete", checkUserAuth, checkSuperAdmin, deleteProductType)
 router.patch("/changeStatus/:id", updateProductTypeStatus)
-
+router.get("/getProductTypeById/:id", getProductTypeById)
+router.patch("/updateProductType/:productTypeId", editProductTypeInfo)
 
 export default router

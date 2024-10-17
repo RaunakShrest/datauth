@@ -71,7 +71,7 @@ const batchIdsQuery = useQuery({
   return (
     <div className="space-y-6">
       <div className="space-y-10 rounded-md border-2 border-gray-200 bg-white p-6">
-        <div
+        {/* <div
           className={twMerge(
             "rounded-md border-2 border-[#bbb] px-4 pb-8",
             errors && errors["productStatus"] ? "border-red-600" : "",
@@ -89,7 +89,7 @@ const batchIdsQuery = useQuery({
             <Radio label="Completed" value="completed" />
             <Radio label="Cancelled" value="cancelled" />
           </RadioGroup>
-        </div>
+        </div> */}
 
         <InputGroupWithLabel wrapperClassName="p-0" cols={2}>
           <AnimatedInput
