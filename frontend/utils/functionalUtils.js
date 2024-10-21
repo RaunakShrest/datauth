@@ -37,5 +37,5 @@ export const selectOptionWithHeading = (selectOptions = []) =>
       ]
 
 export const currencyFormat = (amt) => {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amt)
+  return new Intl.NumberFormat("ne-NP", { style: "currency", currency: "NPR" }).format(amt)
 }

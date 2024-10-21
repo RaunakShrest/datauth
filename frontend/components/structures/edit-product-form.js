@@ -7,7 +7,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 
 export default function EditSingleProductForm({ params }) {
-  const { 'single-product': productId } = params; // Get productId from params
+  const { 'single-product': productId } = params;
   const router = useRouter();
 
   const [product, setProduct] = useState(null);  
@@ -20,8 +20,12 @@ export default function EditSingleProductForm({ params }) {
     productDescription: "",
     productAttributes: [],
   });
+  const [images, setImages] = useState([]); 
+  const [imageFiles, setImageFiles] = useState([]); 
+  const [imagePreviews, setImagePreviews] = useState([]); // To store image preview URLs
+  const [removedImages, setRemovedImages] = useState([]);
 
-  // Fetch the product details
+  // Fetch product details
   useEffect(() => {
     async function fetchProductDetails() {
       if (!productId) return;
@@ -37,6 +41,7 @@ export default function EditSingleProductForm({ params }) {
           productSku: productData.productSku || "",
           productAttributes: productData.productAttributes || [],
         });
+        setImages(productData.productImages || []); 
       } catch (err) {
         console.error("Error fetching product details:", err);
         setError("Failed to fetch product details");
@@ -48,13 +53,14 @@ export default function EditSingleProductForm({ params }) {
     fetchProductDetails();
   }, [productId]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      [name]: value,
-    }));
-  };
+const handleChange = (e) => {
+  const { name, value } = e.target;
+  setFormData((prevFormData) => ({
+    ...prevFormData,
+    [name]: name === "productPrice" ? value.replace(/[^0-9.]/g, '') : value, // Ensure only numbers and decimal points are allowed
+  }));
+};
+;
 
   const handleAttributeChange = (index, e) => {
     const { name, value } = e.target;
@@ -90,26 +96,69 @@ export default function EditSingleProductForm({ params }) {
     return updatedFields;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const updatedData = getChangedFields();
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    setImageFiles(files);
+    const previewUrls = files.map(file => URL.createObjectURL(file));
+    setImagePreviews(previewUrls);
+  };
 
-    try {
-      await axios.patch(
-        `${process.env.NEXT_PUBLIC_BASE_URL_DEV}/products/editProductDetails/${productId}`,
-        updatedData,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      toast.success("Product edited successfully");
-      router.replace(`/products`);
-    } catch (error) {
-      setError("Failed to update product");
+  const handleImageRemove = (index, isExistingImage) => {
+    if (isExistingImage) {
+        setRemovedImages((prevRemoved) => [...prevRemoved, images[index]]);
+        setImages((prevImages) => prevImages.filter((_, imgIndex) => imgIndex !== index));
+    } else {
+        setImageFiles((prevFiles) => prevFiles.filter((_, fileIndex) => fileIndex !== index));
+        setImagePreviews((prevPreviews) => prevPreviews.filter((_, previewIndex) => previewIndex !== index)); 
     }
   };
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  const updatedData = getChangedFields();
+  
+  if (updatedData.productPrice) {
+    updatedData.productPrice = Number(updatedData.productPrice);
+  }
+
+  const formData = new FormData();
+  for (const key in updatedData) {
+    if (key === "productAttributes") {
+      formData.append(key, JSON.stringify(updatedData[key]));
+    } else {
+      formData.append(key, updatedData[key]);
+    }
+  }
+
+  if (removedImages.length > 0) {
+    formData.append("removedImages", JSON.stringify(removedImages));
+  }
+
+  imageFiles.forEach((file) => {
+    formData.append("productItems", file);
+  });
+
+  try {
+    const response = await axios.patch(
+      `${process.env.NEXT_PUBLIC_BASE_URL_DEV}/products/editProductDetails/${productId}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    toast.success("Product edited successfully");
+    window.location.href = "/products";
+    router.replace("/products");
+  } catch (error) {
+    console.error("Error submitting product update:", error);
+    setError("Failed to update product");
+    toast.error("Failed to update product");
+  }
+};
+
+
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
@@ -180,12 +229,66 @@ export default function EditSingleProductForm({ params }) {
             </div>
           ))}
         </div>
+
+        {/* Image upload section */}
+        <div>
+          <label>Upload New Images</label>
+          <input
+            type="file"
+            onChange={handleImageChange}
+            multiple
+            accept="image/*"
+            className="border px-2 py-1 w-full"
+          />
+        </div>
+
         <div>
           <Button type="submit" className="bg-[#017082] px-8 py-2 text-white">
             Save Changes
           </Button>
         </div>
       </form>
+
+      {/* Display uploaded and selected images */}
+      <div className="mt-4">
+        <h3>Current Images</h3>
+        <div className="grid grid-cols-6 gap-2"> {/* Adjusted grid for 6 columns */}
+          {images.map((imageUrl, index) => {
+            const correctedImageUrl = `${process.env.NEXT_PUBLIC_BASE_URL_DEV}${imageUrl.replace(/\\/g, '/')}`;
+            return (
+              <div key={index} className="relative">
+                <img
+                  src={`${process.env.NEXT_PUBLIC_BASE_URL_DEV}/${imageUrl.replace(/\\/g, '/').replace('v1uploads', 'v1/uploads')}`}
+                  alt={`Product Image ${index}`}
+                  className="h-20 w-20 object-cover rounded-md" // Adjusted image size and rounded
+                />
+                <button
+                  className="absolute top-1 right-1 text-red-500 bg-white rounded-full p-1" // Adjusted position and styling
+                  onClick={() => handleImageRemove(index, true)}
+                >
+                  &times;
+                </button>
+              </div>
+            );
+          })}
+
+          {imagePreviews.map((previewUrl, index) => (
+            <div key={index} className="relative">
+              <img
+                src={previewUrl}
+                alt={`New Image ${index}`}
+                className="h-20 w-20 object-cover rounded-md" // Adjusted image size and rounded
+              />
+              <button
+                className="absolute top-1 right-1 text-red-500 bg-white rounded-full p-1" // Adjusted position and styling
+                onClick={() => handleImageRemove(index, false)}
+              >
+                &times;
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

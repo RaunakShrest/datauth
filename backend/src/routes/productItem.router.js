@@ -9,15 +9,15 @@ import {
   getProductById,
   editProductInfo
 } from "../controllers/productItem.controller.js"
-
+import { uploadMultiple } from "../middlewares/productImageUpload.middlware.js"
 const router = express.Router()
 
 router.get("/get-product-items", checkUserAuth, getProductItems)
-router.post("/create-product-item", checkUserAuth, checkCompany, createProductItem)
-router.patch("/update-product-item", checkUserAuth, checkCompany, updateProductItem)
+router.post("/create-product-item", uploadMultiple.array('productItems', 10), checkUserAuth, createProductItem);                                      
+// router.patch("/update-product-item", checkUserAuth, checkCompany, updateProductItem)
 router.delete("/delete-product-item", checkUserAuth, checkCompany, deleteProductItem)
 router.get("/:slug", checkUserAuth, getSingleProduct)
 router.get("/getSingleProduct/:id", getProductById);
-router.patch("/editProductDetails/:productId", editProductInfo);
+router.patch("/editProductDetails/:productId",uploadMultiple.array('productItems',10), editProductInfo);
 
 export default router

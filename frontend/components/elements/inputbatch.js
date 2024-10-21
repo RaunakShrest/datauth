@@ -15,7 +15,6 @@ export default function InputBatch({ type = "text", className, options = [], reg
         <option
           key={option.value} // Assuming option.value is unique
           value={option.value}
-          disabled={!option.value} 
         >
           {option.label} 
         </option>

@@ -32,7 +32,6 @@ export const generateQr = async (text) => {
 
   try {
     const randomId = crypto.randomUUID()
-    console.log("Random ID is", randomId)
 
     // Define the path to store QR code images
     const dirPath = path.join(__dirname, `../../public/qr-codes/`)
