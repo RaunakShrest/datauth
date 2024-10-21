@@ -4,10 +4,12 @@ import { config } from "dotenv"
 config()
 
 const batchSchema = new mongoose.Schema(
-  {
+    {
+    //  _id: mongoose.Schema.Types.ObjectId,
         batchId: {
       type: String,
       required: true,
+      unique:true
     },
 
     productName:{

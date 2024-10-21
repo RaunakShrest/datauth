@@ -85,15 +85,18 @@ export const fetchBatchIds = async () => {
   }
 }
 
-export const createNewProduct = async (data) => {
-  try {
-    const response = await api.post("/products/create-product-item", data)
-
-    return response.data
-  } catch (error) {
-    throw error.response
-  }
-}
+export const createNewProduct = async (formData) => {
+    try {
+        const response = await api.post("/products/create-product-item", formData, {
+            headers: {
+                "Content-Type": "multipart/form-data", // This will set the correct headers for form-data
+            },
+        });
+        return response.data;
+    } catch (error) {
+        throw error.response;
+    }
+};
 
 export const fetchProducts = async () => {
   try {
