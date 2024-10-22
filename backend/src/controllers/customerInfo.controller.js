@@ -1,56 +1,54 @@
-import { CustomerInfoModel } from "../models/customerInfo.model.js"
-import { ApiError } from "../utils/ApiError.js"
-import { ApiResponse } from "../utils/ApiResponse.js"
-
-const getCustomerInfo = async (req, res, next) => {
-  try {
-    const userId = req.user?._id
-
-    if (!userId) {
-      throw new ApiError(404, "unauthorized request")
-    }
-
-    const customerInfo = await CustomerInfoModel.find({ soldBy: userId }).select("-__v")
-
-    return res.status(200).json(new ApiResponse(200, customerInfo, "customer info fetched successfully"))
-  } catch (error) {
-    if (!error.message) {
-      error.message = "error fetching customer info"
-    }
-    next(error)
-  }
-}
+import { CustomerInfoModel } from "../models/customerInfo.model.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { ProductItemModel } from "../models/productItem.model.js";
+import { UserModel } from "../models/user.model.js";
 
 const postCustomerInfo = async (req, res, next) => {
   try {
-    const userId = req.user?._id
+    const { name, email, phoneNumber, soldProducts, soldBy } = req.body;
 
-    if (!userId) {
-      throw new ApiError(404, "unauthorized request")
+    // Validate the required fields
+    if (!name || !email || !soldProducts || !soldBy) {
+      throw new ApiError(400, "Missing required fields");
     }
 
-    const { name, email, phoneNumber, itemsSold } = req.body
-    const requiredFields = [name, email]
+    // Check if the product and user exist
+    const productExists = await ProductItemModel.findById(soldProducts);
+    const userExists = await UserModel.findById(soldBy);
 
-    if (requiredFields.some((eachField) => eachField?.trim() == null || eachField?.trim() == "")) {
-      throw new ApiError(400, "required fields empty")
+    if (!productExists) {
+      throw new ApiError(404, "Product not found");
     }
 
-    const itemsSoldJSON = JSON.parse(itemsSold)
-    if (!itemsSoldJSON?.item || !itemsSoldJSON?.quantity) {
-      throw new ApiError(400, "required fields empty")
+    if (!userExists) {
+      throw new ApiError(404, "User not found");
     }
 
-    const customerInfoToPost = { name, email, phoneNumber, itemsSold, soldBy: userId }
-    const newCustomerInfo = await CustomerInfoModel.create(customerInfoToPost)
+    if (productExists.productStatus === "completed") {
+      throw new ApiError(400, "Cannot assign another customer. The product is already marked as completed.");
+    }
 
-    return res.status(201).json(new ApiResponse(201, newCustomerInfo, "customer created successfully"))
+    const newCustomerInfo = new CustomerInfoModel({
+      name,
+      email,
+      phoneNumber,
+      soldProducts,
+      soldBy,
+    });
+
+    await newCustomerInfo.save();
+    await ProductItemModel.findByIdAndUpdate(
+      soldProducts,
+      { productStatus: 'completed' },
+      { new: true } // Option to return the updated document
+    );
+
+    res.status(201).json(new ApiResponse(201, "Customer info created successfully", newCustomerInfo));
   } catch (error) {
-    if (!error.message) {
-      error.message = "error posting customer info"
-    }
-    next(error)
+    next(error);
   }
-}
+};
 
-export { getCustomerInfo, postCustomerInfo }
+
+export { postCustomerInfo };

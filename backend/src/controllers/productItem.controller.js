@@ -15,21 +15,102 @@ const acceptableStatus = () => [
   process.env.PRODUCT_ITEM_STATUS_COMPLETED,
   process.env.PRODUCT_ITEM_STATUS_CANCELLED,
 ]
+
 const getProductItems = async (req, res, next) => {
   try {
     const userId = req.user?._id;
-    const isSuperAdmin = req.user?.userType === process.env.USER_TYPE_SUPER_ADMIN;
+    const userType = req.user?.userType;
+    const isSuperAdmin = userType === process.env.USER_TYPE_SUPER_ADMIN;
+    const isRetailer = userType === process.env.USER_TYPE_RETAILER; 
 
     if (!userId) {
-      throw new ApiError(404, "unauthorized request");
+      throw new ApiError(404, "Unauthorized request");
     }
-    const productItems = await ProductItemModel.find(isSuperAdmin ? {} : { productManufacturer: userId })
-      .populate("productManufacturer", "companyName")  
-      .populate("productType", "name")                 
-      .populate("batchId", "batchId")      
-      .select("-__v");                             
 
-    return res.status(200).json(new ApiResponse(200, productItems, "product items fetched successfully"));
+    // If user is Super Admin or Retailer, fetch all products
+    const filter = (isSuperAdmin || isRetailer) ? {} : { productManufacturer: userId };
+    const productItems = await ProductItemModel.find(filter)
+      .populate("productManufacturer", "companyName")
+      .populate("productType", "name")
+      .populate("batchId", "batchId")
+      .select("-__v");
+
+    return res.status(200).json(new ApiResponse(200, productItems, "Product items fetched successfully"));
+  } catch (error) {
+    console.error("Error fetching product items:", error.message || "unknown error");
+    next(error);
+  }
+};
+
+
+// const getSingleProduct = async (req, res, next) => {
+//   try {
+//     const userId = req.user?._id
+
+//     if (!userId) {
+//       throw new ApiError(401, "unauthorized request")
+//     }
+
+//     const query = {
+//       slug: req.params?.slug,
+//     }
+
+//     if (req.user.userType !== process.env.USER_TYPE_SUPER_ADMIN) {
+//       query["productManufacturer"] = userId
+//     }
+
+//     const productItem = await ProductItemModel.findOne(query)
+//       .populate("productManufacturer", "companyName")
+//       .populate("productType", "name")
+//       .select("-__v")
+
+//     if (!productItem) {
+//       throw new ApiError(404, "product doesn't exist")
+//     }
+
+//     return res.status(200).json(new ApiResponse(200, productItem, "product item fetched successfully"))
+//   } catch (error) {
+//     if (!error.message) {
+//       error.message = "something went wrong while getting products"
+//     }
+//     next(error)
+//   }
+// }
+/*
+
+If your goal is to allow Retailers to view any product
+ (not just those they manufactured), you may want to adjust the query 
+ logic to allow access based on the product's slug regardless of the productManufacturer. Here’s a revised version of your function:
+
+*/
+
+const getSingleProduct = async (req, res, next) => {
+
+  // for company left
+  try {
+    const userId = req.user?._id;
+
+    if (!userId) {
+      throw new ApiError(401, "unauthorized request");
+    }
+
+    // Always query by slug
+    const query = {
+      slug: req.params?.slug,
+    };
+
+    // If the user is not a Super Admin, we will not restrict the query
+    // This allows Retailers to see all products based on the slug
+    const productItem = await ProductItemModel.findOne(query)
+      .populate("productManufacturer", "companyName")
+      .populate("productType", "name")
+      .select("-__v");
+
+    if (!productItem) {
+      throw new ApiError(404, "product doesn't exist");
+    }
+
+    return res.status(200).json(new ApiResponse(200, productItem, "product item fetched successfully"));
   } catch (error) {
     if (!error.message) {
       error.message = "something went wrong while getting products";
@@ -38,44 +119,8 @@ const getProductItems = async (req, res, next) => {
   }
 };
 
-const getSingleProduct = async (req, res, next) => {
-  console.log("hitting single produ")
-  try {
-    const userId = req.user?._id
-
-    if (!userId) {
-      throw new ApiError(401, "unauthorized request")
-    }
-
-    const query = {
-      slug: req.params?.slug,
-    }
-
-    if (req.user.userType !== process.env.USER_TYPE_SUPER_ADMIN) {
-      query["productManufacturer"] = userId
-    }
-
-    const productItem = await ProductItemModel.findOne(query)
-      .populate("productManufacturer", "companyName")
-      .populate("productType", "name")
-      .select("-__v")
-
-    if (!productItem) {
-      throw new ApiError(404, "product doesn't exist")
-    }
-
-    return res.status(200).json(new ApiResponse(200, productItem, "product item fetched successfully"))
-  } catch (error) {
-    if (!error.message) {
-      error.message = "something went wrong while getting products"
-    }
-    next(error)
-  }
-}
-
 const createProductItem = async (req, res, next) => {
   try {
-   
     const productItemAcceptableStatus = acceptableStatus();
     if (!productItemAcceptableStatus || !Array.isArray(productItemAcceptableStatus)) {
       throw new ApiError(500, "Acceptable status array is invalid");
@@ -98,7 +143,6 @@ const createProductItem = async (req, res, next) => {
     } = req.body;
 
     const sanitizedStatus = productStatus?.toLowerCase().replace(/['"]+/g, '').trim() || "pending";
-
     if (!sanitizedStatus) {
       throw new ApiError(400, "Product status is required");
     }
@@ -107,14 +151,14 @@ const createProductItem = async (req, res, next) => {
       _id: productType,
       status: process.env.PRODUCT_TYPE_STATUS_ENABLED,
     });
-
     if (!requestedProductType) {
       throw new ApiError(404, `Requested product type with ID ${productType} does not exist or is disabled`);
     }
 
+    // Ensure batchId is a valid ObjectId
     if (!mongoose.Types.ObjectId.isValid(batchId)) {
       console.error("Batch ID is invalid:", batchId);
-      throw new ApiError(404, `Invalid batch ID format: ${batchId}`);
+      throw new ApiError(400, `Invalid batch ID format: ${batchId}. A valid batch ID must be a 24-character hexadecimal string.`);
     }
 
     const requestedBatch = await BatchIdModal.findOne({ _id: batchId });
@@ -123,51 +167,41 @@ const createProductItem = async (req, res, next) => {
     }
 
     const batchObjectId = requestedBatch._id; // Store ObjectId from the found batch
-    // Check if the status is acceptable
+
     const isStatusAcceptable = productItemAcceptableStatus.some(eachStatus =>
       typeof eachStatus === 'string' && sanitizedStatus === eachStatus.toLowerCase()
     );
-
     if (!isStatusAcceptable) {
       throw new ApiError(406, "Product status unacceptable");
     }
 
-    // Validate and parse productAttributes
     let parsedAttributes;
     try {
-      parsedAttributes = JSON.parse(productAttributes); // Ensures that it gets parsed immediately
+      parsedAttributes = JSON.parse(productAttributes);
     } catch (err) {
-      throw new ApiError(400, "Invalid product attributes format"); // Clear error message if parsing fails
+      throw new ApiError(400, "Invalid product attributes format");
     }
 
-    // Ensure it's an array and validate its contents
     if (!Array.isArray(parsedAttributes) || parsedAttributes.length === 0) {
-      throw new ApiError(400, "Product attributes are required and must be an array"); // Ensures it’s not an empty array
+      throw new ApiError(400, "Product attributes are required and must be an array");
     }
 
-    // Validate each attribute
     parsedAttributes.forEach(attr => {
       if (!attr.attributeName || !attr.attributeValue) {
         throw new ApiError(400, "Each product attribute must have an attributeName and attributeValue");
       }
     });
 
-    // Generate a unique slug for the product
     const wouldBeSlug = slugify(productName.toLowerCase());
     const existingSortedSimilarSlugs = await ProductItemModel.aggregate(slugSortingQuery(wouldBeSlug));
     const uniqueSlug = await generateUniqueSlug(existingSortedSimilarSlugs, wouldBeSlug);
 
-    // Generate a QR code for the product
     const FRONTEND_URL = process.env.NODE_ENV === "DEV" ? process.env.FRONTEND_URL_DEV : process.env.FRONTEND_URL_PROD;
     const qrFilePath = await generateQr(`${FRONTEND_URL}/products/${uniqueSlug}`);
-
-    // Upload QR code to the storage bucket
     const response = await uploadFile(qrFilePath);
 
-    // Process product images from request files
-    const productImages = req.files?.map(file => file.secure_url || file.path) || []; // Assuming files contain URLs
+    const productImages = req.files?.map(file => file.secure_url || file.path) || [];
 
-    // Create the product item in the database
     const createdProductItem = await ProductItemModel.create({
       productName,
       productType,
@@ -183,10 +217,8 @@ const createProductItem = async (req, res, next) => {
       productImages
     });
 
-    // Respond with success
     return res.status(201).json(new ApiResponse(201, createdProductItem, "Product created successfully"));
   } catch (error) {
-    // Enhanced error handling
     console.error("Error occurred while creating product:", error);
     next(new ApiError(500, error.message || "Something went wrong while creating the product"));
   }
@@ -320,11 +352,5 @@ const editProductInfo = async (req, res, next) => {
         next(error);
     }
 };
-
-
-
-
-
-
 
 export { getProductItems, getSingleProduct, createProductItem, updateProductItem, deleteProductItem , getProductById,editProductInfo}

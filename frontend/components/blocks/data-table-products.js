@@ -1,17 +1,19 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import React, { useRef, useState } from "react"
+import React, { useRef, useState, useEffect } from "react"
 import Table from "./table"
 import ContextMenu from "./context-menu"
 import Pagination from "../composites/pagination"
 import Checkbox from "../elements/checkbox"
 import { twMerge } from "tailwind-merge"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faEllipsisVertical } from "@fortawesome/free-solid-svg-icons"
+import { faEllipsisVertical, faUserPlus } from "@fortawesome/free-solid-svg-icons"
 import { useProducts } from "@/contexts/products-context"
 import ImgWithWrapper from "../composites/img-with-wrapper"
 import QrModal from "../elements/qrmodal"
+import CustomerFormModal from "../composites/customerFormModel"
+import { getCurrentUser } from "@/contexts/query-provider/api-request-functions/api-requests"
 
 export default function DataTable() {
   const router = useRouter()
@@ -19,12 +21,15 @@ export default function DataTable() {
   const tableRef = useRef()
   const contextMenuRef = useRef()
 
-  const { products, columns, sortData, selectedData, setSelectedData } = useProducts()
+  const { products, columns, sortData, selectedData, setSelectedData, setProducts } = useProducts()
 
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
-  const [showModal, setShowModal] = useState(false) // Add modal state
-  const [qrImageUrl, setQrImageUrl] = useState("")  // Store QR image URL for the modal
+  const [showModal, setShowModal] = useState(false)
+  const [qrImageUrl, setQrImageUrl] = useState("")
+  const [showCustomerModal, setShowCustomerModal] = useState(false)
+  const [selectedProductId, setSelectedProductId] = useState(null)
+  const [currentUser, setCurrentUser] = useState(null) // State for current user
 
   const numberOfDataPerPage = 8
 
@@ -36,12 +41,28 @@ export default function DataTable() {
   const indexOfFirstData = indexOfLastData - numberOfDataPerPage
   const currentData = filteredProducts.slice(indexOfFirstData, indexOfLastData)
 
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const currentUserData = await getCurrentUser();
+
+
+        console.log("current user id",currentUserData.data._id)
+        setCurrentUser(currentUserData.data._id); // Set current user
+      } catch (error) {
+        console.error("Error fetching current user:", error);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
   const handleTableHeadingCheckboxChange = () => {
     setSelectedData((prev) =>
       prev.length > 0 ? (prev.length < products.length ? [...products] : []) : [...products],
     )
   }
 
+  
   const handleTableDataCheckboxChange = (clickedData) => {
     setSelectedData((prev) =>
       selectedData.some((eachSelected) => eachSelected._id === clickedData._id)
@@ -49,8 +70,25 @@ export default function DataTable() {
         : [...prev, clickedData],
     )
   }
+  const handleAddCustomerClick = (productId) => {
+    if (currentUser) { 
+      setSelectedProductId(productId);
+      setShowCustomerModal(true);
+    } else {
+      console.error("Current user is not defined");
+    }
+  };
+  
+const handleCustomerSave = (newStatus, productId) => {
+  setShowCustomerModal(false);
 
-  const handlePrint = () => {
+  const updatedProducts = products.map((product) => 
+    product._id === productId ? { ...product, productStatus: newStatus } : product
+  );
+  setProducts(updatedProducts);
+};
+
+    const handlePrint = () => {
     const printWindow = window.open("", "_blank")
     const printableContent = selectedData
       .map(
@@ -155,9 +193,7 @@ export default function DataTable() {
             {currentData?.map((datum, idx) => (
               <Table.Row key={idx} className={twMerge((idx + 1) % 2 !== 0 ? "bg-white" : "")}>
                 <Table.Column className="px-4 py-2">
-                  <Checkbox
-                    onChange={() => handleTableDataCheckboxChange(datum)}
-                  />
+                  <Checkbox onChange={() => handleTableDataCheckboxChange(datum)} />
                 </Table.Column>
 
                 <Table.Column className="px-2">{datum.productName}</Table.Column>
@@ -165,7 +201,14 @@ export default function DataTable() {
                 <Table.Column className="p-2">{datum.productPrice}</Table.Column>
                 <Table.Column className="p-2">{datum.productSku}</Table.Column>
                 <Table.Column className="p-2">{datum.batchId?.batchId}</Table.Column>
-                <Table.Column className="p-2">{datum.productStatus}</Table.Column>
+                <Table.Column className="p-2">   <span
+                    className={twMerge(
+                      "px-2 py-1 rounded-full text-white",
+                      datum.productStatus === "pending" ? "bg-red-500" : datum.productStatus === "completed" ? "bg-green-600" : "bg-gray-500"
+                    )}
+                  >
+                    {datum.productStatus}
+                  </span></Table.Column>
                 <Table.Column className="p-2">
                   {new Date(datum.createdAt).toLocaleString("en-US", {
                     year: "numeric",
@@ -208,10 +251,20 @@ export default function DataTable() {
                         Edit
                       </ContextMenu.Item>
 
-                      <ContextMenu.Item className="rounded-md bg-[#017082]" onClick={() => null}>
+                         <ContextMenu.Item
+                        className="rounded-md bg-[#017082]"
+                        onClick={() => router.push(`/products/${datum._id}/edit`)}
+                      >
                         Delete
                       </ContextMenu.Item>
                     </ContextMenu.Menu>
+
+                    <FontAwesomeIcon
+                      icon={faUserPlus}
+                      className="fa-fw"
+                      size="sm"
+                      onClick={() => handleAddCustomerClick(datum._id)} // Pass product ID here
+                    />
                   </ContextMenu>
                 </Table.Column>
               </Table.Row>
@@ -220,8 +273,7 @@ export default function DataTable() {
         </Table>
       </div>
 
-      {/* Pagination */}
-       <div className="text-right">
+    <div className="text-right">
         <Pagination
           totalNumberOfData={filteredProducts.length}
           numberOfDataPerPage={numberOfDataPerPage}
@@ -230,13 +282,20 @@ export default function DataTable() {
         />
       </div>
 
-      {/* Modal for QR Image */}
+
       <QrModal show={showModal} onClose={() => setShowModal(false)}>
         <img src={qrImageUrl} alt="QR Code"
    className="w-full h-auto max-h-[350px] object-contain"
         
         />
       </QrModal>
+          <CustomerFormModal
+        show={showCustomerModal && currentUser !== null} 
+        onClose={() => setShowCustomerModal(false)}
+        productId={selectedProductId} 
+        currentUserId={currentUser} 
+        onSave={handleCustomerSave} 
+      />
     </div>
   )
 }

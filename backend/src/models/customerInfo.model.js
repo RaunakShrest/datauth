@@ -12,24 +12,15 @@ const customerInfo = new mongoose.Schema(
     },
     phoneNumber: {
       type: String,
+      
     },
-    itemsSold: {
-      type: [
-        {
-          item: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "ProductItem",
-            required: true,
-          },
-          quantity: {
-            type: Number,
-            required: true,
-          },
-        },
-      ],
-      required: true,
-      default: [],
+
+    soldProducts:{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Products",
+      required: true
     },
+
     soldBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -42,3 +33,4 @@ const customerInfo = new mongoose.Schema(
 const CustomerInfoModel = mongoose.model("CustomerInfo", customerInfo)
 
 export { CustomerInfoModel }
+

@@ -124,10 +124,16 @@ const handleImageChange = (e) => {
     setImagePreviews((prevPreviews) => prevPreviews.filter((_, i) => i !== index));
   };
 
-  const handleBatchChange = (event) => {
-    const selectedId = event.target.value;
-    setSelectedBatchId(selectedId);
-  };
+const handleBatchChange = (event) => {
+  const selectedId = event.target.value;
+  const selectedBatch = batchIdOptions.find(batch => batch._id === selectedId); // Find the selected batch object
+  if (selectedBatch) {
+    
+    setSelectedBatchId(selectedBatch._id); 
+  }
+ 
+};
+
 
   return (
     <div className="space-y-6">
