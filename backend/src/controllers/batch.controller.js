@@ -28,13 +28,17 @@ const postBatchId = async (req, res, next) => {
 };
 const getAllBatchIds = async (req, res, next) => {
   try {
-    const batchIds = await BatchIdModal.find().select("batchId -_id");
+    const batchIds = await BatchIdModal.find().select("batchId _id"); // Include _id in the selection
 
     if (!batchIds || batchIds.length === 0) {
       throw new ApiError(404, "No batch IDs found");
     }
+    const responseBatchIds = batchIds.map(batch => ({
+      _id: batch._id,      // ObjectId
+      batchId: batch.batchId // Human-readable batch ID
+    }));
 
-    return res.status(200).json(new ApiResponse(200, batchIds, "Batch IDs fetched successfully"));
+    return res.status(200).json(new ApiResponse(200, responseBatchIds, "Batch IDs fetched successfully"));
   } catch (error) {
     if (!error.message) {
       error.message = "Something went wrong while fetching batch IDs";
@@ -42,5 +46,6 @@ const getAllBatchIds = async (req, res, next) => {
     next(error);
   }
 };
+
 
 export { postBatchId, getAllBatchIds };

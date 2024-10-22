@@ -34,7 +34,7 @@ import companyRoute from "./routes/company.route.js";
 app.use("/api/v1/users", usersRoute);
 app.use("/api/v1/product-types", productTypesRoute);
 app.use("/api/v1/products", productItemsRoute);
-app.use("/api/v1/customer-info", customerInfoRoute);
+app.use("/api/v1/customerInfo", customerInfoRoute);
 app.use("/api/v1/retailers", retailerRoute);
 app.use("/api/v1/batch", batchIdRoute);
 app.use("/api/v1/company", companyRoute);

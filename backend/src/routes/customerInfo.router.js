@@ -1,10 +1,9 @@
 import express from "express"
 import { checkRetailer, checkUserAuth } from "../middlewares/auth.middleware.js"
-import { getCustomerInfo, postCustomerInfo } from "../controllers/customerInfo.controller.js"
+import { postCustomerInfo } from "../controllers/customerInfo.controller.js"
 
 const router = express.Router()
 
-router.get("/get-customer-info", checkUserAuth, checkRetailer, getCustomerInfo)
-router.post("/create-customer-info", checkUserAuth, checkRetailer, postCustomerInfo)
+router.post("/createCustomer", postCustomerInfo)
 
 export default router

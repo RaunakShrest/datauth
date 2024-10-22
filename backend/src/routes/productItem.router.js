@@ -7,12 +7,12 @@ import {
   updateProductItem,
   deleteProductItem,
   getProductById,
-  editProductInfo
+  editProductInfo,
 } from "../controllers/productItem.controller.js"
 import { uploadMultiple } from "../middlewares/productImageUpload.middlware.js"
 const router = express.Router()
 
-router.get("/get-product-items", checkUserAuth, getProductItems)
+router.get("/get-product-items", checkUserAuth,  getProductItems)
 router.post("/create-product-item", uploadMultiple.array('productItems', 10), checkUserAuth, createProductItem);                                      
 // router.patch("/update-product-item", checkUserAuth, checkCompany, updateProductItem)
 router.delete("/delete-product-item", checkUserAuth, checkCompany, deleteProductItem)
