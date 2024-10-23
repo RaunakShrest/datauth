@@ -42,48 +42,6 @@ const getProductItems = async (req, res, next) => {
   }
 };
 
-
-// const getSingleProduct = async (req, res, next) => {
-//   try {
-//     const userId = req.user?._id
-
-//     if (!userId) {
-//       throw new ApiError(401, "unauthorized request")
-//     }
-
-//     const query = {
-//       slug: req.params?.slug,
-//     }
-
-//     if (req.user.userType !== process.env.USER_TYPE_SUPER_ADMIN) {
-//       query["productManufacturer"] = userId
-//     }
-
-//     const productItem = await ProductItemModel.findOne(query)
-//       .populate("productManufacturer", "companyName")
-//       .populate("productType", "name")
-//       .select("-__v")
-
-//     if (!productItem) {
-//       throw new ApiError(404, "product doesn't exist")
-//     }
-
-//     return res.status(200).json(new ApiResponse(200, productItem, "product item fetched successfully"))
-//   } catch (error) {
-//     if (!error.message) {
-//       error.message = "something went wrong while getting products"
-//     }
-//     next(error)
-//   }
-// }
-/*
-
-If your goal is to allow Retailers to view any product
- (not just those they manufactured), you may want to adjust the query 
- logic to allow access based on the product's slug regardless of the productManufacturer. Here’s a revised version of your function:
-
-*/
-
 const getSingleProduct = async (req, res, next) => {
 
   // for company left
@@ -353,4 +311,41 @@ const editProductInfo = async (req, res, next) => {
     }
 };
 
-export { getProductItems, getSingleProduct, createProductItem, updateProductItem, deleteProductItem , getProductById,editProductInfo}
+const getCompanyProductItems = async (req, res, next) => { 
+  try {
+    const companyId = req.params.companyId; 
+    const userId = req.user?._id;
+    const userType = req.user?.userType;
+    const isSuperAdmin = userType === process.env.USER_TYPE_SUPER_ADMIN;
+    const isRetailer = userType === process.env.USER_TYPE_RETAILER;
+    if (!companyId) {
+      throw new ApiError(400, "Company ID is required");
+    }
+
+    const filter = {
+      productManufacturer: companyId, // Match by company ID
+      $or: [
+        { soldBy: userId },  // Products sold by the logged-in retailer
+        { productStatus: "pending" }  // Products that are unsold (status pending)
+      ]
+    };
+
+    // Fetch products based on the filter
+    const productItems = await ProductItemModel.find(filter)
+      .populate("productManufacturer", "companyName")
+      .populate("productType", "name")
+      .populate("batchId", "batchId")
+      .select("-__v");
+
+    return res.status(200).json(new ApiResponse(200, productItems, "Product items fetched successfully"));
+    
+  } catch (error) {
+    console.error("Error fetching product items:", error.message || "unknown error");
+    next(error);
+  }
+};
+
+
+
+
+export { getProductItems,getCompanyProductItems, getSingleProduct, createProductItem, updateProductItem, deleteProductItem , getProductById,editProductInfo}

@@ -71,6 +71,11 @@ const productItemSchema = new mongoose.Schema(
       type: String, 
       required: true, 
     }],
+    
+       soldBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
+    },
   },
   { timestamps: true }
 )

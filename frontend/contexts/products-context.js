@@ -17,17 +17,17 @@ export const useProducts = () => {
   return context
 }
 
-export default function ProductsProvider({ children }) {
+
+export default function ProductsProvider({ children, companyId }) {
   const [isAsc, setIsAsc] = useState(false)
 
   const productsFromApi = useQuery({
-    queryKey: ["fetchProducts"],
-    queryFn: () => fetchProducts(),
+    queryKey: ["fetchProducts", companyId],
+    queryFn: () => fetchProducts({companyId}),
     staleTime: reactQueryStaleTime,
   })
 
   const [products, setProducts] = useState([])
-  // console.log(products)
   const [columns, setColumns] = useState([
     {
       id: "product-name",

@@ -98,10 +98,9 @@ export const createNewProduct = async (formData) => {
     }
 };
 
-export const fetchProducts = async () => {
+export const fetchProducts = async ({companyId}) => {
   try {
-    const response = await api.get("/products/get-product-items")
-
+    const response = await api.get(companyId?`/products/getCompanyProducts/${companyId}`:"/products/get-product-items")
     return response.data
   } catch (error) {
     throw error.response

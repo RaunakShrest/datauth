@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation"
 import axios from "axios" 
 import toast from "react-hot-toast"
 
-export default function ProductsTemplate() {
+export default function ProductsTemplate({companyId}) {
   const title = "Products List"
   const router = useRouter()
 
@@ -121,7 +121,7 @@ const handleSaveBatchId = async () => {
         </div>
       )}
 
-      <ProductsProvider>
+      <ProductsProvider companyId={companyId}>
         <div className="flex items-center gap-2">
           <div>
             <Button>
