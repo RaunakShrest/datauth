@@ -4,6 +4,8 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ProductItemModel } from "../models/productItem.model.js";
 import { UserModel } from "../models/user.model.js";
 
+
+
 const postCustomerInfo = async (req, res, next) => {
   try {
     const { name, email, phoneNumber, soldProducts, soldBy } = req.body;
@@ -29,6 +31,7 @@ const postCustomerInfo = async (req, res, next) => {
       throw new ApiError(400, "Cannot assign another customer. The product is already marked as completed.");
     }
 
+    // Create new customer info
     const newCustomerInfo = new CustomerInfoModel({
       name,
       email,
@@ -38,9 +41,14 @@ const postCustomerInfo = async (req, res, next) => {
     });
 
     await newCustomerInfo.save();
+
+    // Update the product with both soldBy and productStatus
     await ProductItemModel.findByIdAndUpdate(
       soldProducts,
-      { productStatus: 'completed' },
+      { 
+        soldBy, // Update the soldBy field
+        productStatus: 'completed' // Update the productStatus field to 'completed'
+      },
       { new: true } // Option to return the updated document
     );
 

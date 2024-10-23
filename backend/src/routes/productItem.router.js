@@ -8,6 +8,7 @@ import {
   deleteProductItem,
   getProductById,
   editProductInfo,
+  getCompanyProductItems
 } from "../controllers/productItem.controller.js"
 import { uploadMultiple } from "../middlewares/productImageUpload.middlware.js"
 const router = express.Router()
@@ -19,5 +20,5 @@ router.delete("/delete-product-item", checkUserAuth, checkCompany, deleteProduct
 router.get("/:slug", checkUserAuth, getSingleProduct)
 router.get("/getSingleProduct/:id", getProductById);
 router.patch("/editProductDetails/:productId",uploadMultiple.array('productItems',10), editProductInfo);
-
+router.get("/getCompanyProducts/:companyId",checkUserAuth, getCompanyProductItems);
 export default router

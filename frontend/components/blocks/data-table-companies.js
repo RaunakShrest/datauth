@@ -199,6 +199,12 @@ export default function DataTable() {
                       >
                         Approve
                       </ContextMenu.Item>
+                         <ContextMenu.Item
+                        className="rounded-md bg-[#017082]"
+                        onClick={() => router.push(`/companies/${datum._id}/products`)}  
+                      >
+                        View Products
+                      </ContextMenu.Item>
                     </ContextMenu.Menu>
                   </ContextMenu>
                 </Table.Column>
