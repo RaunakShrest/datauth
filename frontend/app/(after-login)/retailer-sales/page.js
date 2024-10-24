@@ -1,9 +1,10 @@
+import RetailerSalesTemplate from "@/components/structures/retailerSales-template"
 import React from "react"
 
 export default function RetailerSalesPage() {
   return (
     <div>
-      <span>This is retailer sales page.</span>
+  <RetailerSalesTemplate/>
     </div>
   )
 }

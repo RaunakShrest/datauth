@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import Table from "./table";
 import { twMerge } from "tailwind-merge";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -9,14 +9,28 @@ import Checkbox from "../elements/checkbox";
 import ContextMenu from "./context-menu";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { getCurrentUser } from "@/contexts/query-provider/api-request-functions/api-requests";
 
 export default function DataTable() {
   const router = useRouter();
   const tableRef = useRef();
   const contextMenuRef = useRef();
+  const[userRole, setUserRole]= useState("")
 
   const { data, sortData, selectedData, setSelectedData, fetchCompanies } = useCompanies(); // Added fetchData
 
+    useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const user = await getCurrentUser(); // Assuming this returns an object with user details
+        setUserRole(user.data.userType); // Set the user role (e.g., "retailer", "super-admin", etc.)
+      } catch (error) {
+        console.error("Error fetching current user:", error);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
   const isTableDataSelected = (dataToVerify) => {
     return selectedData.some((eachSelected) => eachSelected.companyName === dataToVerify.companyName);
   };
@@ -180,6 +194,8 @@ export default function DataTable() {
                       >
                         View
                       </ContextMenu.Item>
+                      {userRole !== "retailer" && (
+                        <>
                       <ContextMenu.Item
                         className="rounded-md bg-[#017082]"
                         // onClick={() => router.push("/companies/edit-company")}
@@ -199,6 +215,8 @@ export default function DataTable() {
                       >
                         Approve
                       </ContextMenu.Item>
+                      </>
+                      )}
                          <ContextMenu.Item
                         className="rounded-md bg-[#017082]"
                         onClick={() => router.push(`/companies/${datum._id}/products`)}  

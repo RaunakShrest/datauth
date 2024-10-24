@@ -45,9 +45,6 @@ export default function DataTable() {
     const fetchCurrentUser = async () => {
       try {
         const currentUserData = await getCurrentUser();
-
-
-        console.log("current user id",currentUserData.data._id)
         setCurrentUser(currentUserData.data._id); // Set current user
       } catch (error) {
         console.error("Error fetching current user:", error);

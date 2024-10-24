@@ -6,11 +6,11 @@ export default function Header() {
   return (
     <div className="flex items-center justify-between bg-white py-2 shadow-md">
       <div className="px-8 py-2">
-        <ImgWithWrapper
+        {/* <ImgWithWrapper
           wrapperClassName="h-14 aspect-[2]"
           imageClassName="object-contain object-left"
           imageAttributes={{ src: "/assets/logo_satyata_horizontal.png", alt: "satyata_logo_horizontal" }}
-        />
+        /> */}
       </div>
 
       <div className="flex items-center gap-6 px-8">

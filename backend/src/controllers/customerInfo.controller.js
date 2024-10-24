@@ -4,18 +4,13 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ProductItemModel } from "../models/productItem.model.js";
 import { UserModel } from "../models/user.model.js";
 
-
-
 const postCustomerInfo = async (req, res, next) => {
   try {
     const { name, email, phoneNumber, soldProducts, soldBy } = req.body;
-
-    // Validate the required fields
     if (!name || !email || !soldProducts || !soldBy) {
       throw new ApiError(400, "Missing required fields");
     }
 
-    // Check if the product and user exist
     const productExists = await ProductItemModel.findById(soldProducts);
     const userExists = await UserModel.findById(soldBy);
 
@@ -31,7 +26,6 @@ const postCustomerInfo = async (req, res, next) => {
       throw new ApiError(400, "Cannot assign another customer. The product is already marked as completed.");
     }
 
-    // Create new customer info
     const newCustomerInfo = new CustomerInfoModel({
       name,
       email,
@@ -58,5 +52,27 @@ const postCustomerInfo = async (req, res, next) => {
   }
 };
 
+const getSoldProductsByRetailer = async (req, res, next) => {
+  try {
+    const retailerId = req.user._id; 
 
-export { postCustomerInfo };
+    if (!retailerId) {
+      throw new ApiError(400, "Retailer ID not found");
+    }
+
+    // Find all customer info documents where soldBy matches the logged-in retailer's ID
+    const customerInfo = await CustomerInfoModel.find({ soldBy: retailerId })
+      .populate("soldProducts") // Populate sold products info
+      .exec();
+
+    if (!customerInfo.length) {
+      throw new ApiError(404, "No products found for this retailer");
+    }
+
+    res.status(200).json(new ApiResponse(200, "Products sold by retailer retrieved successfully", customerInfo));
+  } catch (error) {
+    next(error);
+  }
+};
+
+export { postCustomerInfo, getSoldProductsByRetailer };
