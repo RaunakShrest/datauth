@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import Button from "../elements/button"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faEllipsisVertical, faTrashCan } from "@fortawesome/free-solid-svg-icons"
@@ -9,14 +9,27 @@ import ProductsProvider from "@/contexts/products-context"
 import { useRouter } from "next/navigation"
 import axios from "axios" 
 import toast from "react-hot-toast"
+import { getCurrentUser } from "@/contexts/query-provider/api-request-functions/api-requests"
 
 export default function ProductsTemplate({companyId}) {
   const title = "Products List"
   const router = useRouter()
-
-  // State for controlling modal visibility and storing batch ID
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [batchId, setBatchId] = useState("")
+  const [userRole, setUserRole]= useState("")
+
+    useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const user = await getCurrentUser();
+        setUserRole(user.data.userType); // Set the user role (e.g., "retailer", "super-admin", etc.)
+      } catch (error) {
+        console.error("Error fetching current user:", error);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
 
   const handleOpenModal = () => {
     setIsModalOpen(true)
@@ -55,26 +68,28 @@ const handleSaveBatchId = async () => {
         <h2 className="text-2xl font-bold">{title}</h2>
 
         <div className="flex gap-4">
-          <Button
-            onClick={() => router.push("/products/add-product")}
-            className="flex items-center bg-[#017082] px-4 py-2 text-white mr-2"
-          >
-            <svg
-              className="inline-block w-10"
-              width="25"
-              height="25"
-              viewBox="0 0 25 25"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+             {userRole !== "retailer" && (
+            <Button
+              onClick={() => router.push("/products/add-product")}
+              className="flex items-center bg-[#017082] px-4 py-2 text-white mr-2"
             >
-              <path
-                d="M12.5 0.6875C9.37889 0.72537 6.39629 1.98206 4.18917 4.18917C1.98206 6.39629 0.72537 9.37889 0.6875 12.5C0.72537 15.6211 1.98206 18.6037 4.18917 20.8108C6.39629 23.0179 9.37889 24.2746 12.5 24.3125C15.6211 24.2746 18.6037 23.0179 20.8108 20.8108C23.0179 18.6037 24.2746 15.6211 24.3125 12.5C24.2746 9.37889 23.0179 6.39629 20.8108 4.18917C18.6037 1.98206 15.6211 0.72537 12.5 0.6875ZM19.25 13.3438H13.3438V19.25H11.6562V13.3438H5.75V11.6562H11.6562V5.75H13.3438V11.6562H19.25V13.3438Z"
-                fill="white"
-              />
-            </svg>
-            <span className="inline-block">Add Product</span>
-          </Button>
-
+              <svg
+                className="inline-block w-10"
+                width="25"
+                height="25"
+                viewBox="0 0 25 25"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12.5 0.6875C9.37889 0.72537 6.39629 1.98206 4.18917 4.18917C1.98206 6.39629 0.72537 9.37889 0.6875 12.5C0.72537 15.6211 1.98206 18.6037 4.18917 20.8108C6.39629 23.0179 9.37889 24.2746 12.5 24.3125C15.6211 24.2746 18.6037 23.0179 20.8108 20.8108C23.0179 18.6037 24.2746 15.6211 24.3125 12.5C24.2746 9.37889 23.0179 6.39629 20.8108 4.18917C18.6037 1.98206 15.6211 0.72537 12.5 0.6875ZM19.25 13.3438H13.3438V19.25H11.6562V13.3438H5.75V11.6562H11.6562V5.75H13.3438V11.6562H19.25V13.3438Z"
+                  fill="white"
+                />
+              </svg>
+              <span className="inline-block">Add Product</span>
+            </Button>
+          )}
+          {userRole!=="retailer" &&(
           <Button
             onClick={handleOpenModal}
             className="flex items-center bg-[#017082] px-4 py-2 text-white"
@@ -93,7 +108,7 @@ const handleSaveBatchId = async () => {
               />
             </svg>
             <span className="inline-block">Add BatchId</span>
-          </Button>
+          </Button>)}
         </div>
       </div>
 

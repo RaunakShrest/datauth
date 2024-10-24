@@ -5,11 +5,32 @@ import Link from "next/link"
 import Tabs from "../elements/tabs"
 import { useMenuContext } from "./menu-wrapper"
 import { twMerge } from "tailwind-merge"
+import { useState, useEffect } from "react"
+import { getCurrentUser } from "@/contexts/query-provider/api-request-functions/api-requests"
 
 export default function SideMenu() {
   const { isMenuExpanded } = useMenuContext()
+    const [userData, setUserData] = useState({ companyName: "", userType: "" })
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await getCurrentUser()
+        if (response.success) {
+          setUserData({
+            companyName: response.data.companyName,
+            userType: response.data.userType,
+          })
+        }
+      } catch (error) {
+        console.error("Error fetching user data", error)
+      }
+    }
+    fetchUserData()
+  }, [])
 
   return (
+    <div className="flex flex-col h-[98%] justify-between" >
     <Tabs>
       <Tabs.Item accessableBy={["super-admin", "company", "retailer"]}>
         <Link
@@ -308,5 +329,16 @@ export default function SideMenu() {
         </Link>
       </Tabs.Item>
     </Tabs>
+
+      {/* Displaying companyName and userType at the bottom */}
+     {isMenuExpanded && (
+        <div className="p-4 mt-auto">
+          <div className="bg-gray-200 p-2 rounded shadow-sm text-sm text-center">
+            <p className=" text-gray-900 font-semibold">  {userData.companyName}</p>
+            <p className="text-gray-900 font-semibold"> {userData.userType}</p>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }

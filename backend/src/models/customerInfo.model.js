@@ -17,7 +17,7 @@ const customerInfo = new mongoose.Schema(
 
     soldProducts:{
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Products",
+      ref: "ProductItem",
       required: true
     },
 
