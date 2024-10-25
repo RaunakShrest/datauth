@@ -13,6 +13,7 @@ import {
   updateCompanyStatus,
   deleteCompany,
   uploadProfilePicture,
+  userEditProfile
 } from '../controllers/user.controller.js';
 
 const router = express.Router();
@@ -30,4 +31,5 @@ router.get('/get-companies', getCompanies);
 router.patch('/get-companies/:id', updateCompanyStatus);
 router.delete('/delete-company/:id', deleteCompany, checkSuperAdmin, checkUserAuth);
 router.post('/upload-profile-picture', upload.single('file'), checkUserAuth,uploadProfilePicture);
+router.patch('/edit-profile', checkUserAuth, userEditProfile); // Route to edit user profile
 export default router;

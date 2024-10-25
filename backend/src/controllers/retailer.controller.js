@@ -40,7 +40,7 @@ const updateRetailerStatus = async (req, res, next) => {
         text: `Dear ${updatedRetailer.companyName}, your retailer status has been  "verified" .`,
         html: `<p>Dear ${updatedRetailer.companyName},</p><p>Your retailer status has been updated to <strong>"verified"</strong>.</p>`,
       }];
-
+        
       const emailResult = await sendBulkEmail(emailOptions);
       console.log('Email sent: ', emailResult);
     }

@@ -80,10 +80,7 @@ export default function RetailerSalesProvider({ children }) {
 
 const fetchRetailerSales = async () => {
   try {
-    // Retrieve the token from local storage
     const accessToken = localStorage.getItem("accessToken"); // Replace 'token' with the actual key if different
-    console.log("token is ", accessToken)
-
     if (!accessToken) {
       throw new Error("No token found");
     }

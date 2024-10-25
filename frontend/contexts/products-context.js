@@ -71,8 +71,6 @@ export default function ProductsProvider({ children, companyId }) {
   const [selectedData, setSelectedData] = useState([])
 
   const sortData = (basis) => {
-    // console.log(basis)
-
     setIsAsc((prev) => !prev)
     const dataCopy = JSON.parse(JSON.stringify(products))
 
