@@ -5,7 +5,6 @@ import EditCompany from "@/components/structures/company-single-page";
 import React from "react";
 
 export default function SingleCompanyEdit({params}) {
-  console.log("Parms from context", params)
   return (
     <div className="space-y-6">
       <div>

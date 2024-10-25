@@ -380,7 +380,61 @@ const uploadProfilePicture = async (req, res) => {
     });
   }
 };
+const userEditProfile = async (req, res, next) => {
+  try {
+    const user = req.user;
+    if (!user || !user._id) {
+      return res.status(401).json({ message: "Unauthorized. User not found." });
+    }
+
+    const {
+      userId,
+      firstName,
+      lastName,
+      email,
+      phoneNumber,
+      companyName,
+      address, 
+    } = req.body;
+
+    if (!userId) {
+      throw new ApiError(400, "User ID is required");
+    }
+
+    if (address && (typeof address !== 'object' || !address.zip || !address.city || !address.country || !address.addressLine)) {
+      throw new ApiError(400, "Address must be an object with zip, city, country, and addressLine");
+    }
+
+    const existingUser = await UserModel.findById(userId);
+    if (!existingUser) {
+      throw new ApiError(404, "User not found");
+    }
+
+    const updatedUserFields = {
+      firstName,
+      lastName,
+      email,
+      phoneNumber,
+      companyName,
+      address, // Update with the new address structure
+    };
+
+    // Update the user in the database
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      userId,
+      updatedUserFields,
+      { new: true, runValidators: true }
+    ).select("-__v -password -refreshToken");
+
+    return res.status(200).json(new ApiResponse(200, updatedUser, "User profile updated successfully"));
+  } catch (error) {
+    if (!error.message) {
+      error.message = "Something went wrong while updating user profile";
+    }
+    next(error);
+  }
+};
 
 
 
-export { userSignup, uploadProfilePicture, userSignin, userSignout, getUsers, getCurrentUser, updateUser, refreshAccessToken, getCompanies, updateCompanyStatus, deleteCompany }
+export { userSignup,  userEditProfile, uploadProfilePicture, userSignin, userSignout, getUsers, getCurrentUser, updateUser, refreshAccessToken, getCompanies, updateCompanyStatus, deleteCompany }

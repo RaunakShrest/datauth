@@ -13,6 +13,7 @@ import { useProducts } from "@/contexts/products-context"
 import ImgWithWrapper from "../composites/img-with-wrapper"
 import QrModal from "../elements/qrmodal"
 import CustomerFormModal from "../composites/customerFormModel"
+import axios from "axios"
 import { getCurrentUser } from "@/contexts/query-provider/api-request-functions/api-requests"
 
 export default function DataTable() {
@@ -29,7 +30,8 @@ export default function DataTable() {
   const [qrImageUrl, setQrImageUrl] = useState("")
   const [showCustomerModal, setShowCustomerModal] = useState(false)
   const [selectedProductId, setSelectedProductId] = useState(null)
-  const [currentUser, setCurrentUser] = useState(null) // State for current user
+  const [currentUser, setCurrentUser] = useState(null) 
+   const [customerInfo, setCustomerInfo] = useState(null); 
 
   const numberOfDataPerPage = 8
 
@@ -67,15 +69,24 @@ export default function DataTable() {
         : [...prev, clickedData],
     )
   }
-  const handleAddCustomerClick = (productId) => {
-    if (currentUser) { 
+  const handleAddCustomerClick = async (productId) => {
+    if (currentUser) {
       setSelectedProductId(productId);
       setShowCustomerModal(true);
+      
+      try {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL_DEV}/customerInfo/getCustomerInfo`, {
+          params: { productId }
+        });
+        setCustomerInfo(response.data); // Store the fetched customer data
+      } catch (error) {
+        console.error("Error fetching customer data:", error);
+        setCustomerInfo(null);
+      }
     } else {
       console.error("Current user is not defined");
     }
   };
-  
 const handleCustomerSave = (newStatus, productId) => {
   setShowCustomerModal(false);
 
@@ -286,12 +297,13 @@ const handleCustomerSave = (newStatus, productId) => {
         
         />
       </QrModal>
-          <CustomerFormModal
+        <CustomerFormModal
         show={showCustomerModal && currentUser !== null} 
         onClose={() => setShowCustomerModal(false)}
-        productId={selectedProductId} 
-        currentUserId={currentUser} 
-        onSave={handleCustomerSave} 
+        customerInfo={customerInfo} // Pass the customer data to modal
+        productId={selectedProductId}
+        currentUserId={currentUser}
+        onSave={handleCustomerSave}
       />
     </div>
   )

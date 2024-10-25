@@ -39,8 +39,6 @@ export default function DataTable() {
   }
 
   const handleTableDataCheckboxChange = (clickedData) => {
-    console.log(clickedData)
-
     setSelectedData((prev) =>
       isTableDataSelected(clickedData)
         ? prev.filter((eachPrev) => eachPrev.companyName !== clickedData.companyName)
