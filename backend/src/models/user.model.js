@@ -1,8 +1,8 @@
-import { config } from "dotenv"
-import jwt from "jsonwebtoken"
-import mongoose from "mongoose"
+import { config } from "dotenv";
+import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
-config()
+config();
 
 const userSchema = new mongoose.Schema(
   {
@@ -74,7 +74,11 @@ const userSchema = new mongoose.Schema(
     status: {
       type: String,
       required: true,
-      enum: [process.env.USER_STATUS_PENDING, process.env.USER_STATUS_VERIFIED, process.env.USER_STATUS_DECLINED],
+      enum: [
+        process.env.USER_STATUS_PENDING,
+        process.env.USER_STATUS_VERIFIED,
+        process.env.USER_STATUS_DECLINED,
+      ],
       default: process.env.USER_STATUS_PENDING,
     },
     remarks: {
@@ -83,13 +87,17 @@ const userSchema = new mongoose.Schema(
     refreshToken: {
       type: String,
     },
-      profilePic: {
-    type: String,
-    default: null, // default image is handled
-  },
+    profilePic: {
+      type: String,
+      default: null, // default image is handled
+    },
+    remarks: {
+      type: String,
+      default: null,
+    },
   },
   { timestamps: true }
-)
+);
 
 userSchema.methods.generateAccessToken = function () {
   return jwt.sign(
@@ -102,8 +110,8 @@ userSchema.methods.generateAccessToken = function () {
     {
       expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
     }
-  )
-}
+  );
+};
 
 userSchema.methods.generateRefreshToken = function () {
   return jwt.sign(
@@ -114,9 +122,9 @@ userSchema.methods.generateRefreshToken = function () {
     {
       expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
     }
-  )
-}
+  );
+};
 
-const UserModel = mongoose.model("User", userSchema)
+const UserModel = mongoose.model("User", userSchema);
 
-export { UserModel }
+export { UserModel };

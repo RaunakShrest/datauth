@@ -2,7 +2,7 @@
 
 import { useRetailers } from "@/contexts/retailers-context"
 import { useRouter } from "next/navigation"
-import React, { useRef } from "react"
+import React, { useRef, useState } from "react"
 import Table from "./table"
 import ContextMenu from "./context-menu"
 import Pagination from "../composites/pagination"
@@ -12,8 +12,51 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faEllipsisVertical } from "@fortawesome/free-solid-svg-icons"
 import axios from "axios"
 
+const DisableModal = ({ isOpen, onClose, onSubmit, retailer }) => {
+  const [remarks, setRemarks] = useState("")
+
+  const handleDisableSubmit = () => {
+    onSubmit(retailer, remarks)
+    setRemarks("")
+    onClose()
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="w-[30rem] rounded-md bg-white p-6 shadow-lg">
+        <h2 className="text-lg font-bold">Disable Retailer</h2>
+        <p className="mt-2">Please provide a reason for disabling the retailer:</p>
+        <textarea
+          className="mt-2 w-full rounded-md border p-2"
+          rows="4"
+          value={remarks}
+          onChange={(e) => setRemarks(e.target.value)}
+        ></textarea>
+        <div className="mt-4 flex justify-end space-x-2">
+          <button
+            className="rounded-md bg-gray-300 px-4 py-2"
+            onClick={onClose}
+          >
+            Cancel
+          </button>
+          <button
+            className="rounded-md bg-red-500 px-4 py-2 text-white"
+            onClick={handleDisableSubmit}
+          >
+            Disable
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function DataTable() {
   const router = useRouter()
+  const [isModalOpen, setIsModalOpen] = useState(false) // Modal state
+  const [retailerToDisable, setRetailerToDisable] = useState(null) // Track which company to disable
 
   const tableRef = useRef()
   const contextMenuRef = useRef()
@@ -45,28 +88,44 @@ export default function DataTable() {
         : [...prev, clickedData],
     )
   }
-  const handleApprove= async(retailer)=>{
-const updatedRetailer= {...retailer, status:'verified'};
-try {
-  await updateRetailerStatus(retailer._id,updatedRetailer)
-  await fetchRetailers();
-} catch (error) {
-  console.error("Failed to approve retailer", error)
-}
-  }
-
-  const updateRetailerStatus= async(id, updatedRetailer)=>{
+  const handleApprove = async (retailer) => {
+    const updatedRetailer = { ...retailer, status: "enabled" }
     try {
-      const response= await axios.patch(`${process.env.NEXT_PUBLIC_BASE_URL_DEV}/retailers/updateRetailerStatus/${id}`,updatedRetailer,{
-  headers:{
-  'Content-Type':'application/json'
-}
-      })
+      await updateRetailerStatus(retailer._id, updatedRetailer)
+      await fetchRetailers()
+    } catch (error) {
+      console.error("Failed to approve retailer", error)
+    }
+  }
+  const handleDisable = (retailer) => {
+    setRetailerToDisable(retailer)
+    setIsModalOpen(true)
+  }
+  const handleSubmitDisable = async (retailer, remarks) => {
+    const updatedRetailer = { ...retailer, status: "disabled", remarks }
+
+    try {
+      await updateRetailerStatus(retailer._id, updatedRetailer)
+      await fetchRetailers()
+    } catch (error) {
+      console.error("Failed to disable retailer:", error)
+    }
+  }
+  const updateRetailerStatus = async (id, updatedRetailer) => {
+    try {
+      const response = await axios.patch(
+        `${process.env.NEXT_PUBLIC_BASE_URL_DEV}/retailers/updateRetailerStatus/${id}`,
+        updatedRetailer,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      )
       return response.data
     } catch (error) {
-      console.error("Error updating retailer status",error.response?.data||error.message)
-      throw new Error('Failed to update retailer status')
-      
+      console.error("Error updating retailer status", error.response?.data || error.message)
+      throw new Error("Failed to update retailer status")
     }
   }
   return (
@@ -126,7 +185,9 @@ try {
                 <Table.Column className="px-2">{datum.companyName}</Table.Column>
 
                 <Table.Column className="p-2">
-                  <span className="line-clamp-1">{datum.firstName} {datum.lastName}</span>
+                  <span className="line-clamp-1">
+                    {datum.firstName} {datum.lastName}
+                  </span>
                 </Table.Column>
 
                 <Table.Column className="overflow-hidden p-2">
@@ -137,14 +198,21 @@ try {
                   <span className="line-clamp-1">{datum.email}</span>
                 </Table.Column>
 
-                <Table.Column className="p-2">   <span
+                <Table.Column className="p-2">
+                  {" "}
+                  <span
                     className={twMerge(
-                      "px-2 py-1 rounded-full text-white",
-                      datum.status === "pending" ? "bg-red-500" : datum.status === "verified" ? "bg-green-600" : "bg-gray-500"
+                      "rounded-full px-2 py-1 text-white",
+                      datum.status === "disabled"
+                        ? "bg-red-500"
+                        : datum.status === "enabled"
+                          ? "bg-green-600"
+                          : "bg-gray-500",
                     )}
                   >
                     {datum.status}
-                  </span></Table.Column>
+                  </span>
+                </Table.Column>
 
                 <Table.Column className="p-2">
                   <ContextMenu
@@ -183,6 +251,12 @@ try {
                       >
                         Approve
                       </ContextMenu.Item>
+                      <ContextMenu.Item
+                        className="rounded-md bg-[#017082]"
+                        onClick={() => handleDisable(datum)}
+                      >
+                        Disable
+                      </ContextMenu.Item>
 
                       <ContextMenu.Item
                         className="rounded-md bg-[#017082]"
@@ -206,6 +280,12 @@ try {
           currentPage={8}
         />
       </div>
+      <DisableModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleSubmitDisable}
+        retailer={retailerToDisable}
+      />
     </div>
   )
 }
