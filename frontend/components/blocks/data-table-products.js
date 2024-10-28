@@ -30,8 +30,8 @@ export default function DataTable() {
   const [qrImageUrl, setQrImageUrl] = useState("")
   const [showCustomerModal, setShowCustomerModal] = useState(false)
   const [selectedProductId, setSelectedProductId] = useState(null)
-  const [currentUser, setCurrentUser] = useState(null) 
-   const [customerInfo, setCustomerInfo] = useState(null); 
+  const [currentUser, setCurrentUser] = useState(null)
+  const [customerInfo, setCustomerInfo] = useState(null)
 
   const numberOfDataPerPage = 8
 
@@ -46,22 +46,19 @@ export default function DataTable() {
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
-        const currentUserData = await getCurrentUser();
-        setCurrentUser(currentUserData.data._id); // Set current user
+        const currentUserData = await getCurrentUser()
+        setCurrentUser(currentUserData.data._id) // Set current user
       } catch (error) {
-        console.error("Error fetching current user:", error);
+        console.error("Error fetching current user:", error)
       }
-    };
+    }
 
-    fetchCurrentUser();
-  }, []);
+    fetchCurrentUser()
+  }, [])
   const handleTableHeadingCheckboxChange = () => {
-    setSelectedData((prev) =>
-      prev.length > 0 ? (prev.length < products.length ? [...products] : []) : [...products],
-    )
+    setSelectedData((prev) => (prev.length > 0 ? (prev.length < products.length ? [...products] : []) : [...products]))
   }
 
-  
   const handleTableDataCheckboxChange = (clickedData) => {
     setSelectedData((prev) =>
       selectedData.some((eachSelected) => eachSelected._id === clickedData._id)
@@ -71,32 +68,32 @@ export default function DataTable() {
   }
   const handleAddCustomerClick = async (productId) => {
     if (currentUser) {
-      setSelectedProductId(productId);
-      setShowCustomerModal(true);
-      
+      setSelectedProductId(productId)
+      setShowCustomerModal(true)
+
       try {
         const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL_DEV}/customerInfo/getCustomerInfo`, {
-          params: { productId }
-        });
-        setCustomerInfo(response.data); // Store the fetched customer data
+          params: { productId },
+        })
+        setCustomerInfo(response.data) // Store the fetched customer data
       } catch (error) {
-        console.error("Error fetching customer data:", error);
-        setCustomerInfo(null);
+        console.error("Error fetching customer data:", error)
+        setCustomerInfo(null)
       }
     } else {
-      console.error("Current user is not defined");
+      console.error("Current user is not defined")
     }
-  };
-const handleCustomerSave = (newStatus, productId) => {
-  setShowCustomerModal(false);
+  }
+  const handleCustomerSave = (newStatus, productId) => {
+    setShowCustomerModal(false)
 
-  const updatedProducts = products.map((product) => 
-    product._id === productId ? { ...product, productStatus: newStatus } : product
-  );
-  setProducts(updatedProducts);
-};
+    const updatedProducts = products.map((product) =>
+      product._id === productId ? { ...product, productStatus: newStatus } : product,
+    )
+    setProducts(updatedProducts)
+  }
 
-    const handlePrint = () => {
+  const handlePrint = () => {
     const printWindow = window.open("", "_blank")
     const printableContent = selectedData
       .map(
@@ -105,7 +102,7 @@ const handleCustomerSave = (newStatus, productId) => {
           <img src="${item.qrUrl}" alt="QR Code" style="width: 150px; height: 150px;"/>
           <p>SKU: ${item.productSku}</p>
         </div>
-        ${index < selectedData.length - 1 ? '<hr style="border: 1px solid #000; margin: 20px 0;" />' : ''}`,
+        ${index < selectedData.length - 1 ? '<hr style="border: 1px solid #000; margin: 20px 0;" />' : ""}`,
       )
       .join("")
 
@@ -153,7 +150,7 @@ const handleCustomerSave = (newStatus, productId) => {
         <input
           type="text"
           placeholder="Search by Batch ID"
-          className="w-80 p-2 border border-gray-600 rounded-md"
+          className="w-80 rounded-md border border-gray-600 p-2"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
@@ -162,8 +159,8 @@ const handleCustomerSave = (newStatus, productId) => {
           onClick={handlePrint}
           disabled={selectedData.length === 0}
           className={twMerge(
-            "bg-[#017082] text-white px-4 py-2 rounded-md ml-4",
-            selectedData.length === 0 ? "opacity-50 cursor-not-allowed" : "",
+            "ml-4 rounded-md bg-[#017082] px-4 py-2 text-white",
+            selectedData.length === 0 ? "cursor-not-allowed opacity-50" : "",
           )}
         >
           Print Selected QR
@@ -171,10 +168,16 @@ const handleCustomerSave = (newStatus, productId) => {
       </div>
 
       <div className="overflow-x-auto">
-        <Table className="w-full table-fixed border-collapse" tableRef={tableRef}>
+        <Table
+          className="w-full table-fixed border-collapse"
+          tableRef={tableRef}
+        >
           <Table.Head className="bg-[#017082] text-left text-white">
             <Table.Row className="h-16">
-              <Table.Heading className="pl-4" style={{ width: "50px" }}>
+              <Table.Heading
+                className="pl-4"
+                style={{ width: "50px" }}
+              >
                 <Checkbox onChange={handleTableHeadingCheckboxChange} />
               </Table.Heading>
 
@@ -191,7 +194,10 @@ const handleCustomerSave = (newStatus, productId) => {
                 </Table.Heading>
               ))}
 
-              <Table.Heading className="pl-4" style={{ width: "5rem" }}>
+              <Table.Heading
+                className="pl-4"
+                style={{ width: "5rem" }}
+              >
                 Action
               </Table.Heading>
             </Table.Row>
@@ -199,7 +205,10 @@ const handleCustomerSave = (newStatus, productId) => {
 
           <Table.Body>
             {currentData?.map((datum, idx) => (
-              <Table.Row key={idx} className={twMerge((idx + 1) % 2 !== 0 ? "bg-white" : "")}>
+              <Table.Row
+                key={idx}
+                className={twMerge((idx + 1) % 2 !== 0 ? "bg-white" : "")}
+              >
                 <Table.Column className="px-4 py-2">
                   <Checkbox onChange={() => handleTableDataCheckboxChange(datum)} />
                 </Table.Column>
@@ -209,14 +218,21 @@ const handleCustomerSave = (newStatus, productId) => {
                 <Table.Column className="p-2">{datum.productPrice}</Table.Column>
                 <Table.Column className="p-2">{datum.productSku}</Table.Column>
                 <Table.Column className="p-2">{datum.batchId?.batchId}</Table.Column>
-                <Table.Column className="p-2">   <span
+                <Table.Column className="p-2">
+                  {" "}
+                  <span
                     className={twMerge(
-                      "px-2 py-1 rounded-full text-white",
-                      datum.productStatus === "pending" ? "bg-red-500" : datum.productStatus === "completed" ? "bg-green-600" : "bg-gray-500"
+                      "rounded-full px-2 py-1 text-white",
+                      datum.productStatus === "pending"
+                        ? "bg-red-500"
+                        : datum.productStatus === "completed"
+                          ? "bg-green-600"
+                          : "bg-gray-500",
                     )}
                   >
                     {datum.productStatus}
-                  </span></Table.Column>
+                  </span>
+                </Table.Column>
                 <Table.Column className="p-2">
                   {new Date(datum.createdAt).toLocaleString("en-US", {
                     year: "numeric",
@@ -239,9 +255,16 @@ const handleCustomerSave = (newStatus, productId) => {
                 </Table.Column>
 
                 <Table.Column className="p-2">
-                  <ContextMenu className="relative" tableRef={tableRef} contextMenuRef={contextMenuRef}>
+                  <ContextMenu
+                    className="relative"
+                    tableRef={tableRef}
+                    contextMenuRef={contextMenuRef}
+                  >
                     <ContextMenu.Trigger>
-                      <FontAwesomeIcon icon={faEllipsisVertical} className="fa-fw" />
+                      <FontAwesomeIcon
+                        icon={faEllipsisVertical}
+                        className="fa-fw"
+                      />
                     </ContextMenu.Trigger>
 
                     <ContextMenu.Menu className="absolute z-10 w-[175px] space-y-1 bg-white/80 p-2 text-white">
@@ -259,9 +282,9 @@ const handleCustomerSave = (newStatus, productId) => {
                         Edit
                       </ContextMenu.Item>
 
-                         <ContextMenu.Item
+                      <ContextMenu.Item
                         className="rounded-md bg-[#017082]"
-                        onClick={() => router.push(`/products/${datum._id}/edit`)}
+                        onClick={() => router.push()}
                       >
                         Delete
                       </ContextMenu.Item>
@@ -281,24 +304,27 @@ const handleCustomerSave = (newStatus, productId) => {
         </Table>
       </div>
 
-    <div className="text-right">
+      <div className="text-right">
         <Pagination
           totalNumberOfData={filteredProducts.length}
           numberOfDataPerPage={numberOfDataPerPage}
           currentPage={currentPage}
-          onPageChange={setCurrentPage}  // handle page change
+          onPageChange={setCurrentPage} // handle page change
         />
       </div>
 
-
-      <QrModal show={showModal} onClose={() => setShowModal(false)}>
-        <img src={qrImageUrl} alt="QR Code"
-   className="w-full h-auto max-h-[350px] object-contain"
-        
+      <QrModal
+        show={showModal}
+        onClose={() => setShowModal(false)}
+      >
+        <img
+          src={qrImageUrl}
+          alt="QR Code"
+          className="h-auto max-h-[350px] w-full object-contain"
         />
       </QrModal>
-        <CustomerFormModal
-        show={showCustomerModal && currentUser !== null} 
+      <CustomerFormModal
+        show={showCustomerModal && currentUser !== null}
         onClose={() => setShowCustomerModal(false)}
         customerInfo={customerInfo} // Pass the customer data to modal
         productId={selectedProductId}

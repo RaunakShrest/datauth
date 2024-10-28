@@ -160,7 +160,7 @@ const userSignin = async (req, res, next) => {
     }
     if (
       existingUser.userType === "retailer" &&
-      existingUser.status !== "verified"
+      existingUser.status !== "enabled"
     ) {
       throw new ApiError(403, "Retailer must be verified to sign in");
     }
