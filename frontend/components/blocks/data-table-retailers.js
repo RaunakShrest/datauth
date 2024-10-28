@@ -30,7 +30,7 @@ const DisableModal = ({ isOpen, onClose, onSubmit, retailer }) => {
         <p className="mt-2">Please provide a reason for disabling the retailer:</p>
         <textarea
           className="mt-2 w-full rounded-md border p-2"
-          rows="4"
+          rows="8"
           value={remarks}
           onChange={(e) => setRemarks(e.target.value)}
         ></textarea>
@@ -60,8 +60,15 @@ export default function DataTable() {
 
   const tableRef = useRef()
   const contextMenuRef = useRef()
+  const [currentPage, setCurrentPage] = useState(1)
 
   const { data, sortData, selectedData, setSelectedData, fetchRetailers } = useRetailers()
+
+  const numberOfDataPerPage = 8
+  const indexOfLastData = currentPage * numberOfDataPerPage
+  const indexOfFirstData = indexOfLastData - numberOfDataPerPage
+
+  const currentData = data?.data?.slice(indexOfFirstData, indexOfLastData) || []
 
   const isTableDataSelected = (dataToVerify) => {
     return selectedData.some((eachSelected) => eachSelected.companyName === dataToVerify.companyName) ? true : false
@@ -170,7 +177,7 @@ export default function DataTable() {
           </Table.Head>
 
           <Table.Body>
-            {data.data?.map((datum, idx) => (
+            {currentData?.map((datum, idx) => (
               <Table.Row
                 key={idx}
                 className={twMerge((idx + 1) % 2 !== 0 ? "bg-white" : "")}
@@ -275,9 +282,10 @@ export default function DataTable() {
 
       <div className="text-right">
         <Pagination
-          totalNumberOfData={260}
-          numberOfDataPerPage={10}
-          currentPage={8}
+          totalNumberOfData={data?.data?.length || 0}
+          numberOfDataPerPage={numberOfDataPerPage}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
         />
       </div>
       <DisableModal

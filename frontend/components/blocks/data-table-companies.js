@@ -64,6 +64,14 @@ export default function DataTable() {
 
   const { data, sortData, selectedData, setSelectedData, fetchCompanies } = useCompanies() // Added fetchData
 
+  const [currentPage, setCurrentPage] = useState(1)
+
+  const numberOfDataPerPage = 8
+  const indexOfLastData = currentPage * numberOfDataPerPage
+  const indexOfFirstData = indexOfLastData - numberOfDataPerPage
+
+  const currentData = data?.data?.slice(indexOfFirstData, indexOfLastData) || []
+
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
@@ -205,7 +213,7 @@ export default function DataTable() {
             </Table.Row>
           </Table.Head>
           <Table.Body>
-            {data.data?.map((datum, idx) => (
+            {currentData?.map((datum, idx) => (
               <Table.Row
                 key={idx}
                 className={twMerge((idx + 1) % 2 !== 0 ? "bg-white" : "")}
@@ -324,9 +332,10 @@ export default function DataTable() {
       </div>
       <div className="text-right">
         <Pagination
-          totalNumberOfData={260}
-          numberOfDataPerPage={10}
-          currentPage={8}
+          totalNumberOfData={data?.data?.length || 0}
+          numberOfDataPerPage={numberOfDataPerPage}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
         />
       </div>
       <DisableModal

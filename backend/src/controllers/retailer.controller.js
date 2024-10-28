@@ -115,6 +115,7 @@ const getRetailerById = async (req, res, next) => {
     next(error);
   }
 };
+
 const editRetailerInfo = async (req, res, next) => {
   try {
     const { retailerId } = req.params; // Get retailerId from the URL params

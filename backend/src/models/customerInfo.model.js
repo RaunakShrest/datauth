@@ -1,4 +1,4 @@
-import mongoose from "mongoose"
+import mongoose from "mongoose";
 
 const customerInfo = new mongoose.Schema(
   {
@@ -12,13 +12,16 @@ const customerInfo = new mongoose.Schema(
     },
     phoneNumber: {
       type: String,
-      
     },
-
-    soldProducts:{
+    productManufacturer: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "ProductItem",
-      required: true
+      required: true,
+    },
+    soldProducts: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ProductItem",
+      required: true,
     },
 
     soldBy: {
@@ -28,9 +31,8 @@ const customerInfo = new mongoose.Schema(
     },
   },
   { timestamps: true }
-)
+);
 
-const CustomerInfoModel = mongoose.model("CustomerInfo", customerInfo)
+const CustomerInfoModel = mongoose.model("CustomerInfo", customerInfo);
 
-export { CustomerInfoModel }
-
+export { CustomerInfoModel };

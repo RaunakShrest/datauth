@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useRef, useCallback, useState } from "react"
-import { useRetailerSales } from "@/contexts/retailerSales-context"
 import { useRouter } from "next/navigation"
 import Table from "./table"
 import ContextMenu from "./context-menu"
@@ -10,12 +9,13 @@ import Checkbox from "../elements/checkbox"
 import { twMerge } from "tailwind-merge"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faEllipsisVertical } from "@fortawesome/free-solid-svg-icons"
+import { useCompanySales } from "@/contexts/companySales-context"
 
 export default function DataTable() {
   const router = useRouter()
   const tableRef = useRef()
   const contextMenuRef = useRef()
-  const { data, sortData, selectedData, setSelectedData, fetchRetailerSales } = useRetailerSales()
+  const { data, sortData, selectedData, setSelectedData, fetchCompanySales } = useCompanySales()
 
   const numberOfDataPerPage = 8
   const [hasFetched, setHasFetched] = useState(false)
@@ -28,10 +28,10 @@ export default function DataTable() {
 
   const fetchSalesData = useCallback(() => {
     if (!hasFetched) {
-      fetchRetailerSales()
+      fetchCompanySales()
       setHasFetched(true)
     }
-  }, [fetchRetailerSales, hasFetched])
+  }, [fetchCompanySales, hasFetched])
 
   const handleTableHeadingCheckboxChange = () => {
     setSelectedData((prev) =>
@@ -114,14 +114,11 @@ export default function DataTable() {
                 </Table.Column>
 
                 <Table.Column className="px-2">{datum.name}</Table.Column>
-                <Table.Column className="px-2">{datum.email}</Table.Column>
+                <Table.Column className="px-2">{datum.soldProducts?.productName}</Table.Column>
                 <Table.Column className="overflow-hidden p-2">
-                  <span className="line-clamp-1">{datum.phoneNumber}</span>
+                  <span className="line-clamp-1">{datum.soldBy?.companyName}</span>
                 </Table.Column>
 
-                <Table.Column className="p-2">
-                  <span>{datum.soldProducts?.productName || "N/A"}</span>
-                </Table.Column>
                 <Table.Column className="p-2">
                   <span>{datum.soldProducts?.productPrice || "N/A"}</span>
                 </Table.Column>
@@ -129,7 +126,7 @@ export default function DataTable() {
                   <span>{datum.soldProducts?.batchId || "N/A"}</span>
                 </Table.Column>
                 <Table.Column className="p-2">
-                  {new Date(datum.soldProducts?.createdAt).toLocaleString("en-US", {
+                  {new Date(datum?.createdAt).toLocaleString("en-US", {
                     year: "numeric",
                     month: "short",
                     day: "numeric",
@@ -156,7 +153,20 @@ export default function DataTable() {
                     <ContextMenu.Menu
                       className="absolute z-10 w-[175px] space-y-1 text-white"
                       contextMenuRef={contextMenuRef}
-                    ></ContextMenu.Menu>
+                    >
+                      <ContextMenu.Item
+                        className="rounded-md bg-[#017082]"
+                        onClick={() => {}}
+                      >
+                        View
+                      </ContextMenu.Item>
+                      <ContextMenu.Item
+                        className="rounded-md bg-[#017082]"
+                        onClick={() => {}}
+                      >
+                        Edit
+                      </ContextMenu.Item>
+                    </ContextMenu.Menu>
                   </ContextMenu>
                 </Table.Column>
               </Table.Row>
