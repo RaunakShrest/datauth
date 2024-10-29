@@ -177,27 +177,28 @@ export default function DataTable() {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-
-        <button
-          onClick={handlePrint}
-          disabled={selectedData.length === 0}
-          className={twMerge(
-            "ml-4 rounded-md bg-[#017082] px-4 py-2 text-white",
-            selectedData.length === 0 ? "cursor-not-allowed opacity-50" : "",
-          )}
-        >
-          Print Selected QR
-        </button>
-        <button
-          onClick={handleDownloadQr}
-          disabled={selectedData.length === 0}
-          className={twMerge(
-            "ml-4 rounded-md bg-[#007050] px-4 py-2 text-white",
-            selectedData.length === 0 ? "cursor-not-allowed opacity-50" : "",
-          )}
-        >
-          Download Selected QR
-        </button>
+        <div className="flex justify-end">
+          <button
+            onClick={handlePrint}
+            disabled={selectedData.length === 0}
+            className={twMerge(
+              "ml-4 rounded-md bg-[#017082] px-4 py-2 text-white",
+              selectedData.length === 0 ? "cursor-not-allowed opacity-50" : "",
+            )}
+          >
+            Print Selected QR
+          </button>
+          <button
+            onClick={handleDownloadQr}
+            disabled={selectedData.length === 0}
+            className={twMerge(
+              "ml-4 rounded-md bg-[#017082] px-4 py-2 text-white",
+              selectedData.length === 0 ? "cursor-not-allowed opacity-50" : "",
+            )}
+          >
+            Download Selected QR
+          </button>
+        </div>
       </div>
 
       <div className="overflow-x-auto">
