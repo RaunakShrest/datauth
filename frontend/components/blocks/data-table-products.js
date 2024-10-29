@@ -56,15 +56,21 @@ export default function DataTable() {
     fetchCurrentUser()
   }, [])
   const handleTableHeadingCheckboxChange = () => {
-    setSelectedData((prev) => (prev.length > 0 ? (prev.length < products.length ? [...products] : []) : [...products]))
+    if (selectedData.length === products.length) {
+      setSelectedData([])
+    } else {
+      setSelectedData([...products])
+    }
   }
 
   const handleTableDataCheckboxChange = (clickedData) => {
-    setSelectedData((prev) =>
-      selectedData.some((eachSelected) => eachSelected._id === clickedData._id)
-        ? prev.filter((eachPrev) => eachPrev._id !== clickedData._id)
-        : [...prev, clickedData],
-    )
+    const isAlreadySelected = selectedData.some((eachSelected) => eachSelected._id === clickedData._id)
+
+    if (isAlreadySelected) {
+      setSelectedData((prev) => prev.filter((eachPrev) => eachPrev._id !== clickedData._id))
+    } else {
+      setSelectedData((prev) => [...prev, clickedData])
+    }
   }
   const handleAddCustomerClick = async (productId) => {
     if (currentUser) {
@@ -178,7 +184,10 @@ export default function DataTable() {
                 className="pl-4"
                 style={{ width: "50px" }}
               >
-                <Checkbox onChange={handleTableHeadingCheckboxChange} />
+                <Checkbox
+                  onChange={handleTableHeadingCheckboxChange}
+                  checked={selectedData.length === products.length} // This makes the checkbox reflect the select all state
+                />
               </Table.Heading>
 
               {columns?.map((column) => (
@@ -210,9 +219,11 @@ export default function DataTable() {
                 className={twMerge((idx + 1) % 2 !== 0 ? "bg-white" : "")}
               >
                 <Table.Column className="px-4 py-2">
-                  <Checkbox onChange={() => handleTableDataCheckboxChange(datum)} />
+                  <Checkbox
+                    onChange={() => handleTableDataCheckboxChange(datum)}
+                    checked={selectedData.some((eachSelected) => eachSelected._id === datum._id)} // This makes each checkbox reflect its selection state
+                  />
                 </Table.Column>
-
                 <Table.Column className="px-2">{datum.productName}</Table.Column>
                 <Table.Column className="px-2">{datum.productManufacturer.companyName}</Table.Column>
                 <Table.Column className="p-2">{datum.productPrice}</Table.Column>
