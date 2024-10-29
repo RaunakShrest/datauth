@@ -145,8 +145,25 @@ export default function DataTable() {
   }
 
   const handleQrClick = (qrUrl) => {
-    setQrImageUrl(qrUrl) // Set the clicked QR image URL
-    setShowModal(true) // Show the modal
+    setQrImageUrl(qrUrl)
+    setShowModal(true)
+  }
+  const handleDownloadQr = () => {
+    selectedData.forEach((product) => {
+      fetch(product.qrUrl)
+        .then((response) => response.blob())
+        .then((blob) => {
+          const url = window.URL.createObjectURL(blob)
+          const link = document.createElement("a")
+          link.href = url
+          link.download = `QR_${product.productSku}.png` // Set the filename for download
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+          window.URL.revokeObjectURL(url)
+        })
+        .catch((error) => console.error("Error downloading image:", error))
+    })
   }
 
   return (
@@ -170,6 +187,16 @@ export default function DataTable() {
           )}
         >
           Print Selected QR
+        </button>
+        <button
+          onClick={handleDownloadQr}
+          disabled={selectedData.length === 0}
+          className={twMerge(
+            "ml-4 rounded-md bg-[#007050] px-4 py-2 text-white",
+            selectedData.length === 0 ? "cursor-not-allowed opacity-50" : "",
+          )}
+        >
+          Download Selected QR
         </button>
       </div>
 
