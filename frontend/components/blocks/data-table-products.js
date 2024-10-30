@@ -32,7 +32,7 @@ export default function DataTable() {
   const [selectedProductId, setSelectedProductId] = useState(null)
   const [currentUser, setCurrentUser] = useState(null)
   const [customerInfo, setCustomerInfo] = useState(null)
-
+  const [userRole, setUserRole] = useState("")
   const numberOfDataPerPage = 8
 
   const filteredProducts = products.filter((product) => {
@@ -47,6 +47,7 @@ export default function DataTable() {
     const fetchCurrentUser = async () => {
       try {
         const currentUserData = await getCurrentUser()
+        setUserRole(currentUserData.data.userType)
         setCurrentUser(currentUserData.data._id) // Set current user
       } catch (error) {
         console.error("Error fetching current user:", error)
@@ -56,15 +57,21 @@ export default function DataTable() {
     fetchCurrentUser()
   }, [])
   const handleTableHeadingCheckboxChange = () => {
-    setSelectedData((prev) => (prev.length > 0 ? (prev.length < products.length ? [...products] : []) : [...products]))
+    if (selectedData.length === products.length) {
+      setSelectedData([])
+    } else {
+      setSelectedData([...products])
+    }
   }
 
   const handleTableDataCheckboxChange = (clickedData) => {
-    setSelectedData((prev) =>
-      selectedData.some((eachSelected) => eachSelected._id === clickedData._id)
-        ? prev.filter((eachPrev) => eachPrev._id !== clickedData._id)
-        : [...prev, clickedData],
-    )
+    const isAlreadySelected = selectedData.some((eachSelected) => eachSelected._id === clickedData._id)
+
+    if (isAlreadySelected) {
+      setSelectedData((prev) => prev.filter((eachPrev) => eachPrev._id !== clickedData._id))
+    } else {
+      setSelectedData((prev) => [...prev, clickedData])
+    }
   }
   const handleAddCustomerClick = async (productId) => {
     if (currentUser) {
@@ -139,8 +146,25 @@ export default function DataTable() {
   }
 
   const handleQrClick = (qrUrl) => {
-    setQrImageUrl(qrUrl) // Set the clicked QR image URL
-    setShowModal(true) // Show the modal
+    setQrImageUrl(qrUrl)
+    setShowModal(true)
+  }
+  const handleDownloadQr = () => {
+    selectedData.forEach((product) => {
+      fetch(product.qrUrl)
+        .then((response) => response.blob())
+        .then((blob) => {
+          const url = window.URL.createObjectURL(blob)
+          const link = document.createElement("a")
+          link.href = url
+          link.download = `QR_${product.productSku}.png` // Set the filename for download
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+          window.URL.revokeObjectURL(url)
+        })
+        .catch((error) => console.error("Error downloading image:", error))
+    })
   }
 
   return (
@@ -154,17 +178,28 @@ export default function DataTable() {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-
-        <button
-          onClick={handlePrint}
-          disabled={selectedData.length === 0}
-          className={twMerge(
-            "ml-4 rounded-md bg-[#017082] px-4 py-2 text-white",
-            selectedData.length === 0 ? "cursor-not-allowed opacity-50" : "",
-          )}
-        >
-          Print Selected QR
-        </button>
+        <div className="flex justify-end">
+          <button
+            onClick={handlePrint}
+            disabled={selectedData.length === 0}
+            className={twMerge(
+              "ml-4 rounded-md bg-[#017082] px-4 py-2 text-white",
+              selectedData.length === 0 ? "cursor-not-allowed opacity-50" : "",
+            )}
+          >
+            Print Selected QR
+          </button>
+          <button
+            onClick={handleDownloadQr}
+            disabled={selectedData.length === 0}
+            className={twMerge(
+              "ml-4 rounded-md bg-[#017082] px-4 py-2 text-white",
+              selectedData.length === 0 ? "cursor-not-allowed opacity-50" : "",
+            )}
+          >
+            Download Selected QR
+          </button>
+        </div>
       </div>
 
       <div className="overflow-x-auto">
@@ -178,7 +213,10 @@ export default function DataTable() {
                 className="pl-4"
                 style={{ width: "50px" }}
               >
-                <Checkbox onChange={handleTableHeadingCheckboxChange} />
+                <Checkbox
+                  onChange={handleTableHeadingCheckboxChange}
+                  checked={selectedData.length === products.length} // This makes the checkbox reflect the select all state
+                />
               </Table.Heading>
 
               {columns?.map((column) => (
@@ -210,9 +248,11 @@ export default function DataTable() {
                 className={twMerge((idx + 1) % 2 !== 0 ? "bg-white" : "")}
               >
                 <Table.Column className="px-4 py-2">
-                  <Checkbox onChange={() => handleTableDataCheckboxChange(datum)} />
+                  <Checkbox
+                    onChange={() => handleTableDataCheckboxChange(datum)}
+                    checked={selectedData.some((eachSelected) => eachSelected._id === datum._id)} // This makes each checkbox reflect its selection state
+                  />
                 </Table.Column>
-
                 <Table.Column className="px-2">{datum.productName}</Table.Column>
                 <Table.Column className="px-2">{datum.productManufacturer.companyName}</Table.Column>
                 <Table.Column className="p-2">{datum.productPrice}</Table.Column>
@@ -289,14 +329,15 @@ export default function DataTable() {
                         Delete
                       </ContextMenu.Item>
                     </ContextMenu.Menu>
-
+                  </ContextMenu>
+                  {userRole !== "company" && (
                     <FontAwesomeIcon
                       icon={faUserPlus}
                       className="fa-fw"
                       size="sm"
                       onClick={() => handleAddCustomerClick(datum._id)} // Pass product ID here
                     />
-                  </ContextMenu>
+                  )}
                 </Table.Column>
               </Table.Row>
             ))}

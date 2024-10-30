@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useRef, useCallback, useState } from "react"
-import { useRouter } from "next/navigation"
 import Table from "./table"
 import ContextMenu from "./context-menu"
 import Pagination from "../composites/pagination"
@@ -10,28 +9,33 @@ import { twMerge } from "tailwind-merge"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faEllipsisVertical } from "@fortawesome/free-solid-svg-icons"
 import { useCompanySales } from "@/contexts/companySales-context"
-
 export default function DataTable() {
-  const router = useRouter()
   const tableRef = useRef()
   const contextMenuRef = useRef()
-  const { data, sortData, selectedData, setSelectedData, fetchCompanySales } = useCompanySales()
+  const { data, sortData, selectedData, setSelectedData, fetchCompanySales, userRole } = useCompanySales()
 
   const numberOfDataPerPage = 8
   const [hasFetched, setHasFetched] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
 
+  const [searchBatchId, setSearchBatchId] = useState("")
+  const [searchRetailerName, setSearchRetailerName] = useState("")
+  const [searchProductName, setSearchProductName] = useState("")
+  const initialStartDate = new Date()
+  initialStartDate.setMonth(initialStartDate.getMonth() - 1) // Set to one month before today
+  const initialEndDate = new Date()
+  const [startDate, setStartDate] = useState(initialStartDate.toISOString().split("T")[0])
+  const [endDate, setEndDate] = useState(initialEndDate.toISOString().split("T")[0])
   const indexOfLastData = currentPage * numberOfDataPerPage
   const indexOfFirstData = indexOfLastData - numberOfDataPerPage
-
-  const currentData = data?.data?.slice(indexOfFirstData, indexOfLastData) || []
+  // const currentData = data?.data?.slice(indexOfFirstData, indexOfLastData) || []
 
   const fetchSalesData = useCallback(() => {
     if (!hasFetched) {
-      fetchCompanySales()
+      // fetchCompanySales()
       setHasFetched(true)
     }
-  }, [fetchCompanySales, hasFetched])
+  }, [hasFetched])
 
   const handleTableHeadingCheckboxChange = () => {
     setSelectedData((prev) =>
@@ -58,9 +62,88 @@ export default function DataTable() {
   const isTableDataSelected = (datum) => {
     return selectedData.some((selected) => selected.name === datum.name)
   }
+  // Adjusted Filtering Logic in DataTable Component
+  const filteredData =
+    data?.data?.filter((datum) => {
+      const createdAt = new Date(datum?.createdAt)
+      const isWithinDateRange =
+        (!startDate || createdAt >= new Date(startDate)) &&
+        (!endDate || createdAt < new Date(new Date(endDate).setHours(24, 0, 0, 0))) // Adjust end date to include entire day
+
+      return (
+        datum.soldProducts?.batchId.toLowerCase().includes(searchBatchId.toLowerCase()) &&
+        datum.soldBy?.companyName.toLowerCase().includes(searchRetailerName.toLowerCase()) &&
+        datum.soldProducts?.productName.toLowerCase().includes(searchProductName.toLowerCase()) &&
+        isWithinDateRange
+      )
+    }) || []
+
+  const currentData = filteredData.slice(indexOfFirstData, indexOfLastData)
+
+  const handleReset = () => {
+    setSearchBatchId("")
+    setSearchRetailerName("")
+    setSearchProductName("")
+    setStartDate(initialStartDate.toISOString().split("T")[0]) // Reset to initial start date
+    setEndDate(initialEndDate.toISOString().split("T")[0]) // Reset to initial end date
+  }
 
   return (
     <div className="space-y-4">
+      {/* Search Field */}
+      <div className="flex justify-start">
+        <div className="m-2 mb-6 flex items-start justify-between">
+          <input
+            type="text"
+            placeholder="Search by Batch ID"
+            value={searchBatchId}
+            onChange={(e) => setSearchBatchId(e.target.value)}
+            className="w-80 rounded-md border border-gray-600 p-2"
+          />
+        </div>
+        <div className="m-2 mb-6 flex items-start justify-between">
+          <input
+            type="text"
+            placeholder="Search by Retailer name"
+            value={searchRetailerName}
+            onChange={(e) => setSearchRetailerName(e.target.value)}
+            className="w-80 rounded-md border border-gray-600 p-2"
+          />
+        </div>
+        <div className="m-2 mb-6 flex items-start justify-between">
+          <input
+            type="text"
+            placeholder="Search by Product name"
+            value={searchProductName}
+            onChange={(e) => setSearchProductName(e.target.value)}
+            className="w-80 rounded-md border border-gray-600 p-2"
+          />
+        </div>
+        <div className="ml-auto flex items-center space-x-2">
+          <div>
+            Start
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="rounded border p-2"
+            />
+            End
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="ml-2 rounded border p-2"
+            />
+          </div>
+          <button
+            onClick={handleReset}
+            className="ml-3 rounded-md bg-red-500 px-2 py-4 text-white"
+          >
+            Reset
+          </button>
+        </div>
+      </div>
       <div className="overflow-x-auto">
         <Table
           className="w-full table-fixed border-collapse"
@@ -112,6 +195,9 @@ export default function DataTable() {
                     checked={isTableDataSelected(datum)}
                   />
                 </Table.Column>
+                {userRole === "super-admin" && (
+                  <Table.Column className="px-2">{datum.soldBy?.companyName}</Table.Column>
+                )}
 
                 <Table.Column className="px-2">{datum.name}</Table.Column>
                 <Table.Column className="px-2">{datum.soldProducts?.productName}</Table.Column>
