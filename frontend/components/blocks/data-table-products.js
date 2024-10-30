@@ -32,7 +32,7 @@ export default function DataTable() {
   const [selectedProductId, setSelectedProductId] = useState(null)
   const [currentUser, setCurrentUser] = useState(null)
   const [customerInfo, setCustomerInfo] = useState(null)
-
+  const [userRole, setUserRole] = useState("")
   const numberOfDataPerPage = 8
 
   const filteredProducts = products.filter((product) => {
@@ -47,6 +47,7 @@ export default function DataTable() {
     const fetchCurrentUser = async () => {
       try {
         const currentUserData = await getCurrentUser()
+        setUserRole(currentUserData.data.userType)
         setCurrentUser(currentUserData.data._id) // Set current user
       } catch (error) {
         console.error("Error fetching current user:", error)
@@ -328,14 +329,15 @@ export default function DataTable() {
                         Delete
                       </ContextMenu.Item>
                     </ContextMenu.Menu>
-
+                  </ContextMenu>
+                  {userRole !== "company" && (
                     <FontAwesomeIcon
                       icon={faUserPlus}
                       className="fa-fw"
                       size="sm"
                       onClick={() => handleAddCustomerClick(datum._id)} // Pass product ID here
                     />
-                  </ContextMenu>
+                  )}
                 </Table.Column>
               </Table.Row>
             ))}

@@ -109,19 +109,29 @@ const postCustomerInfo = async (req, res, next) => {
 
 const getSoldProductsByRetailer = async (req, res, next) => {
   try {
-    const retailerId = req.user._id;
+    // Check if the logged-in user is super-admin
+    let customerInfo;
 
-    if (!retailerId) {
-      throw new ApiError(400, "Retailer ID not found");
+    if (req.user.userType === "super-admin") {
+      // Super-admin can view all sold products by all retailers
+      customerInfo = await CustomerInfoModel.find()
+        .populate("soldProducts") // Populate sold products info
+        .exec();
+    } else {
+      // For regular retailer, fetch sold products only by their ID
+      const retailerId = req.user._id;
+
+      if (!retailerId) {
+        throw new ApiError(400, "Retailer ID not found");
+      }
+
+      customerInfo = await CustomerInfoModel.find({ soldBy: retailerId })
+        .populate("soldProducts") // Populate sold products info
+        .exec();
     }
 
-    // Find all customer info documents where soldBy matches the logged-in retailer's ID
-    const customerInfo = await CustomerInfoModel.find({ soldBy: retailerId })
-      .populate("soldProducts") // Populate sold products info
-      .exec();
-
     if (!customerInfo.length) {
-      throw new ApiError(404, "No products found for this retailer");
+      throw new ApiError(404, "No products found");
     }
 
     res
@@ -129,7 +139,7 @@ const getSoldProductsByRetailer = async (req, res, next) => {
       .json(
         new ApiResponse(
           200,
-          "Products sold by retailer retrieved successfully",
+          "Products sold by retailers retrieved successfully",
           customerInfo
         )
       );
@@ -178,27 +188,46 @@ const getCustomerInfo = async (req, res, next) => {
 
 const getSoldProductsByCompany = async (req, res, next) => {
   try {
+    console.log("role", req.user.userType);
     const companyId = req.user._id;
+    const userType = req.user.userType;
 
-    if (!companyId) {
-      throw new ApiError(400, "companyId not found");
+    // If userType is not super-admin, proceed to get products for the specific company
+    let customerInfo;
+
+    if (userType === "super-admin") {
+      // If the user is a super-admin, fetch all sold products for all companies
+      customerInfo = await CustomerInfoModel.find({})
+        .populate({
+          path: "soldProducts", // Populate sold products info
+        })
+        .populate({
+          path: "soldBy", // Assuming 'soldBy' references the retailer
+          select: "companyName", // Only select the companyName field from the Retailer model
+        })
+        .exec();
+    } else {
+      // For non-super-admin users, only fetch products for the logged-in company
+      if (!companyId) {
+        throw new ApiError(400, "companyId not found");
+      }
+
+      customerInfo = await CustomerInfoModel.find({
+        productManufacturer: companyId,
+      })
+        .populate({
+          path: "soldProducts", // Populate sold products info
+        })
+        .populate({
+          path: "soldBy", // Assuming 'soldBy' references the retailer
+          select: "companyName", // Only select the companyName field from the Retailer model
+        })
+        .exec();
     }
 
-    // Find all customer info documents where productManufacturer matches the logged-in company's ID
-    const customerInfo = await CustomerInfoModel.find({
-      productManufacturer: companyId,
-    })
-      .populate({
-        path: "soldProducts", // Populate sold products info
-      })
-      .populate({
-        path: "soldBy", // Assuming 'soldBy' references the retailer
-        select: "companyName", // Only select the retailerName field from the Retailer model
-      })
-      .exec();
-
+    // Check if customerInfo is empty
     if (!customerInfo.length) {
-      throw new ApiError(404, "No products found for this company");
+      throw new ApiError(404, "No products found");
     }
 
     res
@@ -206,7 +235,9 @@ const getSoldProductsByCompany = async (req, res, next) => {
       .json(
         new ApiResponse(
           200,
-          "Products sold by company retrieved successfully",
+          userType === "super-admin"
+            ? "All sold products retrieved successfully"
+            : "Products sold by company retrieved successfully",
           customerInfo
         )
       );
