@@ -264,6 +264,10 @@ const getUsers = async (req, res, next) => {
 
 const getCurrentUser = async (req, res, next) => {
   try {
+    const status = req.user.status;
+    if (status === "disabled") {
+      throw new ApiError(401, "Unauthorized request");
+    }
     return res
       .status(200)
       .json(new ApiResponse(200, req.user, "user fetched successfully"));
