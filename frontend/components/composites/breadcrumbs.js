@@ -14,17 +14,22 @@ export default function Breadcrumbs() {
 
   let currentLink = null
 
+  const isObjectId = (route) => {
+    return /^[a-f\d]{24}$/i.test(route)
+  }
+
   return (
     <div className="flex text-sm text-[#017082]">
       {routesArray.map((route, idx, arr) => {
-        currentLink = currentLink ? currentLink + `/${route}` : `/${route}`
+        currentLink = currentLink ? `${currentLink}/${route}` : `/${route}`
+        const displayRoute = isObjectId(route) ? "" : (routeToCrumb[route] ?? route)
 
         return (
           <div key={idx}>
             {idx !== arr.length - 1 ? (
               <>
                 <Link href={currentLink}>
-                  <span>{routeToCrumb[route] ?? route}</span>
+                  <span>{displayRoute}</span>
                 </Link>
 
                 <FontAwesomeIcon
@@ -33,7 +38,7 @@ export default function Breadcrumbs() {
                 />
               </>
             ) : (
-              <span className="text-black">{routeToCrumb[route] ?? route}</span>
+              <span className="text-black">{displayRoute}</span>
             )}
           </div>
         )
