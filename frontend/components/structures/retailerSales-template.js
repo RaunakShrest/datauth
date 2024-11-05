@@ -1,7 +1,4 @@
 import React from "react"
-import Button from "../elements/button"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faEllipsisVertical, faTrashCan } from "@fortawesome/free-solid-svg-icons"
 import DataTable from "../blocks/data-table-retailerSales"
 import RetailerSalesProvider from "@/contexts/retailerSales-context"
 
@@ -15,17 +12,7 @@ export default function RetailerSalesTemplate() {
       </div>
 
       <RetailerSalesProvider>
-        <div className="flex items-center gap-2">
-          <div>
-            <Button>
-              <FontAwesomeIcon icon={faTrashCan} />
-            </Button>
-
-            <Button>
-              <FontAwesomeIcon icon={faEllipsisVertical} />
-            </Button>
-          </div>
-        </div>
+        <div className="flex items-center gap-2"></div>
 
         <div>
           <DataTable />

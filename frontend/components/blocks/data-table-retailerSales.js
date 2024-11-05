@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useCallback, useState } from "react"
 import { useRetailerSales } from "@/contexts/retailerSales-context"
-import { useRouter } from "next/navigation"
 import Table from "./table"
 import ContextMenu from "./context-menu"
 import Pagination from "../composites/pagination"
@@ -10,28 +9,81 @@ import Checkbox from "../elements/checkbox"
 import { twMerge } from "tailwind-merge"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faEllipsisVertical } from "@fortawesome/free-solid-svg-icons"
+const convertToCSV = (data) => {
+  const header = [
+    "Customer Name",
+    "Email",
+    "Phone Number",
+    "Product Name",
+    "Product Price",
+    "Batch ID",
+    "Manufacturer",
+    "Product Attributes",
+    "Sold Date",
+  ]
+  const rows = data.map((datum) => {
+    const attributes = datum.soldProducts?.productAttributes
+      ? datum.soldProducts.productAttributes.map((attr) => `${attr.attributeName}: ${attr.attributeValue}`).join("; ")
+      : "N/A"
+
+    return [
+      datum.name,
+      datum.email,
+      datum.phoneNumber,
+      datum.soldProducts?.productManufacturer?.companyName || "N/A",
+      datum.soldProducts?.productName || "N/A",
+      datum.soldProducts?.productPrice || "N/A",
+      datum.soldProducts?.batchId || "N/A",
+      attributes,
+      datum.soldProducts?.createdAt,
+    ]
+  })
+
+  const csvContent = [header.join(","), ...rows.map((row) => row.join(","))].join("\n")
+
+  return csvContent
+}
+
+// Helper function to download CSV file
+const downloadCSV = (csvContent, fileName = "Retailer_Sales.csv") => {
+  const blob = new Blob([csvContent], { type: "text/csv" })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement("a")
+  link.href = url
+  link.setAttribute("download", fileName)
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
 
 export default function DataTable() {
-  const router = useRouter()
   const tableRef = useRef()
   const contextMenuRef = useRef()
-  const { data, sortData, selectedData, setSelectedData, fetchRetailerSales } = useRetailerSales()
+  const { data, sortData, selectedData, setSelectedData, fetchRetailerSales, userRole } = useRetailerSales()
 
   const numberOfDataPerPage = 8
   const [hasFetched, setHasFetched] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
+  const [searchBatchId, setSearchBatchId] = useState("")
+  const [searchCustomerName, setSearchCustomerName] = useState("")
+  const [searchProductName, setSearchProductName] = useState("")
+  const [searchCompanyName, setSearchCompanyName] = useState("")
+
+  const initialStartDate = new Date()
+  initialStartDate.setMonth(initialStartDate.getMonth() - 1) // Set to one month before today
+  const initialEndDate = new Date()
+  const [startDate, setStartDate] = useState(initialStartDate.toISOString().split("T")[0])
+  const [endDate, setEndDate] = useState(initialEndDate.toISOString().split("T")[0])
 
   const indexOfLastData = currentPage * numberOfDataPerPage
   const indexOfFirstData = indexOfLastData - numberOfDataPerPage
 
-  const currentData = data?.data?.slice(indexOfFirstData, indexOfLastData) || []
-
   const fetchSalesData = useCallback(() => {
     if (!hasFetched) {
-      fetchRetailerSales()
+      // fetchRetailerSales()
       setHasFetched(true)
     }
-  }, [fetchRetailerSales, hasFetched])
+  }, [hasFetched])
 
   const handleTableHeadingCheckboxChange = () => {
     setSelectedData((prev) =>
@@ -58,9 +110,108 @@ export default function DataTable() {
   const isTableDataSelected = (datum) => {
     return selectedData.some((selected) => selected.name === datum.name)
   }
+  const filteredData =
+    data?.data?.filter((datum) => {
+      const createdAt = new Date(datum?.createdAt)
+      const isWithinDateRange =
+        (!startDate || createdAt >= new Date(startDate)) &&
+        (!endDate || createdAt < new Date(new Date(endDate).setHours(24, 0, 0, 0))) // Adjust end date to include entire day
+      return (
+        datum.soldProducts?.batchId.toLowerCase().includes(searchBatchId.toLowerCase()) &&
+        datum.name.toLowerCase().includes(searchCustomerName.toLowerCase()) &&
+        datum.soldProducts?.productName.toLowerCase().includes(searchProductName.toLowerCase()) &&
+        datum.soldProducts?.productManufacturer?.companyName.toLowerCase().includes(searchCompanyName.toLowerCase()) &&
+        isWithinDateRange
+      )
+    }) || []
+  const currentData = filteredData.slice(indexOfFirstData, indexOfLastData)
+  const handleReset = () => {
+    setSearchBatchId("")
+    setSearchCustomerName("")
+    setSearchProductName("")
+    setSearchCompanyName("")
+    setStartDate(initialStartDate.toISOString().split("T")[0]) // Reset to initial start date
+    setEndDate(initialEndDate.toISOString().split("T")[0]) // Reset to initial end date
+  }
+  const handleDownloadCSV = () => {
+    const csvContent = convertToCSV(selectedData)
+    downloadCSV(csvContent)
+  }
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-start">
+        <div className="m-2 mb-6 flex items-start justify-between">
+          <input
+            type="text"
+            placeholder="Search by Batch ID"
+            value={searchBatchId}
+            onChange={(e) => setSearchBatchId(e.target.value)}
+            className="w-60 rounded-md border border-gray-600 p-2"
+          />
+        </div>
+        <div className="m-2 mb-6 flex items-start justify-between">
+          <input
+            type="text"
+            placeholder="Search by Customer name"
+            value={searchCustomerName}
+            onChange={(e) => setSearchCustomerName(e.target.value)}
+            className="w-60 rounded-md border border-gray-600 p-2"
+          />
+        </div>
+        <div className="m-2 mb-6 flex items-start justify-between">
+          <input
+            type="text"
+            placeholder="Search by Product name"
+            value={searchProductName}
+            onChange={(e) => setSearchProductName(e.target.value)}
+            className="w-60 rounded-md border border-gray-600 p-2"
+          />
+        </div>
+        <div className="m-2 mb-6 flex items-start justify-between">
+          <input
+            type="text"
+            placeholder="Search by Company name"
+            value={searchCompanyName}
+            onChange={(e) => setSearchCompanyName(e.target.value)}
+            className="w-60 rounded-md border border-gray-600 p-2"
+          />
+        </div>
+        <div className="ml-auto flex items-center space-x-2">
+          <div>
+            Start
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="rounded border p-2"
+            />
+            End
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="ml-2 rounded border p-2"
+            />
+          </div>
+          <button
+            onClick={handleReset}
+            className="ml-3 rounded-md bg-red-500 px-2 py-4 text-white"
+          >
+            Reset
+          </button>
+        </div>
+      </div>
+
+      {selectedData.length > 0 && (
+        <button
+          onClick={handleDownloadCSV}
+          className="ml-2 mt-2 rounded-md bg-blue-500 px-4 py-2 text-white"
+        >
+          Download CSV
+        </button>
+      )}
+
       <div className="overflow-x-auto">
         <Table
           className="w-full table-fixed border-collapse"
@@ -112,22 +263,30 @@ export default function DataTable() {
                     checked={isTableDataSelected(datum)}
                   />
                 </Table.Column>
-
+                {userRole === "super-admin" && (
+                  <Table.Column className="p-2">
+                    <span>{datum.soldBy?.companyName || "N/A"}</span>
+                  </Table.Column>
+                )}
                 <Table.Column className="px-2">{datum.name}</Table.Column>
                 <Table.Column className="px-2">{datum.email}</Table.Column>
                 <Table.Column className="overflow-hidden p-2">
                   <span className="line-clamp-1">{datum.phoneNumber}</span>
                 </Table.Column>
-
+                <Table.Column className="p-2">
+                  <span>{datum.soldProducts?.productManufacturer?.companyName || "N/A"}</span>
+                </Table.Column>
                 <Table.Column className="p-2">
                   <span>{datum.soldProducts?.productName || "N/A"}</span>
                 </Table.Column>
+
                 <Table.Column className="p-2">
                   <span>{datum.soldProducts?.productPrice || "N/A"}</span>
                 </Table.Column>
                 <Table.Column className="p-2">
                   <span>{datum.soldProducts?.batchId || "N/A"}</span>
                 </Table.Column>
+
                 <Table.Column className="p-2">
                   {new Date(datum.soldProducts?.createdAt).toLocaleString("en-US", {
                     year: "numeric",

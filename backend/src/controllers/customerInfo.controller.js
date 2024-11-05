@@ -115,7 +115,17 @@ const getSoldProductsByRetailer = async (req, res, next) => {
     if (req.user.userType === "super-admin") {
       // Super-admin can view all sold products by all retailers
       customerInfo = await CustomerInfoModel.find()
-        .populate("soldProducts") // Populate sold products info
+        .populate({
+          path: "soldProducts",
+          populate: {
+            path: "productManufacturer", // Assuming this is the field containing the company ObjectId
+            select: "companyName", // Select only the companyName field
+          },
+        })
+        .populate({
+          path: "soldBy",
+          select: "companyName",
+        })
         .exec();
     } else {
       // For regular retailer, fetch sold products only by their ID
@@ -126,7 +136,13 @@ const getSoldProductsByRetailer = async (req, res, next) => {
       }
 
       customerInfo = await CustomerInfoModel.find({ soldBy: retailerId })
-        .populate("soldProducts") // Populate sold products info
+        .populate({
+          path: "soldProducts",
+          populate: {
+            path: "productManufacturer", // Populate the manufacturer field
+            select: "companyName", // Select the companyName to include in the response
+          },
+        })
         .exec();
     }
 
@@ -188,7 +204,6 @@ const getCustomerInfo = async (req, res, next) => {
 
 const getSoldProductsByCompany = async (req, res, next) => {
   try {
-    console.log("role", req.user.userType);
     const companyId = req.user._id;
     const userType = req.user.userType;
 

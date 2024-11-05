@@ -9,6 +9,52 @@ import { twMerge } from "tailwind-merge"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faEllipsisVertical } from "@fortawesome/free-solid-svg-icons"
 import { useCompanySales } from "@/contexts/companySales-context"
+
+const convertToCSV = (data) => {
+  const header = [
+    "Company Name",
+    "Customer Name",
+    "Product Name",
+    "Retailer Name",
+    "Product Price",
+    "Batch ID",
+    "Product Attributes",
+    "Sold Date",
+  ]
+  const rows = data.map((datum) => {
+    const attributes = datum.soldProducts?.productAttributes
+      ? datum.soldProducts.productAttributes.map((attr) => `${attr.attributeName}: ${attr.attributeValue}`).join("; ")
+      : "N/A"
+
+    return [
+      datum.soldBy?.companyName,
+      datum.name,
+      datum.soldProducts?.productName || "N/A",
+      datum.soldBy?.companyName || "N/A",
+      datum.soldProducts?.productPrice || "N/A",
+      datum.soldProducts?.batchId || "N/A",
+      attributes,
+      datum.soldProducts?.createdAt,
+    ]
+  })
+
+  const csvContent = [header.join(","), ...rows.map((row) => row.join(","))].join("\n")
+
+  return csvContent
+}
+
+// Helper function to download CSV file
+const downloadCSV = (csvContent, fileName = "Company_Sales.csv") => {
+  const blob = new Blob([csvContent], { type: "text/csv" })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement("a")
+  link.href = url
+  link.setAttribute("download", fileName)
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
 export default function DataTable() {
   const tableRef = useRef()
   const contextMenuRef = useRef()
@@ -17,7 +63,6 @@ export default function DataTable() {
   const numberOfDataPerPage = 8
   const [hasFetched, setHasFetched] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
-
   const [searchBatchId, setSearchBatchId] = useState("")
   const [searchRetailerName, setSearchRetailerName] = useState("")
   const [searchProductName, setSearchProductName] = useState("")
@@ -28,7 +73,6 @@ export default function DataTable() {
   const [endDate, setEndDate] = useState(initialEndDate.toISOString().split("T")[0])
   const indexOfLastData = currentPage * numberOfDataPerPage
   const indexOfFirstData = indexOfLastData - numberOfDataPerPage
-  // const currentData = data?.data?.slice(indexOfFirstData, indexOfLastData) || []
 
   const fetchSalesData = useCallback(() => {
     if (!hasFetched) {
@@ -87,6 +131,10 @@ export default function DataTable() {
     setStartDate(initialStartDate.toISOString().split("T")[0]) // Reset to initial start date
     setEndDate(initialEndDate.toISOString().split("T")[0]) // Reset to initial end date
   }
+  const handleDownloadCSV = () => {
+    const csvContent = convertToCSV(selectedData)
+    downloadCSV(csvContent)
+  }
 
   return (
     <div className="space-y-4">
@@ -144,6 +192,14 @@ export default function DataTable() {
           </button>
         </div>
       </div>
+      {selectedData.length > 0 && (
+        <button
+          onClick={handleDownloadCSV}
+          className="ml-2 mt-2 rounded-md bg-blue-500 px-4 py-2 text-white"
+        >
+          Download CSV
+        </button>
+      )}
       <div className="overflow-x-auto">
         <Table
           className="w-full table-fixed border-collapse"
