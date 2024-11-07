@@ -1,7 +1,7 @@
-import mongoose from "mongoose"
-import { config } from "dotenv"
+import mongoose from "mongoose";
+import { config } from "dotenv";
 
-config()
+config();
 
 const productItemSchema = new mongoose.Schema(
   {
@@ -21,7 +21,7 @@ const productItemSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-      batchId: {
+    batchId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Batch",
       required: true,
@@ -65,21 +65,22 @@ const productItemSchema = new mongoose.Schema(
     },
     qrUrl: {
       type: String,
-      required: true,
     },
-      productImages: [{ 
-      type: String, 
-      required: true, 
-    }],
-    
-       soldBy: {
+    productImages: [
+      {
+        type: String,
+        required: true,
+      },
+    ],
+
+    soldBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User"
+      ref: "User",
     },
   },
   { timestamps: true }
-)
+);
 
-const ProductItemModel = mongoose.model("ProductItem", productItemSchema)
+const ProductItemModel = mongoose.model("ProductItem", productItemSchema);
 
-export { ProductItemModel }
+export { ProductItemModel };

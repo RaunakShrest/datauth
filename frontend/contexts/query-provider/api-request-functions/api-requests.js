@@ -133,10 +133,9 @@ export const fetchProducts = async ({ companyId }) => {
   }
 }
 
-export const fetchSingleProduct = async (productSlug) => {
+export const fetchSingleProduct = async (productId) => {
   try {
-    const response = await api.get(`/products/${productSlug}`)
-
+    const response = await api.get(`/products/${productId}`)
     return response.data
   } catch (error) {
     throw error.response
