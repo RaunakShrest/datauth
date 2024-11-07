@@ -2,23 +2,23 @@ import { api } from "@/lib/api"
 
 export const getCurrentUser = async () => {
   try {
-    const accessToken = localStorage.getItem("accessToken");
+    const accessToken = localStorage.getItem("accessToken")
 
     if (!accessToken) {
-      throw new Error("Access token not found");
+      throw new Error("Access token not found")
     }
 
     const response = await api.get("/users/get-current-user", {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
-    });
+    })
 
-    return response.data;
+    return response.data
   } catch (error) {
-    throw error.response;
+    throw error.response
   }
-};
+}
 
 export const signInUser = async (formData) => {
   try {
@@ -58,11 +58,26 @@ export const registerUser = async (data) => {
 
 export const createNewProductType = async (data) => {
   try {
-    const response = await api.post("/product-types/create", data)
+    // Get the access token from localStorage
+    const accessToken = localStorage.getItem("accessToken")
+
+    if (!accessToken) {
+      throw new Error("No access token found")
+    }
+
+    // Set up the headers with the Bearer token
+    const config = {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+
+    // Make the POST request to create a new product type with authorization headers
+    const response = await api.post("/product-types/create", data, config)
 
     return response.data
   } catch (error) {
-    throw error.response
+    throw error.response || error
   }
 }
 
@@ -75,9 +90,18 @@ export const fetchProductTypes = async () => {
     throw error.response
   }
 }
+export const fetchProductTypesRegistration = async () => {
+  try {
+    const response = await api.get("/product-types/getProductTypeRegistration")
+
+    return response.data
+  } catch (error) {
+    throw error.response
+  }
+}
 export const fetchBatchIds = async () => {
   try {
-    const response = await api.get("/batch/getAllBatchIds")
+    const response = await api.get("/batch/getBatchIds")
 
     return response.data
   } catch (error) {
@@ -86,21 +110,23 @@ export const fetchBatchIds = async () => {
 }
 
 export const createNewProduct = async (formData) => {
-    try {
-        const response = await api.post("/products/create-product-item", formData, {
-            headers: {
-                "Content-Type": "multipart/form-data", // This will set the correct headers for form-data
-            },
-        });
-        return response.data;
-    } catch (error) {
-        throw error.response;
-    }
-};
-
-export const fetchProducts = async ({companyId}) => {
   try {
-    const response = await api.get(companyId?`/products/getCompanyProducts/${companyId}`:"/products/get-product-items")
+    const response = await api.post("/products/create-product-item", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data", // This will set the correct headers for form-data
+      },
+    })
+    return response.data
+  } catch (error) {
+    throw error.response
+  }
+}
+
+export const fetchProducts = async ({ companyId }) => {
+  try {
+    const response = await api.get(
+      companyId ? `/products/getCompanyProducts/${companyId}` : "/products/get-product-items",
+    )
     return response.data
   } catch (error) {
     throw error.response

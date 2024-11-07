@@ -1,7 +1,7 @@
-import mongoose from "mongoose"
-import { config } from "dotenv"
+import mongoose from "mongoose";
+import { config } from "dotenv";
 
-config()
+config();
 
 const productTypeSchema = new mongoose.Schema(
   {
@@ -9,7 +9,7 @@ const productTypeSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-      price: {
+    price: {
       type: String,
       required: true,
     },
@@ -19,7 +19,10 @@ const productTypeSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: [process.env.PRODUCT_TYPE_STATUS_ENABLED, process.env.PRODUCT_TYPE_STATUS_DISABLED],
+      enum: [
+        process.env.PRODUCT_TYPE_STATUS_ENABLED,
+        process.env.PRODUCT_TYPE_STATUS_DISABLED,
+      ],
       default: process.env.PRODUCT_TYPE_STATUS_DISABLED,
       required: true,
     },
@@ -28,10 +31,15 @@ const productTypeSchema = new mongoose.Schema(
       default: [],
       required: true,
     },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
   },
   { timestamps: true }
-)
+);
 
-const ProductTypeModel = mongoose.model("ProductType", productTypeSchema)
+const ProductTypeModel = mongoose.model("ProductType", productTypeSchema);
 
-export { ProductTypeModel }
+export { ProductTypeModel };

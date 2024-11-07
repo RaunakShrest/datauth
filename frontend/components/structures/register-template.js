@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import ImgWithWrapper from "../composites/img-with-wrapper"
 import InputWithIcon from "../composites/input-with-icon"
 import InputGroupWithLabel from "../blocks/input-group-with-label"
@@ -27,27 +27,12 @@ import { useMutation } from "@tanstack/react-query"
 import { registerUser } from "@/contexts/query-provider/api-request-functions/api-requests"
 import toast from "react-hot-toast"
 import { useRouter } from "next/navigation"
+import axios from "axios"
 
 export default function RegisterTemplate() {
   const router = useRouter()
 
   const { register, handleSubmit, control, watch, setError, clearErrors } = useRegisterFormContext()
-
-  // protects from re-renders still providing real time data
-  /* useEffect(() => {
-    const subscription = watch((data) => {
-      if (data.registerPassword !== data.confirmRegisterPassword) {
-        setError("registerPassword", { type: "custom", message: "passwords do not match" })
-        setError("confirmRegisterPassword", { type: "custom", message: "passwords do not match" })
-      } else {
-        clearErrors(["registerPassword", "confirmRegisterPassword"])
-      }
-    })
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [watch]) */
 
   const registerMutation = useMutation({
     mutationFn: (data) => registerUser(data),
@@ -86,6 +71,31 @@ export default function RegisterTemplate() {
 
     return registerMutation.mutate(dataToPost)
   }
+  const [productTypes, setProductTypes] = useState([])
+  const [loadingProductTypes, setLoadingProductTypes] = useState(true)
+  const [errorProductTypes, setErrorProductTypes] = useState(null)
+  useEffect(() => {
+    // Fetch product types from the API
+    const fetchProductTypes = async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_BASE_URL_DEV}/product-types/getProductTypeRegistration`,
+        )
+        const { data } = response.data
+        if (Array.isArray(data)) {
+          setProductTypes(data)
+        } else {
+          setError("Invalid data format")
+        }
+      } catch (error) {
+        setError("Error fetching product types")
+      } finally {
+        setLoadingProductTypes(false)
+      }
+    }
+
+    fetchProductTypes()
+  }, [])
 
   return (
     <div>
@@ -278,21 +288,28 @@ export default function RegisterTemplate() {
                   label="User Type"
                 />
               </div>
-
               <div className="rounded-lg px-4">
                 <InputWithIcon
                   useFormContext={useRegisterFormContext}
                   iconElement={false}
+                  inputType="select"
                   inputAttributes={{
-                    type: "text",
                     required: true,
-                    placeholder: "Product Type",
                     name: "productType",
-                    register,
-                    fieldRule: productTypeRule,
+                    ...register("productType", { required: "Product Type is required" }), // Register the field with validation
                   }}
-                  label="Product Type"
-                />
+                  label="Select Product Type"
+                >
+                  <option value="">-- Select a Product Type --</option>
+                  {productTypes.map((productType) => (
+                    <option
+                      key={productType.name}
+                      value={productType.name}
+                    >
+                      {productType.name}
+                    </option>
+                  ))}
+                </InputWithIcon>
               </div>
 
               {/* Password Input Group */}
