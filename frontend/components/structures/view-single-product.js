@@ -63,11 +63,11 @@ export default function ViewSingleProduct() {
 
       {/* Conditionally render image slider if there are images */}
       {productImages.length > 0 && (
-        <div className="flex justify-center items-center space-x-4">
+        <div className="flex items-center justify-center space-x-4">
           {/* Left Arrow */}
           <button
             onClick={handlePrevImage}
-            className="bg-gray-300 p-2 rounded-full"
+            className="rounded-full bg-gray-300 p-2"
           >
             &#8592; {/* Left Arrow */}
           </button>
@@ -76,13 +76,13 @@ export default function ViewSingleProduct() {
           <img
             src={currentImage}
             alt={`Product image ${currentImageIndex + 1}`}
-            className="object-cover w-1/3 h-[500px] rounded-md"
+            className="h-[500px] w-1/3 rounded-md object-cover"
           />
 
           {/* Right Arrow */}
           <button
             onClick={handleNextImage}
-            className="bg-gray-300 p-2 rounded-full"
+            className="rounded-full bg-gray-300 p-2"
           >
             &#8594; {/* Right Arrow */}
           </button>
@@ -135,11 +135,29 @@ export default function ViewSingleProduct() {
           <span className="text-lg font-bold">Product Attributes</span>
         </div>
         {productData?.productAttributes.map((eachAttribute) => (
-          <div className="flex gap-4" key={eachAttribute._id}>
+          <div
+            className="flex gap-4"
+            key={eachAttribute._id}
+          >
             <p className="w-52 font-bold">{eachAttribute.attributeName}</p>
             <p className="text-[#7f7f7f]">{eachAttribute.attributeValue}</p>
           </div>
         ))}
+      </div>
+      <div className="space-y-2 bg-white px-8 py-8">
+        <p className="font-bold">Product Weblink</p>
+        {productData?.productWebLink ? (
+          <a
+            href={productData.productWebLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:underline"
+          >
+            {productData.productWebLink}
+          </a>
+        ) : (
+          <p className="text-[#7f7f7f]">N/A</p>
+        )}
       </div>
     </div>
   )

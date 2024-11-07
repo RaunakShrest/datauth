@@ -61,7 +61,7 @@ const getSingleProduct = async (req, res, next) => {
 
     // Always query by slug
     const query = {
-      slug: req.params?.slug,
+      _id: req.params?.productId,
     };
 
     // If the user is not a Super Admin, we will not restrict the query
@@ -112,6 +112,7 @@ const createProductItem = async (req, res, next) => {
       batchId,
       productStatus,
       productAttributes,
+      productWebLink,
     } = req.body;
 
     const sanitizedStatus =
@@ -131,7 +132,6 @@ const createProductItem = async (req, res, next) => {
       );
     }
 
-    // Ensure batchId is a valid ObjectId
     if (!mongoose.Types.ObjectId.isValid(batchId)) {
       console.error("Batch ID is invalid:", batchId);
       throw new ApiError(
@@ -145,7 +145,7 @@ const createProductItem = async (req, res, next) => {
       throw new ApiError(404, "Requested batch does not exist");
     }
 
-    const batchObjectId = requestedBatch._id; // Store ObjectId from the found batch
+    const batchObjectId = requestedBatch._id;
 
     const isStatusAcceptable = productItemAcceptableStatus.some(
       (eachStatus) =>
@@ -188,18 +188,10 @@ const createProductItem = async (req, res, next) => {
       wouldBeSlug
     );
 
-    const FRONTEND_URL =
-      process.env.NODE_ENV === "DEV"
-        ? process.env.FRONTEND_URL_DEV
-        : process.env.FRONTEND_URL_PROD;
-    const qrFilePath = await generateQr(
-      `${FRONTEND_URL}/products/${uniqueSlug}`
-    );
-    const response = await uploadFile(qrFilePath);
-
     const productImages =
       req.files?.map((file) => file.secure_url || file.path) || [];
 
+    // Step 1: Create the product item without the QR code
     const createdProductItem = await ProductItemModel.create({
       productName,
       productType,
@@ -210,10 +202,24 @@ const createProductItem = async (req, res, next) => {
       productManufacturer: userId,
       productAttributes: parsedAttributes,
       slug: uniqueSlug,
-      qrUrl: response.secure_url,
-      batchId: batchObjectId, // Store ObjectId from the batch lookup
+      batchId: batchObjectId,
       productImages,
+      productWebLink,
     });
+
+    // Step 2: Generate the QR code using the product's _id
+    const FRONTEND_URL =
+      process.env.NODE_ENV === "DEV"
+        ? process.env.FRONTEND_URL_DEV
+        : process.env.FRONTEND_URL_PROD;
+    const qrFilePath = await generateQr(
+      `${FRONTEND_URL}/products/${createdProductItem._id}`
+    );
+    const response = await uploadFile(qrFilePath);
+
+    // Step 3: Update the product item with the QR code URL
+    createdProductItem.qrUrl = response.secure_url;
+    await createdProductItem.save();
 
     return res
       .status(201)
@@ -250,6 +256,7 @@ const updateProductItem = async (req, res, next) => {
       productDescription,
       productStatus,
       batchId,
+      productWebLink,
     } = req.body;
     const fieldPassed = {
       productName,
@@ -258,6 +265,7 @@ const updateProductItem = async (req, res, next) => {
       productDescription,
       productStatus,
       batchId,
+      productWebLink,
     };
 
     // status checker

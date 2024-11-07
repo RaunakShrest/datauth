@@ -1,29 +1,22 @@
 "use client"
 
-import LoadingAnimation from "@/components/composites/loading-animation"
 import EditSingleProductForm from "@/components/structures/edit-product-form"
 import EditSingleProductProvider from "@/contexts/edit-single-product-form.js"
-import { fetchSingleProduct, getCurrentUser } from "@/contexts/query-provider/api-request-functions/api-requests"
-import { reactQueryStaleTime } from "@/utils/staticUtils"
-import { useQuery } from "@tanstack/react-query"
-import { redirect, useParams, useRouter } from "next/navigation"
+
+import { useParams } from "next/navigation"
 import React from "react"
 
 export default function EditSingleProduct() {
   const params = useParams()
-  
-  return( 
-  <div>
-    <EditSingleProductProvider>
-  <EditSingleProductForm params={params} />
-  </EditSingleProductProvider>
 
-</div>
+  return (
+    <div>
+      <EditSingleProductProvider>
+        <EditSingleProductForm params={params} />
+      </EditSingleProductProvider>
+    </div>
   )
 }
-
-
-
 
 // const router = useRouter()
 
