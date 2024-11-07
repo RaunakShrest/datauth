@@ -112,6 +112,7 @@ const createProductItem = async (req, res, next) => {
       batchId,
       productStatus,
       productAttributes,
+      productWebLink,
     } = req.body;
 
     const sanitizedStatus =
@@ -203,6 +204,7 @@ const createProductItem = async (req, res, next) => {
       slug: uniqueSlug,
       batchId: batchObjectId,
       productImages,
+      productWebLink,
     });
 
     // Step 2: Generate the QR code using the product's _id
@@ -254,6 +256,7 @@ const updateProductItem = async (req, res, next) => {
       productDescription,
       productStatus,
       batchId,
+      productWebLink,
     } = req.body;
     const fieldPassed = {
       productName,
@@ -262,6 +265,7 @@ const updateProductItem = async (req, res, next) => {
       productDescription,
       productStatus,
       batchId,
+      productWebLink,
     };
 
     // status checker

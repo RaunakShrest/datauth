@@ -77,7 +77,11 @@ const productItemSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
+    productWebLink: {
+      type: String,
+    },
   },
+
   { timestamps: true }
 );
 
