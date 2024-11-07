@@ -1,22 +1,23 @@
-"use client";
+"use client"
 
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useState, useEffect } from "react"
+import axios from "axios"
+import { ApiError } from "next/dist/server/api-utils"
 
-const ProductTypeContext = React.createContext();
+const ProductTypeContext = React.createContext()
 
 export const useProductType = () => {
-  const context = React.useContext(ProductTypeContext);
+  const context = React.useContext(ProductTypeContext)
 
   if (!context) {
-    throw new Error("use useProductType within the scope of ProductTypeProvider");
+    throw new Error("use useProductType within the scope of ProductTypeProvider")
   }
 
-  return context;
-};
+  return context
+}
 
 export default function ProductTypeProvider({ children }) {
-  const [isAsc, setIsAsc] = useState(true);
+  const [isAsc, setIsAsc] = useState(true)
   const [data, setData] = useState({
     data: [],
     columns: [
@@ -30,32 +31,41 @@ export default function ProductTypeProvider({ children }) {
       },
       { id: "product-type-status", text: "Status", dataKey: "status", isSortable: true, isWide: false },
     ],
-  });
-  const [selectedData, setSelectedData] = useState([]);
+  })
+  const [selectedData, setSelectedData] = useState([])
 
   const fetchProductTypes = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL_DEV}/product-types/get-all`);
-      setData((prev) => ({ ...prev, data: response.data.data || [] }));
+      const accessToken = localStorage.getItem("accessToken")
+
+      if (!accessToken) {
+        throw new Error("No access token found")
+      }
+      const config = {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL_DEV}/product-types/get-all`, config)
+
+      setData((prev) => ({ ...prev, data: response.data.data || [] }))
     } catch (error) {
-      console.error("Error fetching product types data:", error);
+      console.error("Error fetching product types data:", error)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchProductTypes();
-  }, []);
+    fetchProductTypes()
+  }, [])
 
   const sortData = (basis) => {
-    setIsAsc((prev) => !prev);
+    setIsAsc((prev) => !prev)
 
-    const dataCopy = [...data.data];
-    const sortedData = dataCopy?.sort((a, b) =>
-      isAsc ? (a[basis] > b[basis] ? 1 : -1) : a[basis] < b[basis] ? 1 : -1
-    );
+    const dataCopy = [...data.data]
+    const sortedData = dataCopy?.sort((a, b) => (isAsc ? (a[basis] > b[basis] ? 1 : -1) : a[basis] < b[basis] ? 1 : -1))
 
-    setData((prev) => ({ ...prev, data: sortedData }));
-  };
+    setData((prev) => ({ ...prev, data: sortedData }))
+  }
 
   return (
     <ProductTypeContext.Provider
@@ -63,5 +73,5 @@ export default function ProductTypeProvider({ children }) {
     >
       {children}
     </ProductTypeContext.Provider>
-  );
+  )
 }

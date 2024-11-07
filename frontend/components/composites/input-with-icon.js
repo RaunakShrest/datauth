@@ -7,12 +7,13 @@ import { twMerge } from "tailwind-merge"
 export default function InputWithIcon({
   useFormContext,
   iconElement,
-  inputType,
+  inputType = "input", // inputType can now be "input" or "select"
   wrapperClassName,
   inputClassName,
   takesFullWidth,
   className, //if not used, when passed className prop, causes issues
   label,
+  children, // This is to handle `option` elements for `select`
   ...props
 }) {
   const formContextValues = useFormContext()
@@ -38,10 +39,21 @@ export default function InputWithIcon({
         >
           {iconElement}
 
-          <Input
-            className={inputClassName}
-            {...props.inputAttributes}
-          />
+          {/* Conditionally render input or select based on inputType */}
+          {inputType === "select" ? (
+            <select
+              className={twMerge("w-full rounded-md px-3 py-2", inputClassName)}
+              multiple={props.inputAttributes.multiple} // Ensure multiple is passed here
+              {...props.inputAttributes}
+            >
+              {children}
+            </select>
+          ) : (
+            <Input
+              className={inputClassName}
+              {...props.inputAttributes}
+            />
+          )}
         </div>
 
         {formContextValues?.errors[props.inputAttributes.name] && (

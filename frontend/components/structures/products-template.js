@@ -37,12 +37,27 @@ export default function ProductsTemplate({ companyId }) {
 
   const handleCloseModal = () => {
     setIsModalOpen(false)
-    setBatchId("") // Reset the input field on close
+    setBatchId("")
   }
 
   const handleSaveBatchId = async () => {
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_BASE_URL_DEV}/batch/createBatchId`, { batchId })
+      const accessToken = localStorage.getItem("accessToken")
+
+      if (!accessToken) {
+        throw new Error("Token not found. Please log in again.")
+      }
+
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BASE_URL_DEV}/batch/createBatchId`,
+        { batchId },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
+      )
+
       if (response.status === 201) {
         toast.success("Batch ID posted successfully!")
         handleCloseModal()
