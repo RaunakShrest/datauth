@@ -1,29 +1,34 @@
-"use client";
+"use client"
 
-import React, { useRef } from "react";
-import Table from "./table";
-import { twMerge } from "tailwind-merge";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEllipsisVertical } from "@fortawesome/free-solid-svg-icons";
-import { useProductType } from "@/contexts/product-type-context";
-import Pagination from "../composites/pagination";
-import Checkbox from "../elements/checkbox";
-import ContextMenu from "./context-menu";
-import { useRouter } from "next/navigation";
-import axios from "axios"; 
+import React, { useRef, useState } from "react"
+import Table from "./table"
+import { twMerge } from "tailwind-merge"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faEllipsisVertical } from "@fortawesome/free-solid-svg-icons"
+import { useProductType } from "@/contexts/product-type-context"
+import Pagination from "../composites/pagination"
+import Checkbox from "../elements/checkbox"
+import ContextMenu from "./context-menu"
+import { useRouter } from "next/navigation"
+import axios from "axios"
 
 export default function DataTable() {
-  const router = useRouter();
-  const tableRef = useRef();
-  const contextMenuRef = useRef();
+  const router = useRouter()
+  const tableRef = useRef()
+  const contextMenuRef = useRef()
 
-  const { data, selectedData, sortData, setSelectedData, fetchProductTypes} = useProductType();
+  const { data, selectedData, sortData, setSelectedData, fetchProductTypes } = useProductType()
+
+  const [currentPage, setCurrentPage] = useState(1)
+  const numberofDataPerPage = 8
+  const indexOfLastData = currentPage * numberofDataPerPage
+  const indexOfFirstData = indexOfLastData - numberofDataPerPage
+
+  const currentData = data?.data?.slice(indexOfFirstData, indexOfLastData) || []
 
   const isTableDataSelected = (dataToVerify) => {
-    return selectedData.some(
-      (eachSelected) => eachSelected.name === dataToVerify.name
-    );
-  };
+    return selectedData.some((eachSelected) => eachSelected.name === dataToVerify.name)
+  }
 
   const isTableHeadingSelected = () => {
     const isAllDataSelected = data.data?.every((datum) =>
@@ -38,7 +43,7 @@ export default function DataTable() {
       prev.length > 0 ? (prev.length < data.data.length ? [...data.data] : []) : [...data.data],
     )
   }
-   const handleTableDataCheckboxChange = (clickedData) => {
+  const handleTableDataCheckboxChange = (clickedData) => {
     setSelectedData((prev) =>
       isTableDataSelected(clickedData)
         ? prev.filter((eachPrev) => eachPrev.name !== clickedData.name)
@@ -47,28 +52,30 @@ export default function DataTable() {
   }
   const handleChangeStatus = async (productTypeId, currentStatus) => {
     try {
-      const newStatus = currentStatus === "enabled" ? "disabled" : "enabled";
+      const newStatus = currentStatus === "enabled" ? "disabled" : "enabled"
       const response = await axios.patch(
-        `${process.env.NEXT_PUBLIC_BASE_URL_DEV}/product-types/changeStatus/${productTypeId}`, 
-        { status: newStatus }
-      );
+        `${process.env.NEXT_PUBLIC_BASE_URL_DEV}/product-types/changeStatus/${productTypeId}`,
+        { status: newStatus },
+      )
 
       if (response.status === 200) {
-
-        fetchProductTypes();
+        fetchProductTypes()
       } else {
-        alert("Failed to update status");
+        alert("Failed to update status")
       }
     } catch (error) {
-      console.error("Error updating status:", error);
-      alert("Error updating status");
+      console.error("Error updating status:", error)
+      alert("Error updating status")
     }
-  };
+  }
 
   return (
     <div className="space-y-4">
       <div className="overflow-x-auto">
-        <Table className="w-full table-fixed border-collapse" tableRef={tableRef}>
+        <Table
+          className="w-full table-fixed border-collapse"
+          tableRef={tableRef}
+        >
           <Table.Head className="bg-[#017082] text-left text-white">
             <Table.Row className="h-16">
               <Table.Heading className="w-[50px] pl-4">
@@ -96,7 +103,7 @@ export default function DataTable() {
           </Table.Head>
 
           <Table.Body>
-            {data.data?.map((datum, idx) => (
+            {currentData?.map((datum, idx) => (
               <Table.Row
                 key={idx}
                 className={twMerge((idx + 1) % 2 !== 0 ? "bg-[white]" : "")}
@@ -117,10 +124,8 @@ export default function DataTable() {
                 <Table.Column className="p-2">
                   <span
                     className={twMerge(
-                      "px-2 py-1 rounded-full text-white",
-                      datum.status === "disabled"
-                        ? "bg-red-500"
-                        : "bg-green-600"
+                      "rounded-full px-2 py-1 text-white",
+                      datum.status === "disabled" ? "bg-red-500" : "bg-green-600",
                     )}
                   >
                     {datum.status === "enabled" ? "Enabled" : "Disabled"}
@@ -146,18 +151,14 @@ export default function DataTable() {
                     >
                       <ContextMenu.Item
                         className="rounded-md bg-[#017082]"
-                        onClick={() =>
-                          router.push("/product-types/single-product-type")
-                        }
+                        onClick={() => router.push("/product-types/single-product-type")}
                       >
                         View
                       </ContextMenu.Item>
 
                       <ContextMenu.Item
                         className="rounded-md bg-[#017082]"
-                        onClick={() =>
-                          router.push(`/product-types/${datum._id}/edit`)
-                        }
+                        onClick={() => router.push(`/product-types/${datum._id}/edit`)}
                       >
                         Edit
                       </ContextMenu.Item>
@@ -186,11 +187,12 @@ export default function DataTable() {
 
       <div className="text-right">
         <Pagination
-          totalNumberOfData={260}
-          numberOfDataPerPage={10}
-          currentPage={8}
+          totalNumberOfData={data?.data?.length || 0}
+          numberofDataPerPage={numberofDataPerPage}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
         />
       </div>
     </div>
-  );
+  )
 }

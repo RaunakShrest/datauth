@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect } from "react"
 import Button from "../elements/button"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faEllipsisVertical, faTrashCan } from "@fortawesome/free-solid-svg-icons"
 import DataTable from "../blocks/data-table-products"
 import ProductsProvider from "@/contexts/products-context"
 import { useRouter } from "next/navigation"
@@ -158,17 +156,7 @@ export default function ProductsTemplate({ companyId }) {
       )}
 
       <ProductsProvider companyId={companyId}>
-        <div className="flex items-center gap-2">
-          <div>
-            <Button>
-              <FontAwesomeIcon icon={faTrashCan} />
-            </Button>
-
-            <Button>
-              <FontAwesomeIcon icon={faEllipsisVertical} />
-            </Button>
-          </div>
-        </div>
+        <div className="flex items-center gap-2"></div>
 
         <div>
           <DataTable />
