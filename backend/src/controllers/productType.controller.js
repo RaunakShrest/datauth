@@ -99,10 +99,9 @@ const getAllProductTypes = async (req, res, next) => {
 const createProductType = async (req, res, next) => {
   try {
     const { name, price, description, status, attributes } = req.body;
-    const userId = req.user._id; // Assuming the user's ID is stored in req.user._id
-    const userType = req.user.userType; // Assuming the user's type is stored in req.user.userType
+    const userId = req.user._id;
+    const userType = req.user.userType;
 
-    // Validate required fields
     if (
       [name, price, description, status].some(
         (each) => each == null || each.trim() === ""
@@ -111,12 +110,10 @@ const createProductType = async (req, res, next) => {
       throw new ApiError(400, "Required Fields Empty");
     }
 
-    // Validate attributes
     if (attributes?.length <= 0) {
       throw new ApiError(400, "Attributes are required");
     }
 
-    // Validate status
     if (status) {
       if (
         !acceptableStatus().some(
@@ -131,21 +128,15 @@ const createProductType = async (req, res, next) => {
     // Strip <p> and </p> tags from description
     const sanitizedDescription = description.replace(/<\/?p>/g, "");
 
-    // Prepare product type fields
     const providedFields = {
       name,
       price,
       description: sanitizedDescription,
       status,
       attributes,
+      createdBy: userId, // `createdBy` is set for all user types
     };
 
-    // If the user is a company, include createdBy field
-    if (userType === "company") {
-      providedFields.createdBy = userId;
-    }
-
-    // Create the product type
     const createdProductType = await ProductTypeModel.create({
       ...providedFields,
     });
