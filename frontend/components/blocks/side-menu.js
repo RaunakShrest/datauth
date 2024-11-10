@@ -58,7 +58,7 @@ export default function SideMenu() {
           </Link>
         </Tabs.Item>
 
-        <Tabs.Item accessableBy={["super-admin", "company", "retailer"]}>
+        <Tabs.Item accessableBy={["super-admin", "company"]}>
           <Link
             href="/product-types"
             className="inline-block space-x-4 transition-all duration-300 group-hover:scale-110"

@@ -5,6 +5,7 @@ import {
   getSoldProductsByRetailer,
   getCustomerInfo,
   getSoldProductsByCompany,
+  getProductWithOrderNumber,
 } from "../controllers/customerInfo.controller.js";
 
 const router = express.Router();
@@ -13,5 +14,10 @@ router.post("/createCustomer", postCustomerInfo);
 router.get("/soldProducts", checkUserAuth, getSoldProductsByRetailer);
 router.get("/getCustomerInfo", getCustomerInfo);
 router.get("/soldProductsByCompany", checkUserAuth, getSoldProductsByCompany);
+router.get(
+  "/getProductByOrderNumber",
+  checkUserAuth,
+  getProductWithOrderNumber
+);
 
 export default router;

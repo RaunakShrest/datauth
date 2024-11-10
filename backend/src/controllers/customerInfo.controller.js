@@ -301,10 +301,49 @@ const getSoldProductsByCompany = async (req, res, next) => {
     next(error);
   }
 };
+const getProductWithOrderNumber = async (req, res, next) => {
+  try {
+    const { email, orderNumber } = req.query;
+    if (!email || !orderNumber) {
+      throw new ApiError(400, "Missing email or orderNumber parameter");
+    }
+    const customerInfo = await CustomerInfoModel.findOne({
+      email: email,
+      "orderId.orderNumber": orderNumber,
+    });
+
+    if (!customerInfo) {
+      throw new ApiError(
+        404,
+        "Customer not found with the provided email and order number"
+      );
+    }
+
+    const productItem = await ProductItemModel.findOne({
+      _id: customerInfo.soldProducts,
+    });
+
+    if (!productItem) {
+      throw new ApiError(
+        404,
+        "Product not found for the provided order number"
+      );
+    }
+
+    res
+      .status(200)
+      .json(
+        new ApiResponse(200, "Product item retrieved successfully", productItem)
+      );
+  } catch (error) {
+    next(error);
+  }
+};
 
 export {
   postCustomerInfo,
   getSoldProductsByRetailer,
   getCustomerInfo,
   getSoldProductsByCompany,
+  getProductWithOrderNumber,
 };

@@ -41,7 +41,6 @@ const customerInfoSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Pre-save hook to generate orderId
 customerInfoSchema.pre("save", async function (next) {
   if (this.isNew) {
     try {
@@ -57,7 +56,7 @@ customerInfoSchema.pre("save", async function (next) {
         lastCustomer.orderId.orderNumber
       ) {
         const lastOrderNum = parseInt(lastCustomer.orderId.orderNumber, 10);
-        newOrderNumber = String(lastOrderNum + 1).padStart(4, "0");
+        newOrderNumber = String(lastOrderNum + 1).padStart(5, "0");
       }
       this.orderId.orderNumber = newOrderNumber;
       next();
