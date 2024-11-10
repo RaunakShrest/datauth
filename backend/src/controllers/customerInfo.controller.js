@@ -4,41 +4,53 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ProductItemModel } from "../models/productItem.model.js";
 import { UserModel } from "../models/user.model.js";
 
+import sendBulkEmail from "../middlewares/sendEmail.middleware.js";
+
 const postCustomerInfo = async (req, res, next) => {
   try {
     const { name, email, phoneNumber, soldProducts, soldBy } = req.body;
+
+    // Validate required fields
     if (!name || !email || !soldProducts || !soldBy) {
       throw new ApiError(400, "Missing required fields");
     }
 
+    // Check if product and company exist
     const product = await ProductItemModel.findById(soldProducts).populate(
       "productManufacturer"
     );
-
-    const userExists = await UserModel.findById(soldBy);
+    const companyUser = await UserModel.findById(soldBy);
 
     if (!product) {
       throw new ApiError(404, "Product not found");
     }
-
-    if (!userExists) {
-      throw new ApiError(404, "User not found");
+    if (!companyUser) {
+      throw new ApiError(404, "Company not found");
     }
 
-    // Get the productManufacturer from the product
     const productManufacturer = product.productManufacturer;
-
-    // Find existing customer info by soldProducts
     const existingCustomer = await CustomerInfoModel.findOne({ soldProducts });
+    const companyEmail = companyUser.email; // Company’s email address
 
-    // If customer info exists, check if the data matches
+    // Company email options
+    const companyEmailOptions = [
+      {
+        from: process.env.SENDER_ADDRESS,
+        to: companyEmail,
+        subject: "Customer Information Notification",
+        text: `A customer record has been created for product ID: ${soldProducts}.`,
+        html: `<p>A customer record has been created for product ID: ${soldProducts}.</p>`,
+      },
+    ];
+
     if (existingCustomer) {
+      // Check if data is identical to avoid duplicate entries
       const isDataSame =
         existingCustomer.name === name &&
         existingCustomer.email === email &&
         existingCustomer.phoneNumber === phoneNumber &&
         existingCustomer.productManufacturer.toString() ===
-          productManufacturer.toString(); // Compare productManufacturer
+          productManufacturer.toString();
 
       if (isDataSame) {
         return res
@@ -52,13 +64,29 @@ const postCustomerInfo = async (req, res, next) => {
           );
       }
 
-      // If the data is different, update the existing record
+      // Update customer info
       existingCustomer.name = name;
       existingCustomer.email = email;
       existingCustomer.phoneNumber = phoneNumber;
-      existingCustomer.productManufacturer = productManufacturer; // Update manufacturer
+      existingCustomer.productManufacturer = productManufacturer;
 
       await existingCustomer.save();
+
+      const customerUpdateEmailOptions = [
+        {
+          from: process.env.SENDER_ADDRESS,
+          to: email,
+          subject: "Your Information has been Updated",
+          text: `Dear ${name}, your customer information has been updated successfully.`,
+          html: `<p>Dear ${name},</p><p>Your customer information has been updated successfully.</p>`,
+        },
+      ];
+
+      // Send update emails
+      await sendBulkEmail([
+        ...customerUpdateEmailOptions,
+        ...companyEmailOptions,
+      ]);
 
       return res
         .status(200)
@@ -70,27 +98,40 @@ const postCustomerInfo = async (req, res, next) => {
           )
         );
     } else {
-      // Create a new customer record if no existing record is found
+      // Create a new customer with auto-incremented orderId
       const newCustomerInfo = new CustomerInfoModel({
         name,
         email,
         phoneNumber,
         soldProducts,
         soldBy,
-        productManufacturer, // Add manufacturer to new customer info
+        productManufacturer,
       });
 
-      await newCustomerInfo.save();
+      await newCustomerInfo.save(); // orderId generated via pre-save hook
 
-      // Update the product with soldBy and productStatus
+      // Update product status
       await ProductItemModel.findByIdAndUpdate(
         soldProducts,
-        {
-          soldBy,
-          productStatus: "completed", // Keep productStatus as completed for new entries
-        },
+        { soldBy, productStatus: "completed" },
         { new: true }
       );
+
+      const customerCreationEmailOptions = [
+        {
+          from: process.env.SENDER_ADDRESS,
+          to: email,
+          subject: "Product Purchased",
+          text: `Dear ${name}, Thank you for purchasing our product using productAuth, powered by blockchain technology.`,
+          html: `<p>Dear ${name},</p><p>Thank you for purchasing our product using productAuth, powered by blockchain technology.</p>`,
+        },
+      ];
+
+      // Send creation emails
+      await sendBulkEmail([
+        ...customerCreationEmailOptions,
+        ...companyEmailOptions,
+      ]);
 
       return res
         .status(201)
