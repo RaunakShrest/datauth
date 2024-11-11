@@ -1,22 +1,23 @@
-"use client";
+"use client"
 
-import React, { createContext, useContext, useState, useEffect } from "react";
-import axios from "axios";
+import React, { createContext, useContext, useState, useEffect } from "react"
+import axios from "axios"
+import { getCurrentUser } from "./query-provider/api-request-functions/api-requests"
 
-const RetailersContext = createContext();
+const RetailersContext = createContext()
 
 export const useRetailers = () => {
-  const context = useContext(RetailersContext);
+  const context = useContext(RetailersContext)
 
   if (!context) {
-    throw new Error("use useRetailers within the context of RetailersProvider");
+    throw new Error("use useRetailers within the context of RetailersProvider")
   }
 
-  return context;
-};
+  return context
+}
 
 export default function RetailersProvider({ children }) {
-  const [isAsc, setIsAsc] = useState(true);
+  const [isAsc, setIsAsc] = useState(true)
 
   const [data, setData] = useState({
     data: [], // Initially empty, will be populated by API call
@@ -57,42 +58,53 @@ export default function RetailersProvider({ children }) {
         width: "100px",
       },
     ],
-  });
-  const [selectedData, setSelectedData] = useState([]);
+  })
+  const [selectedData, setSelectedData] = useState([])
+  const [userRole, setUserRole] = useState("")
 
   const sortData = (basis) => {
-    setIsAsc((prev) => !prev);
-    const dataCopy = [...data.data];
-    const sortedData = dataCopy?.sort((a, b) =>
-      isAsc ? (a[basis] > b[basis] ? 1 : -1) : a[basis] < b[basis] ? 1 : -1
-    );
+    setIsAsc((prev) => !prev)
+    const dataCopy = [...data.data]
+    const sortedData = dataCopy?.sort((a, b) => (isAsc ? (a[basis] > b[basis] ? 1 : -1) : a[basis] < b[basis] ? 1 : -1))
 
-    setData((prev) => ({ ...prev, data: sortedData }));
-  };
+    setData((prev) => ({ ...prev, data: sortedData }))
+  }
 
   const fetchRetailers = async () => {
     try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BASE_URL_DEV}/retailers/getRetailers`
-      );
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL_DEV}/retailers/getRetailers`)
       setData((prev) => ({
         ...prev,
         data: response.data.data || [],
-      }));
+      }))
     } catch (error) {
-      console.error("Error fetching retailers data", error);
+      console.error("Error fetching retailers data", error)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchRetailers();
-  }, []);
+    const fetchCurrentUser = async () => {
+      try {
+        const user = await getCurrentUser()
+        setUserRole(user.data.userType)
+      } catch (error) {
+        console.error("Error fetching current user:", error)
+      }
+    }
+
+    const fetchData = async () => {
+      await fetchRetailers()
+      await fetchCurrentUser()
+    }
+
+    fetchData()
+  }, [1])
 
   return (
     <RetailersContext.Provider
-      value={{ data, setData, sortData, selectedData, setSelectedData , fetchRetailers}}
+      value={{ data, setData, sortData, selectedData, setSelectedData, fetchRetailers, userRole }}
     >
       {children}
     </RetailersContext.Provider>
-  );
+  )
 }
