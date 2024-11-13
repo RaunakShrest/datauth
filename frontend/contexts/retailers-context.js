@@ -98,7 +98,7 @@ export default function RetailersProvider({ children }) {
     }
 
     fetchData()
-  }, [1])
+  }, [])
 
   return (
     <RetailersContext.Provider

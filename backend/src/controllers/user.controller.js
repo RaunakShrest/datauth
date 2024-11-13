@@ -5,7 +5,8 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { UserModel } from "../models/user.model.js";
 
 import { sendBulkEmail } from "../middlewares/sendEmail.middleware.js";
-
+import { sendResetPasswordEmail } from "../utils/sendResetPasswordEmail.js";
+import crypto from "crypto";
 const userTypes = () => [
   process.env.USER_TYPE_COMPANY,
   process.env.USER_TYPE_RETAILER,
@@ -567,6 +568,78 @@ const userEditProfile = async (req, res, next) => {
   }
 };
 
+const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      throw new ApiError(400, "Email is required");
+    }
+
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      throw new ApiError(404, "User with the provided email does not exist");
+    }
+
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = await bcrypt.hash(resetToken, 10);
+    const tokenExpiry = Date.now() + 3600000; // Token valid for 1 hour
+
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpires = tokenExpiry;
+    await user.save();
+
+    const resetLink = `${process.env.FRONTEND_URL_DEV}/resetPassword?token=${resetToken}&email=${user.email}`;
+    await sendResetPasswordEmail(user.email, resetLink);
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, {}, "Password reset link sent to your email"));
+  } catch (error) {
+    next(error);
+  }
+};
+
+const resetPassword = async (req, res, next) => {
+  try {
+    const { token, email, newPassword } = req.body;
+
+    if (!token || !email || !newPassword) {
+      throw new ApiError(400, "Token, email, and new password are required");
+    }
+
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      throw new ApiError(404, "User with the provided email does not exist");
+    }
+
+    if (!user.resetPasswordToken || !user.resetPasswordExpires) {
+      throw new ApiError(400, "No password reset token found for this user");
+    }
+
+    if (user.resetPasswordExpires < Date.now()) {
+      throw new ApiError(400, "Password reset token has expired");
+    }
+
+    const isTokenValid = await bcrypt.compare(token, user.resetPasswordToken);
+    if (!isTokenValid) {
+      throw new ApiError(400, "Invalid or expired password reset token");
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, {}, "Password has been successfully reset"));
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   userSignup,
   userEditProfile,
@@ -580,4 +653,6 @@ export {
   getCompanies,
   updateCompanyStatus,
   deleteCompany,
+  forgotPassword,
+  resetPassword,
 };

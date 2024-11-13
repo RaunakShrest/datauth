@@ -78,11 +78,9 @@ const userSchema = new mongoose.Schema(
         process.env.USER_STATUS_PENDING,
         process.env.USER_STATUS_VERIFIED,
         process.env.USER_STATUS_DECLINED,
+        process.env.USER_STATUS_ENABLED,
       ],
       default: process.env.USER_STATUS_PENDING,
-    },
-    remarks: {
-      type: String,
     },
     refreshToken: {
       type: String,
@@ -94,6 +92,14 @@ const userSchema = new mongoose.Schema(
     remarks: {
       type: String,
       default: null,
+    },
+    resetPasswordToken: {
+      type: String,
+      required: false,
+    },
+    resetPasswordExpires: {
+      type: Date,
+      required: false,
     },
   },
   { timestamps: true }
