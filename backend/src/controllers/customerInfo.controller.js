@@ -30,18 +30,7 @@ const postCustomerInfo = async (req, res, next) => {
 
     const productManufacturer = product.productManufacturer;
     const existingCustomer = await CustomerInfoModel.findOne({ soldProducts });
-    const companyEmail = companyUser.email; // Company’s email address
-
-    // Company email options
-    const companyEmailOptions = [
-      {
-        from: process.env.SENDER_ADDRESS,
-        to: companyEmail,
-        subject: "Customer Information Notification",
-        text: `A customer record has been created for product ID: ${soldProducts}.`,
-        html: `<p>A customer record has been created for product ID: ${soldProducts}.</p>`,
-      },
-    ];
+    const companyEmail = companyUser.email;
 
     if (existingCustomer) {
       // Check if data is identical to avoid duplicate entries
@@ -77,8 +66,18 @@ const postCustomerInfo = async (req, res, next) => {
           from: process.env.SENDER_ADDRESS,
           to: email,
           subject: "Your Information has been Updated",
-          text: `Dear ${name}, your customer information has been updated successfully.`,
-          html: `<p>Dear ${name},</p><p>Your customer information has been updated successfully.</p>`,
+          text: `Dear ${name}, your customer information has been updated successfully with order number: ${existingCustomer.orderId.orderNumber}.`,
+          html: `<p>Dear ${name},</p><p>Your customer information has been updated successfully with order number: <strong> ${existingCustomer.orderId.orderNumber}.</p>`,
+        },
+      ];
+
+      const companyEmailOptions = [
+        {
+          from: process.env.SENDER_ADDRESS,
+          to: companyEmail,
+          subject: "Customer Information Notification",
+          text: `A customer record has been updated for product ID: ${soldProducts} with order number: ${existingCustomer.orderId.orderNumber}.`,
+          html: `<p>A customer record has been updated for product ID: ${soldProducts} with order number: ${existingCustomer.orderId.orderNumber}.</p>`,
         },
       ];
 
@@ -108,7 +107,10 @@ const postCustomerInfo = async (req, res, next) => {
         productManufacturer,
       });
 
-      await newCustomerInfo.save(); // orderId generated via pre-save hook
+      await newCustomerInfo.save(); // orderNumber generated via pre-save hook
+
+      // Retrieve the orderNumber after save
+      const orderNumber = newCustomerInfo.orderId.orderNumber;
 
       // Update product status
       await ProductItemModel.findByIdAndUpdate(
@@ -122,8 +124,18 @@ const postCustomerInfo = async (req, res, next) => {
           from: process.env.SENDER_ADDRESS,
           to: email,
           subject: "Product Purchased",
-          text: `Dear ${name}, Thank you for purchasing our product using productAuth, powered by blockchain technology.`,
-          html: `<p>Dear ${name},</p><p>Thank you for purchasing our product using productAuth, powered by blockchain technology.</p>`,
+          text: `Dear ${name}, Thank you for purchasing our product. Your order number is: ${orderNumber}.`,
+          html: `<p>Dear ${name},</p><p>Thank you for purchasing our product. Your order number is: ${orderNumber}.</p>`,
+        },
+      ];
+
+      const companyEmailOptions = [
+        {
+          from: process.env.SENDER_ADDRESS,
+          to: companyEmail,
+          subject: "Customer Information Notification",
+          text: `A customer record has been created for product ID: ${soldProducts} with order number: ${orderNumber}.`,
+          html: `<p>A customer record has been created for product ID: ${soldProducts} with order number: ${orderNumber}.</p>`,
         },
       ];
 
@@ -208,13 +220,9 @@ const getSoldProductsByRetailer = async (req, res, next) => {
 const getCustomerInfo = async (req, res, next) => {
   try {
     const { productId } = req.query;
-
-    // Validate productId
     if (!productId) {
       throw new ApiError(400, "Missing productId parameter");
     }
-
-    // Check if the product exists
     const productExists = await ProductItemModel.findById(productId);
     if (!productExists) {
       throw new ApiError(404, "Product not found");

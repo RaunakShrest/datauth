@@ -116,7 +116,12 @@ export default function LoginTemplate() {
             />
 
             <div className="flex justify-between">
-              <Button className="p-0 text-sm text-[#8f8f8f]">Forgot Password ?</Button>
+              <Button
+                className="p-0 text-sm text-[#8f8f8f]"
+                onClick={() => router.push("/forgetPassword")}
+              >
+                Forgot Password ?
+              </Button>
 
               <Button
                 className="p-0 text-sm text-[#8f8f8f]"

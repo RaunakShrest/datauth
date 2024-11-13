@@ -35,25 +35,54 @@ const DisableModal = ({ isOpen, onClose, onSubmit, company }) => {
           onChange={(e) => setRemarks(e.target.value)}
           required
         ></textarea>
+        <div className="mt-2 flex justify-between">
+          <div className="flex">
+            <button
+              className="rounded-md bg-gray-300 px-4 py-2"
+              onClick={onClose}
+            >
+              Cancel
+            </button>
+          </div>
+          <div className="flex">
+            <button
+              className="rounded-md bg-red-500 px-4 py-2 text-white"
+              onClick={handleDisableSubmit}
+            >
+              Disable
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+const ApprovalModal = ({ isOpen, onClose, onConfirm }) => {
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="w-[20rem] rounded-md bg-white p-6 shadow-lg">
+        <h2 className="text-lg font-bold">Approve Company</h2>
+        <p className="mt-2">Do you want to approve this company?</p>
         <div className="mt-4 flex justify-end space-x-2">
           <button
-            className="rounded-md bg-gray-300 px-4 py-2"
+            className="rounded-md bg-red-600 px-4 py-2"
             onClick={onClose}
           >
             Cancel
           </button>
           <button
-            className="rounded-md bg-red-500 px-4 py-2 text-white"
-            onClick={handleDisableSubmit}
+            className="rounded-md bg-green-500 px-4 py-2 text-white"
+            onClick={onConfirm}
           >
-            Disable
+            Yes
           </button>
         </div>
       </div>
     </div>
   )
 }
-
 export default function DataTable() {
   const router = useRouter()
   const tableRef = useRef()
@@ -61,6 +90,8 @@ export default function DataTable() {
   const [userRole, setUserRole] = useState("")
   const [isModalOpen, setIsModalOpen] = useState(false) // Modal state
   const [companyToDisable, setCompanyToDisable] = useState(null) // Track which company to disable
+  const [companyToApprove, setCompanyToApprove] = useState(null)
+  const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false)
 
   const { data, sortData, selectedData, setSelectedData, fetchCompanies } = useCompanies() // Added fetchData
 
@@ -108,12 +139,13 @@ export default function DataTable() {
     )
   }
 
-  const handleApprove = async (company) => {
-    const updatedCompany = { ...company, status: "enabled" }
+  const handleApprove = async () => {
+    const updatedCompany = { ...companyToApprove, status: "enabled" } // Update status to 'enabled'
 
     try {
-      await updateCompanyStatus(company._id, updatedCompany) // Use _id instead of id
+      await updateCompanyStatus(companyToApprove._id, updatedCompany)
       await fetchCompanies()
+      setIsApprovalModalOpen(false) // Close the modal after approval
     } catch (error) {
       console.error("Failed to approve company:", error)
     }
@@ -304,7 +336,10 @@ export default function DataTable() {
                           </ContextMenu.Item>
                           <ContextMenu.Item
                             className="rounded-md bg-[#017082]"
-                            onClick={() => handleApprove(datum)}
+                            onClick={() => {
+                              setCompanyToApprove(datum)
+                              setIsApprovalModalOpen(true)
+                            }}
                           >
                             Approve
                           </ContextMenu.Item>
@@ -340,9 +375,14 @@ export default function DataTable() {
       </div>
       <DisableModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)} // Close modal handler
-        onSubmit={handleSubmitDisable} // Submit handler
-        company={companyToDisable} // Pass the selected company to disable
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleSubmitDisable}
+        company={companyToDisable}
+      />
+      <ApprovalModal
+        isOpen={isApprovalModalOpen}
+        onClose={() => setIsApprovalModalOpen(false)}
+        onConfirm={handleApprove}
       />
     </div>
   )

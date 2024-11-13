@@ -62,7 +62,7 @@ export default function DataTable() {
   const contextMenuRef = useRef()
   const [currentPage, setCurrentPage] = useState(1)
 
-  const { data, sortData, selectedData, setSelectedData, fetchRetailers } = useRetailers()
+  const { data, sortData, selectedData, setSelectedData, fetchRetailers, userRole } = useRetailers()
 
   const numberOfDataPerPage = 8
   const indexOfLastData = currentPage * numberOfDataPerPage
@@ -251,20 +251,22 @@ export default function DataTable() {
                       >
                         Edit
                       </ContextMenu.Item>
-
-                      <ContextMenu.Item
-                        className="rounded-md bg-[#017082]"
-                        onClick={() => handleApprove(datum)}
-                      >
-                        Approve
-                      </ContextMenu.Item>
-                      <ContextMenu.Item
-                        className="rounded-md bg-[#017082]"
-                        onClick={() => handleDisable(datum)}
-                      >
-                        Disable
-                      </ContextMenu.Item>
-
+                      {userRole === "super-admin" && (
+                        <ContextMenu.Item
+                          className="rounded-md bg-[#017082]"
+                          onClick={() => handleApprove(datum)}
+                        >
+                          Approve
+                        </ContextMenu.Item>
+                      )}
+                      {userRole === "super-admin" && (
+                        <ContextMenu.Item
+                          className="rounded-md bg-[#017082]"
+                          onClick={() => handleDisable(datum)}
+                        >
+                          Disable
+                        </ContextMenu.Item>
+                      )}
                       <ContextMenu.Item
                         className="rounded-md bg-[#017082]"
                         onClick={() => {}}
