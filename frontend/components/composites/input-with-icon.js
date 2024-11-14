@@ -58,7 +58,7 @@ export default function InputWithIcon({
 
         {formContextValues?.errors[props.inputAttributes.name] && (
           <div>
-            <span className="text-sm text-red-600">
+            <span className="text-[0.75rem] text-red-600">
               {formContextValues?.errors[props.inputAttributes.name]?.message}
             </span>
           </div>

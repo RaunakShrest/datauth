@@ -4,22 +4,18 @@ module.exports = {
   content: ["./pages/**/*.{js,jsx}", "./components/**/*.{js,jsx}", "./app/**/*.{js,jsx}", "./src/**/*.{js,jsx}"],
   prefix: "",
   theme: {
-    screens: {
-      sm: "360px",
-      xl: "1500px",
-    },
     container: {
       center: true,
       padding: "1rem",
+    },
+    extend: {
       screens: {
         sm: "360px",
         xl: "1500px",
       },
-    },
-    extend: {
       colors: {
         border: "hsl(var(--border))",
-        themeGreen: '#017082',
+        themeGreen: "#017082",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
