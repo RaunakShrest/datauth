@@ -37,7 +37,7 @@ export default function LoginTemplate() {
   return (
     <div className="flex h-screen w-screen bg-gray-100">
       {/* Main content of the login page */}
-      {/* <div className="flex w-full"> */}
+
       {/* Image Section on the left */}
       <div className="h-full w-0 bg-[url('/assets/hand-image.png')] bg-cover bg-center bg-no-repeat md:w-[30%]"></div>
 
