@@ -142,8 +142,8 @@ export const phoneRule = {
     message: "phone number too long",
   },
   pattern: {
-    value: /^\+[0-9]{11,15}$/g,
-    message: "invalid, make sure to enter country code",
+    value: /^[0-9]{10}$/,
+    message: "invalid, phone number should be exactly 10 digits",
   },
 }
 

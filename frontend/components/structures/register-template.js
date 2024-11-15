@@ -31,6 +31,8 @@ import axios from "axios"
 
 export default function RegisterTemplate() {
   const router = useRouter()
+  const [isPasswordVisible, setPasswordVisible] = useState(false)
+  const [isConfirmPasswordVisible, setConfirmPasswordVisible] = useState(false)
 
   const { register, handleSubmit, control, watch, setError, clearErrors } = useRegisterFormContext()
 
@@ -97,232 +99,232 @@ export default function RegisterTemplate() {
     fetchProductTypes()
   }, [])
 
+  const togglePasswordVisibility = () => {
+    setPasswordVisible(!isPasswordVisible)
+  }
+  const toggleConfirmPasswordVisibility = () => {
+    setConfirmPasswordVisible(!isConfirmPasswordVisible)
+  }
+
   return (
-    <div>
-      <div className="container">
-        <div className="grid grid-cols-12 border-2 border-[#007082]">
-          <div className="-z-10 col-start-1 col-end-7 bg-[#007082]">
-            <ImgWithWrapper
-              imageAttributes={{ src: "/assets/lady-with-computer.png", alt: "logo" }}
-              imageClassName="object-top"
-              wrapperClassName="h-full -mr-16"
-            />
+    <div className="flex h-screen w-screen">
+      {/* Left side image container */}
+      <div className="h-full w-0 bg-[url('/assets/registerImage.png')] bg-cover bg-center bg-no-repeat md:w-[30%]"></div>
+
+      {/* Right side form container */}
+      <div className="flex w-full flex-col items-center justify-center md:w-[70%]">
+        {/* Heading and welcome message */}
+
+        {/* Form container */}
+        <div className="flex-shrink space-y-6 rounded-lg">
+          <div className="mb-8 text-center">
+            <h1 className="mb-2 text-4xl font-bold text-[#004DA8]">Create Your Account</h1>
+            <p className="text-lg">Welcome! We're excited to have you join us</p>
           </div>
 
-          <div className="col-start-7 -col-end-1">
-            <div className="mb-16">
-              <ImgWithWrapper
-                wrapperClassName="mx-auto size-[200px]"
-                imageAttributes={{ src: "/assets/logo_satyata.png", alt: "logo" }}
+          {/* Already have an account message */}
+          <div className="mb-4 text-center">
+            <span>Already have an account? </span>
+            <span className="cursor-pointer text-blue-500">Login</span>
+          </div>
+          <div className="space-y-8 py-4">
+            {/* Full Name Input Group */}
+            <InputGroupWithLabel
+              cols={3}
+              label="Full Name"
+              requiredField
+            >
+              <InputWithIcon
+                useFormContext={useRegisterFormContext}
+                iconElement={false}
+                inputAttributes={{
+                  type: "text",
+                  placeholder: "First Name",
+                  required: true,
+                  name: "firstName",
+                  register,
+                  fieldRule: firstNameRule,
+                }}
               />
+              <InputWithIcon
+                useFormContext={useRegisterFormContext}
+                iconElement={false}
+                inputAttributes={{
+                  type: "text",
+                  placeholder: "Middle Name",
+                  name: "middleName",
+                  register,
+                  fieldRule: middleNameRule,
+                }}
+              />
+              <InputWithIcon
+                useFormContext={useRegisterFormContext}
+                iconElement={false}
+                inputAttributes={{
+                  type: "text",
+                  placeholder: "Last Name",
+                  required: true,
+                  name: "lastName",
+                  register,
+                  fieldRule: lastNameRule,
+                }}
+              />
+            </InputGroupWithLabel>
 
-              <h1 className="text-center text-4xl font-bold">Registration</h1>
+            {/* Address Input Group */}
+            <InputGroupWithLabel
+              cols={3}
+              label="Address"
+              requiredField
+            >
+              <InputWithIcon
+                useFormContext={useRegisterFormContext}
+                iconElement={false}
+                takesFullWidth
+                inputAttributes={{
+                  type: "text",
+                  placeholder: "Address Line",
+                  required: true,
+                  name: "addressLine",
+                  register,
+                  fieldRule: addressLineRule,
+                }}
+              />
+              <InputWithIcon
+                useFormContext={useRegisterFormContext}
+                iconElement={false}
+                inputAttributes={{
+                  type: "text",
+                  placeholder: "Country",
+                  required: true,
+                  name: "country",
+                  register,
+                  fieldRule: countryRule,
+                }}
+              />
+              <InputWithIcon
+                useFormContext={useRegisterFormContext}
+                iconElement={false}
+                inputAttributes={{
+                  type: "text",
+                  placeholder: "City/State",
+                  required: true,
+                  name: "city",
+                  register,
+                  fieldRule: cityRule,
+                }}
+              />
+              <InputWithIcon
+                useFormContext={useRegisterFormContext}
+                iconElement={false}
+                inputAttributes={{
+                  type: "text",
+                  placeholder: "Zip Code",
+                  required: true,
+                  name: "zip",
+                  register,
+                  fieldRule: zipRule,
+                }}
+              />
+            </InputGroupWithLabel>
+
+            <div className="grid grid-cols-2 gap-4 rounded-lg px-4">
+              <InputWithIcon
+                useFormContext={useRegisterFormContext}
+                iconElement={false}
+                inputAttributes={{
+                  type: "email",
+                  required: true,
+                  placeholder: "example@gmail.com",
+                  name: "registerEmail",
+                  register,
+                  fieldRule: registerEmailRule,
+                }}
+                label="Email"
+              />
+              <InputWithIcon
+                useFormContext={useRegisterFormContext}
+                iconElement={false}
+                inputAttributes={{
+                  type: "number",
+                  required: true,
+                  placeholder: "9812345678",
+                  name: "phone",
+                  register,
+                  fieldRule: phoneRule,
+                }}
+                label="Phone"
+              />
             </div>
 
-            <div className="space-y-8 py-4">
-              {/* Full Name Input Group */}
+            <div className="rounded-lg px-4">
+              <InputWithIcon
+                useFormContext={useRegisterFormContext}
+                iconElement={false}
+                inputAttributes={{
+                  type: "text",
+                  required: true,
+                  placeholder: "Company Name",
+                  name: "companyName",
+                  register,
+                  fieldRule: companyNameRule,
+                }}
+                label="Company Name"
+              />
+            </div>
 
-              <InputGroupWithLabel
-                cols={3}
-                label="Full Name"
-                requiredField
+            <div className="rounded-lg px-4">
+              <InputWithIcon
+                useFormContext={useRegisterFormContext}
+                iconElement={false}
+                inputAttributes={{
+                  type: "select",
+                  options: userTypeOptions,
+                  required: true,
+                  placeholder: "User Type",
+                  name: "userType",
+                  register,
+                  fieldRule: userTypeRule,
+                }}
+                label="User Type"
+              />
+            </div>
+            <div className="rounded-lg px-4">
+              <InputWithIcon
+                useFormContext={useRegisterFormContext}
+                iconElement={false}
+                inputType="select"
+                inputAttributes={{
+                  required: true,
+                  name: "productType",
+                  ...register("productType", { required: "Product Type is required" }),
+                }}
+                label="Select Product Type"
               >
-                <InputWithIcon
-                  useFormContext={useRegisterFormContext}
-                  iconElement={false}
-                  inputAttributes={{
-                    type: "text",
-                    placeholder: "First Name",
-                    required: true,
-                    name: "firstName",
-                    register,
-                    fieldRule: firstNameRule,
-                  }}
-                />
+                <option value="">-- Select a Product Type --</option>
+                {productTypes.map((productType) => (
+                  <option
+                    key={productType.name}
+                    value={productType.name}
+                  >
+                    {productType.name}
+                  </option>
+                ))}
+              </InputWithIcon>
+            </div>
 
+            {/* Password Input Group */}
+            <InputGroupWithLabel
+              cols={2}
+              label="Password"
+              requiredField
+            >
+              <div className="relative mx-auto w-full max-w-[350px]">
                 <InputWithIcon
                   useFormContext={useRegisterFormContext}
                   iconElement={false}
                   inputAttributes={{
-                    type: "text",
-                    placeholder: "Middle Name",
-                    name: "middleName",
-                    register,
-                    fieldRule: middleNameRule,
-                  }}
-                />
-
-                <InputWithIcon
-                  useFormContext={useRegisterFormContext}
-                  iconElement={false}
-                  inputAttributes={{
-                    type: "text",
-                    placeholder: "Last Name",
-                    required: true,
-                    name: "lastName",
-                    register,
-                    fieldRule: lastNameRule,
-                  }}
-                />
-              </InputGroupWithLabel>
-
-              {/* Address Input Group */}
-              <InputGroupWithLabel
-                cols={3}
-                label="Address"
-                requiredField
-              >
-                <InputWithIcon
-                  useFormContext={useRegisterFormContext}
-                  iconElement={false}
-                  takesFullWidth
-                  inputAttributes={{
-                    type: "text",
-                    placeholder: "Address Line",
-                    required: true,
-                    name: "addressLine",
-                    register,
-                    fieldRule: addressLineRule,
-                  }}
-                />
-
-                <InputWithIcon
-                  useFormContext={useRegisterFormContext}
-                  iconElement={false}
-                  inputAttributes={{
-                    type: "text",
-                    placeholder: "Country",
-                    required: true,
-                    name: "country",
-                    register,
-                    fieldRule: countryRule,
-                  }}
-                />
-
-                <InputWithIcon
-                  useFormContext={useRegisterFormContext}
-                  iconElement={false}
-                  inputAttributes={{
-                    type: "text",
-                    placeholder: "City/State",
-                    required: true,
-                    name: "city",
-                    register,
-                    fieldRule: cityRule,
-                  }}
-                />
-
-                <InputWithIcon
-                  useFormContext={useRegisterFormContext}
-                  iconElement={false}
-                  inputAttributes={{
-                    type: "text",
-                    placeholder: "Zip Code",
-                    required: true,
-                    name: "zip",
-                    register,
-                    fieldRule: zipRule,
-                  }}
-                />
-              </InputGroupWithLabel>
-
-              <div className="grid grid-cols-2 gap-4 rounded-lg px-4">
-                <InputWithIcon
-                  useFormContext={useRegisterFormContext}
-                  iconElement={false}
-                  inputAttributes={{
-                    type: "email",
-                    required: true,
-                    placeholder: "example@mail.com",
-                    name: "registerEmail",
-                    register,
-                    fieldRule: registerEmailRule,
-                  }}
-                  label="Email"
-                />
-
-                <InputWithIcon
-                  useFormContext={useRegisterFormContext}
-                  iconElement={false}
-                  inputAttributes={{
-                    type: "text",
-                    required: true,
-                    placeholder: "+977 9812345678",
-                    name: "phone",
-                    register,
-                    fieldRule: phoneRule,
-                  }}
-                  label="Phone"
-                />
-              </div>
-
-              <div className="rounded-lg px-4">
-                <InputWithIcon
-                  useFormContext={useRegisterFormContext}
-                  iconElement={false}
-                  inputAttributes={{
-                    type: "text",
-                    required: true,
-                    placeholder: "Company Name",
-                    name: "companyName",
-                    register,
-                    fieldRule: companyNameRule,
-                  }}
-                  label="Company Name"
-                />
-              </div>
-
-              <div className="rounded-lg px-4">
-                <InputWithIcon
-                  useFormContext={useRegisterFormContext}
-                  iconElement={false}
-                  inputAttributes={{
-                    type: "select",
-                    options: userTypeOptions,
-                    required: true,
-                    placeholder: "User Type",
-                    name: "userType",
-                    register,
-                    fieldRule: userTypeRule,
-                  }}
-                  label="User Type"
-                />
-              </div>
-              <div className="rounded-lg px-4">
-                <InputWithIcon
-                  useFormContext={useRegisterFormContext}
-                  iconElement={false}
-                  inputType="select"
-                  inputAttributes={{
-                    required: true,
-                    name: "productType",
-                    ...register("productType", { required: "Product Type is required" }), // Register the field with validation
-                  }}
-                  label="Select Product Type"
-                >
-                  <option value="">-- Select a Product Type --</option>
-                  {productTypes.map((productType) => (
-                    <option
-                      key={productType.name}
-                      value={productType.name}
-                    >
-                      {productType.name}
-                    </option>
-                  ))}
-                </InputWithIcon>
-              </div>
-
-              {/* Password Input Group */}
-              <InputGroupWithLabel
-                cols={2}
-                label="Password"
-                requiredField
-              >
-                <InputWithIcon
-                  useFormContext={useRegisterFormContext}
-                  iconElement={false}
-                  inputAttributes={{
-                    type: "password",
+                    type: isPasswordVisible ? "text" : "password",
                     required: true,
                     placeholder: "Password",
                     name: "registerPassword",
@@ -342,12 +344,19 @@ export default function RegisterTemplate() {
                     },
                   }}
                 />
-
+                <Button
+                  className="absolute inset-y-0 right-0 flex h-full w-8 items-center justify-center px-2 text-gray-600"
+                  onClick={togglePasswordVisibility}
+                >
+                  {isPasswordVisible ? "👁️" : "🙈"}
+                </Button>
+              </div>
+              <div className="relative mx-auto w-full max-w-[350px]">
                 <InputWithIcon
                   useFormContext={useRegisterFormContext}
                   iconElement={false}
                   inputAttributes={{
-                    type: "password",
+                    type: isConfirmPasswordVisible ? "text" : "password",
                     required: true,
                     placeholder: "Confirm Password",
                     name: "confirmRegisterPassword",
@@ -367,24 +376,30 @@ export default function RegisterTemplate() {
                     },
                   }}
                 />
-              </InputGroupWithLabel>
-
-              <div className="px-4 text-right">
                 <Button
-                  type="submit"
-                  className="bg-[#017082] px-8 py-2 text-white"
-                  onClick={handleSubmit(submitFn)}
-                  disabled={registerMutation.isPending}
+                  className="absolute inset-y-0 right-0 flex items-center px-2 text-gray-600"
+                  onClick={toggleConfirmPasswordVisibility}
                 >
-                  <span className="flex h-6 w-16 items-center justify-center">
-                    {registerMutation.isPending ? (
-                      <span className="inline-block size-4 animate-spin rounded-full border-2 border-white border-t-gray-400" />
-                    ) : (
-                      <span>Submit</span>
-                    )}
-                  </span>
+                  {isConfirmPasswordVisible ? "👁️" : "🙈"}
                 </Button>
               </div>
+            </InputGroupWithLabel>
+
+            <div className="px-4 text-right">
+              <Button
+                type="submit"
+                className="bg-[#004DA8] px-8 py-2 text-white"
+                onClick={handleSubmit(submitFn)}
+                disabled={registerMutation.isPending}
+              >
+                <span className="flex h-6 w-16 items-center justify-center">
+                  {registerMutation.isPending ? (
+                    <span className="inline-block size-4 animate-spin rounded-full border-2 border-white border-t-gray-400" />
+                  ) : (
+                    <span>Submit</span>
+                  )}
+                </span>
+              </Button>
             </div>
           </div>
         </div>
