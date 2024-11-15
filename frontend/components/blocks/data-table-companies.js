@@ -256,7 +256,7 @@ export default function DataTable() {
                     checked={isTableDataSelected(datum)}
                   />
                 </Table.Column>
-                <Table.Column className="px-2">{datum.companyName}</Table.Column>
+                <Table.Column className="px-2">{datum.companyName} </Table.Column>
                 <Table.Column className="p-2">
                   <span className="line-clamp-1">
                     {datum.firstName} {datum.lastName}
@@ -313,12 +313,12 @@ export default function DataTable() {
                       className="absolute z-10 w-[175px] space-y-1 text-white"
                       contextMenuRef={contextMenuRef}
                     >
-                      <ContextMenu.Item
+                      {/* <ContextMenu.Item
                         className="rounded-md bg-[#017082]"
                         onClick={() => router.push("/companies/single-company")}
                       >
                         View
-                      </ContextMenu.Item>
+                      </ContextMenu.Item> */}
                       {userRole !== "retailer" && (
                         <>
                           <ContextMenu.Item

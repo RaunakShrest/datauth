@@ -19,7 +19,7 @@ export default function InputWithIcon({
   const formContextValues = useFormContext()
 
   return (
-    <div className={`space-y-2 ${takesFullWidth ? "col-start-1 -col-end-1" : ""}`}>
+    <div className={`space-y-2 ${takesFullWidth ? "col-start-1 col-end-1" : ""}`}>
       {label && (
         <div>
           <label>
