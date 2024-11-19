@@ -21,6 +21,12 @@ const batchSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    startDate: {
+      type: Date,
+    },
+    endDate: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );

@@ -357,6 +357,40 @@ const getCompanies = async (req, res, next) => {
     next(error);
   }
 };
+// const getCompanies = async (req, res, next) => {
+//   try {
+//     // Fetch companies with specific fields excluded
+//     const companies = await UserModel.find({ userType: "company" }).select(
+//       "-__v -password -refreshToken"
+//     );
+
+//     // Convert companies data to a JSON string
+//     const companiesString = JSON.stringify(companies);
+//     console.log("comapnies jsonStringify", companiesString);
+
+//     // Generate a SHA-256 hash of the companies data
+//     const hash = crypto
+//       .createHash("sha256")
+//       .update(companiesString)
+//       .digest("hex");
+
+//     console.log("hashed crypto", hash);
+//     // Send the response with the companies and hash
+//     return (
+//       res
+//         .status(200)
+//         // .json(
+//         //   new ApiResponse(200, { companies }, "companies fetched successfully")
+//         // );
+//         .json(new ApiResponse(200, companies, "companies fetched successfully"))
+//     );
+//   } catch (error) {
+//     if (!error.message) {
+//       error.message = "something went wrong while fetching companies";
+//     }
+//     next(error);
+//   }
+// };
 
 const updateCompanyStatus = async (req, res, next) => {
   const { id } = req.params;

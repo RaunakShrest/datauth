@@ -17,13 +17,12 @@ export const useProducts = () => {
   return context
 }
 
-
 export default function ProductsProvider({ children, companyId }) {
   const [isAsc, setIsAsc] = useState(false)
 
   const productsFromApi = useQuery({
     queryKey: ["fetchProducts", companyId],
-    queryFn: () => fetchProducts({companyId}),
+    queryFn: () => fetchProducts({ companyId }),
     staleTime: reactQueryStaleTime,
   })
 
@@ -36,7 +35,7 @@ export default function ProductsProvider({ children, companyId }) {
       isSortable: true,
       width: "150px",
     },
-        {
+    {
       id: "company-manufacturer",
       text: "Manufacturer",
       dataKey: "companymanufacturer",
@@ -57,14 +56,14 @@ export default function ProductsProvider({ children, companyId }) {
       isSortable: false,
       width: "100px",
     },
-        {
+    {
       id: "batchId",
       text: "Batch",
       dataKey: "batchid",
       isSortable: true,
       width: "150px",
     },
-    { id: "product-status", text: "Status", dataKey: "status", isSortable: true, width: "80px" },
+    { id: "product-status", text: "Status", dataKey: "status", isSortable: true, width: "100px" },
     { id: "createdAt", text: "Created Date", dataKey: "createdAt", isSortable: true, width: "150px" },
     { id: "qr-code", text: "QR Code", dataKey: "qr-code", isSortable: false, width: "40px" },
   ])
