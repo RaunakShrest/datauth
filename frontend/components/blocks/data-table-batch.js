@@ -13,7 +13,7 @@ import { getCurrentUser } from "@/contexts/query-provider/api-request-functions/
 import { Modal } from "../elements/Modal"
 import toast from "react-hot-toast"
 
-export default function DataTable({}) {
+export default function DataTable() {
   const tableRef = useRef()
   const contextMenuRef = useRef()
   const [userRole, setUserRole] = useState("")

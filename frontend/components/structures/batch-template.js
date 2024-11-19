@@ -9,6 +9,12 @@ import Button from "../elements/button"
 export default function BatchTemplate() {
   const title = "Batches"
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
+
+  const handleModalSuccess = () => {
+    setRefreshTrigger((prev) => prev + 1)
+    setIsModalOpen(false)
+  }
 
   return (
     <div className="space-y-6">
@@ -18,7 +24,6 @@ export default function BatchTemplate() {
           onClick={() => setIsModalOpen(true)}
           className="flex items-center bg-[#017082] px-4 py-2 text-white"
         >
-          {" "}
           <svg
             className="inline-block w-10"
             width="25"
@@ -36,7 +41,7 @@ export default function BatchTemplate() {
         </Button>
       </div>
 
-      <BatchProvider>
+      <BatchProvider refreshTrigger={refreshTrigger}>
         <div className="flex items-center gap-2"></div>
 
         <div>
@@ -46,7 +51,7 @@ export default function BatchTemplate() {
       <AddBatchIdModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        // onSuccess={handleModalSuccess}
+        onSuccess={handleModalSuccess}
       />
     </div>
   )

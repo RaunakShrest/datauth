@@ -15,7 +15,7 @@ export const useBatch = () => {
   return context
 }
 
-export default function BatchProvider({ children }) {
+export default function BatchProvider({ children, refreshTrigger }) {
   const [isAsc, setIsAsc] = useState(true)
   const [data, setData] = useState({
     data: [],
@@ -50,7 +50,7 @@ export default function BatchProvider({ children }) {
 
   useEffect(() => {
     fetchBatches()
-  }, [])
+  }, [refreshTrigger])
 
   const sortData = (basis) => {
     setIsAsc((prev) => !prev)
