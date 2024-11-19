@@ -18,6 +18,7 @@ export const routeToCrumb = {
   dashboard: "Dashboard",
   "company-sales": "Company Sales",
   "retailer-sales": "Retailer Sales",
+  batch: "Batch",
 }
 
 export const reactQueryStaleTime = Infinity

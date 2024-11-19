@@ -54,7 +54,7 @@ export default function RetailerSalesProvider({ children }) {
             : []),
           {
             id: "customer-name",
-            text: "Customer Name",
+            text: "Customer",
             dataKey: "name",
             isSortable: true,
             width: "150px",
