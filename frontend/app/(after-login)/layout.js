@@ -12,7 +12,7 @@ export default function AfterLoginLayout({ children }) {
       <div className="container max-w-[3000rem]">
         <div className="sticky top-0 mt-2 flex gap-4">
           <MenuWrapper>
-            <div className="sticky top-0 ml-[-15px] h-screen rounded-md bg-[#017082] px-2 pt-8 text-white shadow-md">
+            <div className="sticky top-0 ml-[-15px] h-screen rounded-md bg-white px-2 pt-8 text-white shadow-md">
               <SideMenu />
             </div>
           </MenuWrapper>

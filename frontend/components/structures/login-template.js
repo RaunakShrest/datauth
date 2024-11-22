@@ -44,7 +44,7 @@ export default function LoginTemplate() {
       {/* Main content of the login page */}
 
       {/* Image Section on the left */}
-      <div className="h-full w-0 bg-[url('/assets/hand-image.png')] bg-cover bg-center bg-no-repeat md:w-[30%]"></div>
+      <div className="h-full w-0 bg-[url('/assets/loginimage.png')] bg-cover bg-bottom bg-no-repeat md:w-[30%]"></div>
 
       {/* Form Section on the right */}
       <div className="flex min-h-screen w-full items-center justify-center border-2 md:w-[70%]">
@@ -52,13 +52,13 @@ export default function LoginTemplate() {
           <div className="w-full space-y-6 p-10">
             {/* Logo placed above the title */}
             <ImgWithWrapper
-              wrapperClassName="mx-auto w-24 h-24"
-              imageAttributes={{ src: "/assets/logo_satyata.png", alt: "logo" }}
+              wrapperClassName="mx-auto w-[200px] h-[60px]"
+              imageAttributes={{ src: "/assets/authprodlogo.png", alt: "logo" }}
             />
 
             {/* Title */}
             <div className="text-center">
-              <h1 className="text-xl font-bold text-[#004DA8]">Login to your account</h1>
+              <h1 className="text-xl font-bold text-[#02235E]">Login to your account</h1>
               <p className="mb-10 text-sm">Welcome back, You've been missed!</p>
             </div>
 
@@ -136,7 +136,7 @@ export default function LoginTemplate() {
               {/* Forgot Password link positioned below the password field */}
               <div className="absolute bottom-[-1.5rem] right-0">
                 <Button
-                  className="p-0 text-xs text-[#004DA8] hover:text-green-700"
+                  className="p-0 text-xs text-[#02235E] hover:[#012D61]"
                   onClick={() => router.push("/forgetPassword")}
                 >
                   Forgot Password?
@@ -147,10 +147,10 @@ export default function LoginTemplate() {
             {/* Login Button */}
             <div className="mt-8 text-center">
               <Button
-                className={`w-full max-w-[350px] rounded-lg bg-[#004DA8] px-8 py-2 text-white ${
+                className={`w-full max-w-[350px] mt-3 rounded-lg bg-[#02235E] px-8 py-2 text-white ${
                   loginMutation.isPending ? "cursor-not-allowed opacity-50" : "opacity-100"
-                }`}
-                onClick={handleSubmit(submitFn)}
+                } hover:bg-[#012D61]`}
+                onClick={handleSubmit(submitFn)}  
                 disabled={loginMutation.isPending}
               >
                 <span className="flex items-center justify-center">
@@ -169,7 +169,7 @@ export default function LoginTemplate() {
                 onClick={() => router.push("/register")}
               >
                 <span className="text-black">Don't have an account? </span>
-                <span className="text-[#004DA8] hover:text-[#004DA8]">Register</span>
+                <span className="text-[#02235E] hover:[#012D61]">Register</span>
               </Button>
             </div>
           </div>

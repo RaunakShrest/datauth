@@ -109,29 +109,44 @@ export default function RegisterTemplate() {
   return (
     <div className="flex h-screen w-screen">
       {/* Left side image container */}
-      <div className="h-full w-0 bg-[url('/assets/registerImage.png')] bg-cover bg-center bg-no-repeat md:w-[30%]"></div>
+      <div className="h-full w-0 bg-[url('/assets/loginimage.png')] bg-cover bg-bottom bg-no-repeat md:w-[30%]"></div>
 
       {/* Right side form container */}
-      <div className="flex w-full flex-col items-center justify-center md:w-[70%]">
+      <div className="flex w-full h-full flex-col items-center justify-center md:w-[70%]">
         {/* Heading and welcome message */}
 
         {/* Form container */}
         <div className="flex-shrink space-y-6 rounded-lg">
-          <div className="mb-8 text-center">
-            <h1 className="mb-2 text-4xl font-bold text-[#004DA8]">Create Your Account</h1>
+          <div className=" text-center">
+            <h1 className="text-4xl font-bold text-[#02235E]">Create Your Account</h1>
             <p className="text-lg">Welcome! We're excited to have you join us</p>
           </div>
 
           {/* Already have an account message */}
-          <div className="mb-4 text-center">
+          <div className="mb-2 text-center">
             <span>Already have an account? </span>
-            <span className="cursor-pointer text-blue-500">Login</span>
+            <span className="font-bold cursor-pointer text[#02235E]">Login</span>
           </div>
-          <div className="space-y-8 py-4">
+          <div className="space-y-4">
+          <div className="rounded-lg px-4">
+              <InputWithIcon
+                useFormContext={useRegisterFormContext}
+                iconElement={false}
+                inputAttributes={{
+                  type: "text",
+                  required: true,
+                  placeholder: "Company Name",
+                  name: "companyName",
+                  register,
+                  fieldRule: companyNameRule,
+                }}
+                label={<span className="font-bold">Company Name</span>}
+              />
+            </div>
             {/* Full Name Input Group */}
             <InputGroupWithLabel
               cols={3}
-              label="Full Name"
+              label={<span className="font-bold">Contact Person's Name</span>}
               requiredField
             >
               <InputWithIcon
@@ -173,8 +188,8 @@ export default function RegisterTemplate() {
 
             {/* Address Input Group */}
             <InputGroupWithLabel
-              cols={3}
-              label="Address"
+              cols={1}
+              label={<span className="font-bold">Address</span>}
               requiredField
             >
               <InputWithIcon
@@ -190,18 +205,12 @@ export default function RegisterTemplate() {
                   fieldRule: addressLineRule,
                 }}
               />
-              <InputWithIcon
-                useFormContext={useRegisterFormContext}
-                iconElement={false}
-                inputAttributes={{
-                  type: "text",
-                  placeholder: "Country",
-                  required: true,
-                  name: "country",
-                  register,
-                  fieldRule: countryRule,
-                }}
-              />
+            </InputGroupWithLabel>
+            <InputGroupWithLabel
+              cols={3}
+              requiredField
+            >
+              
               <InputWithIcon
                 useFormContext={useRegisterFormContext}
                 iconElement={false}
@@ -226,6 +235,19 @@ export default function RegisterTemplate() {
                   fieldRule: zipRule,
                 }}
               />
+              <InputWithIcon
+                useFormContext={useRegisterFormContext}
+                iconElement={false}
+                inputAttributes={{
+                  type: "text",
+                  placeholder: "Country",
+                  required: true,
+                  name: "country",
+                  register,
+                  fieldRule: countryRule,
+                }}
+              />
+              
             </InputGroupWithLabel>
 
             <div className="grid grid-cols-2 gap-4 rounded-lg px-4">
@@ -240,7 +262,8 @@ export default function RegisterTemplate() {
                   register,
                   fieldRule: registerEmailRule,
                 }}
-                label="Email"
+                label={<span className="font-bold">Email</span>}
+
               />
               <InputWithIcon
                 useFormContext={useRegisterFormContext}
@@ -253,27 +276,11 @@ export default function RegisterTemplate() {
                   register,
                   fieldRule: phoneRule,
                 }}
-                label="Phone"
+                label={<span className="font-bold">Phone</span>}
+
               />
             </div>
-
-            <div className="rounded-lg px-4">
-              <InputWithIcon
-                useFormContext={useRegisterFormContext}
-                iconElement={false}
-                inputAttributes={{
-                  type: "text",
-                  required: true,
-                  placeholder: "Company Name",
-                  name: "companyName",
-                  register,
-                  fieldRule: companyNameRule,
-                }}
-                label="Company Name"
-              />
-            </div>
-
-            <div className="rounded-lg px-4">
+            <div className="grid grid-cols-2 gap-4 rounded-lg px-4">
               <InputWithIcon
                 useFormContext={useRegisterFormContext}
                 iconElement={false}
@@ -286,10 +293,9 @@ export default function RegisterTemplate() {
                   register,
                   fieldRule: userTypeRule,
                 }}
-                label="User Type"
+                label={<span className="font-bold">User Type</span>}
+
               />
-            </div>
-            <div className="rounded-lg px-4">
               <InputWithIcon
                 useFormContext={useRegisterFormContext}
                 iconElement={false}
@@ -299,7 +305,8 @@ export default function RegisterTemplate() {
                   name: "productType",
                   ...register("productType", { required: "Product Type is required" }),
                 }}
-                label="Select Product Type"
+                label={<span className="font-bold">Product Type</span>}
+
               >
                 <option value="">-- Select a Product Type --</option>
                 {productTypes.map((productType) => (
@@ -316,10 +323,10 @@ export default function RegisterTemplate() {
             {/* Password Input Group */}
             <InputGroupWithLabel
               cols={2}
-              label="Password"
+              label={<span className="font-bold">Password</span>}
               requiredField
             >
-              <div className="relative mx-auto w-full max-w-[350px]">
+              <div className="relative w-full max-w-[350px]">
                 <InputWithIcon
                   useFormContext={useRegisterFormContext}
                   iconElement={false}
@@ -385,20 +392,18 @@ export default function RegisterTemplate() {
               </div>
             </InputGroupWithLabel>
 
-            <div className="px-4 text-right">
+            <div className="w-full px-4 py-2 text-right">
               <Button
                 type="submit"
-                className="bg-[#004DA8] px-8 py-2 text-white"
+                className="w-full bg-[#02235E] px-8 py-2 text-white flex items-center justify-center hover:bg-[#012D61]"
                 onClick={handleSubmit(submitFn)}
                 disabled={registerMutation.isPending}
               >
-                <span className="flex h-6 w-16 items-center justify-center">
-                  {registerMutation.isPending ? (
-                    <span className="inline-block size-4 animate-spin rounded-full border-2 border-white border-t-gray-400" />
-                  ) : (
-                    <span>Submit</span>
-                  )}
-                </span>
+                {registerMutation.isPending ? (
+                  <span className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-white border-t-gray-400"></span>
+                ) : (
+                  <span>Submit</span>
+                )}
               </Button>
             </div>
           </div>
