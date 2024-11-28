@@ -183,7 +183,7 @@ export default function DataTable() {
             onClick={handlePrint}
             disabled={selectedData.length === 0}
             className={twMerge(
-              "ml-4 rounded-md bg-[#017082] px-4 py-2 text-white",
+              "ml-4 rounded-md bg-[#02235E] px-4 py-2 text-white",
               selectedData.length === 0 ? "cursor-not-allowed opacity-50" : "",
             )}
           >
@@ -193,7 +193,7 @@ export default function DataTable() {
             onClick={handleDownloadQr}
             disabled={selectedData.length === 0}
             className={twMerge(
-              "ml-4 rounded-md bg-[#017082] px-4 py-2 text-white",
+              "ml-4 rounded-md bg-[#0051DC] px-4 py-2 text-white",
               selectedData.length === 0 ? "cursor-not-allowed opacity-50" : "",
             )}
           >
@@ -202,13 +202,13 @@ export default function DataTable() {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto rounded-lg">
         <Table
           className="w-full table-fixed border-collapse"
           tableRef={tableRef}
         >
-          <Table.Head className="bg-[#017082] text-left text-white">
-            <Table.Row className="h-16">
+          <Table.Head className="bg-[#02235E] text-left text-white">
+            <Table.Row className="h-[48px]">
               <Table.Heading
                 className="pl-4"
                 style={{ width: "50px" }}
@@ -245,7 +245,7 @@ export default function DataTable() {
             {currentData?.map((datum, idx) => (
               <Table.Row
                 key={idx}
-                className={twMerge((idx + 1) % 2 !== 0 ? "bg-white" : "")}
+                className="border-b border-b-[#605E5E] bg-white"
               >
                 <Table.Column className="px-4 py-2">
                   <Checkbox
@@ -309,21 +309,21 @@ export default function DataTable() {
 
                     <ContextMenu.Menu className="absolute z-10 w-[175px] space-y-1 bg-white/80 p-2 text-white">
                       <ContextMenu.Item
-                        className="rounded-md bg-[#017082]"
+                        className="rounded-md bg-[#0000CC]"
                         onClick={() => router.push(`/products/${datum._id}`)}
                       >
                         View
                       </ContextMenu.Item>
 
                       <ContextMenu.Item
-                        className="rounded-md bg-[#017082]"
+                        className="rounded-md bg-[#0000CC]"
                         onClick={() => router.push(`/products/${datum._id}/edit`)}
                       >
                         Edit
                       </ContextMenu.Item>
 
                       <ContextMenu.Item
-                        className="rounded-md bg-[#017082]"
+                        className="rounded-md bg-[#0000CC]"
                         onClick={() => router.push()}
                       >
                         Delete

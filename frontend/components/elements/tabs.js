@@ -71,7 +71,7 @@ const TabItem = ({ className, children, accessableBy, href, ...props }) => {
   return (
     <li
       className={twMerge(
-        "group whitespace-nowrap rounded-md px-2 py-2 font-semibold transition-all duration-300 hover:bg-[#02235E]",
+        "group whitespace-nowrap rounded-md px-2 py-2 font-semibold transition-all duration-300 hover:bg-[#274b8a]",
         isActive && "bg-[#02235E] text-white",
         className,
       )}

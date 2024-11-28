@@ -4,7 +4,7 @@ import ProfileIcon from "../composites/profile-icon"
 
 export default function Header() {
   return (
-    <div className="flex items-center justify-between bg-white py-2 shadow-md">
+    <div className="flex items-center justify-between bg-white py-2">
       <div className="px-8 py-2">
         {/* <ImgWithWrapper
           wrapperClassName="h-14 aspect-[2]"

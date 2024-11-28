@@ -169,99 +169,104 @@ export default function EditSingleProductForm({ params }) {
         onSubmit={handleSubmit}
         className="space-y-4"
       >
-        <div>
-          <label>Product Name</label>
-          <input
-            type="text"
-            name="productName"
-            value={formData.productName}
-            onChange={handleChange}
-            className="w-full border px-2 py-1"
-          />
-        </div>
-        <div>
-          <label>Price</label>
-          <input
-            type="text"
-            name="productPrice"
-            value={formData.productPrice}
-            onChange={handleChange}
-            className="w-full border px-2 py-1"
-          />
-        </div>
-        <div>
-          <label>Description</label>
-          <textarea
-            name="productDescription"
-            value={formData.productDescription}
-            onChange={handleChange}
-            className="w-full border px-2 py-1"
-          />
-        </div>
-        <div>
-          <label>SKU</label>
-          <input
-            type="text"
-            name="productSku"
-            value={formData.productSku}
-            onChange={handleChange}
-            className="w-full border px-2 py-1"
-          />
-        </div>
-        <div>
-          <label>Product Weblink</label>
-          <input
-            type="text"
-            name="productWebLink"
-            value={formData.productWebLink}
-            onChange={handleChange}
-            className="w-full border px-2 py-1"
-          />
-        </div>
-        <div>
-          <label>Attributes</label>
-          {formData.productAttributes.map((attribute, index) => (
-            <div
-              key={attribute._id}
-              className="flex space-x-2"
-            >
+        <div className="rounded-lg bg-white p-4">
+          <div className="mb-5">
+            <label className="font-bold">Product Name</label>
+            <input
+              type="text"
+              name="productName"
+              value={formData.productName}
+              onChange={handleChange}
+              className="w-full rounded-sm border border-[#616161] px-2 py-4"
+            />
+          </div>
+          <div className="mb-5 flex justify-between">
+            <div className="w-[49%]">
+              <label className="font-bold">Price</label>
               <input
                 type="text"
-                name="attributeName"
-                value={attribute.attributeName}
-                onChange={(e) => handleAttributeChange(index, e)}
-                placeholder="Attribute Name"
-                className="w-1/2 border px-2 py-1"
-                disabled
-              />
-              <input
-                type="text"
-                name="attributeValue"
-                value={attribute.attributeValue}
-                onChange={(e) => handleAttributeChange(index, e)}
-                placeholder="Attribute Value"
-                className="w-1/2 border px-2 py-1"
+                name="productPrice"
+                value={formData.productPrice}
+                onChange={handleChange}
+                className="w-full rounded-sm border border-[#616161] px-2 py-4"
               />
             </div>
-          ))}
-        </div>
+            <div className="w-[49%]">
+              <label className="font-bold">SKU</label>
+              <input
+                type="text"
+                name="productSku"
+                value={formData.productSku}
+                onChange={handleChange}
+                className="w-full rounded-sm border border-[#616161] px-2 py-4"
+              />
+            </div>
+          </div>
+          <div className="mb-5">
+            <label className="font-bold">Product Weblink</label>
+            <input
+              type="text"
+              name="productWebLink"
+              value={formData.productWebLink}
+              onChange={handleChange}
+              className="w-full rounded-sm border border-[#616161] px-2 py-4"
+            />
+          </div>
 
-        {/* Image upload section */}
-        <div>
-          <label>Upload New Images</label>
-          <input
-            type="file"
-            onChange={handleImageChange}
-            multiple
-            accept="image/*"
-            className="w-full border px-2 py-1"
-          />
+          <div className="mb-5">
+            <label className="font-bold">Description</label>
+            <textarea
+              name="productDescription"
+              value={formData.productDescription}
+              onChange={handleChange}
+              className="w-full rounded-sm border border-[#616161] px-2 py-4"
+            />
+          </div>
+          <div className="mb-5">
+            <label className="font-bold">Attributes</label>
+            {formData.productAttributes.map((attribute, index) => (
+              <div
+                key={attribute._id}
+                className="mb-2 flex space-x-2"
+              >
+                <input
+                  type="text"
+                  name="attributeName"
+                  value={attribute.attributeName}
+                  onChange={(e) => handleAttributeChange(index, e)}
+                  placeholder="Attribute Name"
+                  className="w-1/7 rounded-sm border border-[#616161] px-2 py-4"
+                  disabled
+                />
+                <input
+                  type="text"
+                  name="attributeValue"
+                  value={attribute.attributeValue}
+                  onChange={(e) => handleAttributeChange(index, e)}
+                  placeholder="Attribute Value"
+                  className="w-6/7 rounded-sm border border-[#616161] px-2 py-4"
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Image upload section */}
+          <div>
+            <label className="font-bold">Upload New Images</label>
+            <input
+              type="file"
+              onChange={handleImageChange}
+              multiple
+              accept="image/*"
+              className="w-full border px-2 py-1"
+            />
+          </div>
         </div>
 
         <div>
           <Button
             type="submit"
-            className="bg-[#017082] px-8 py-2 text-white"
+            className="bg-[#02235E] px-8 py-2 text-white"
           >
             Save Changes
           </Button>

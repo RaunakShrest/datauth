@@ -18,7 +18,7 @@ export default function ProductTypesTemplate() {
         <div>
           <Button
             onClick={() => router.push("/product-types/add-product-type")}
-            className="flex items-center bg-[#017082] px-4 py-2 text-white"
+            className="flex items-center bg-[#02235E] px-4 py-2 text-white"
           >
             <svg
               className="inline-block w-10"

@@ -140,45 +140,47 @@ export default function DataTable() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-start">
-        <div className="m-2 mb-6 flex items-start justify-between">
-          <input
-            type="text"
-            placeholder="Search by Batch ID"
-            value={searchBatchId}
-            onChange={(e) => setSearchBatchId(e.target.value)}
-            className="w-60 rounded-md border border-gray-600 p-2"
-          />
+      <div className="flex w-full flex-row flex-wrap justify-between">
+        <div className="w-8/10 flex flex-wrap justify-between">
+          <div className="m-2">
+            <input
+              type="text"
+              placeholder="Search by Batch ID"
+              value={searchBatchId}
+              onChange={(e) => setSearchBatchId(e.target.value)}
+              className="rounded-md border border-gray-600 p-2"
+            />
+          </div>
+          <div className="m-2">
+            <input
+              type="text"
+              placeholder="Search by Customer name"
+              value={searchCustomerName}
+              onChange={(e) => setSearchCustomerName(e.target.value)}
+              className="rounded-md border border-gray-600 p-2"
+            />
+          </div>
+          <div className="m-2">
+            <input
+              type="text"
+              placeholder="Search by Product name"
+              value={searchProductName}
+              onChange={(e) => setSearchProductName(e.target.value)}
+              className="rounded-md border border-gray-600 p-2"
+            />
+          </div>
+          <div className="m-2">
+            <input
+              type="text"
+              placeholder="Search by Company name"
+              value={searchCompanyName}
+              onChange={(e) => setSearchCompanyName(e.target.value)}
+              className="rounded-md border border-gray-600 p-2"
+            />
+          </div>
         </div>
-        <div className="m-2 mb-6 flex items-start justify-between">
-          <input
-            type="text"
-            placeholder="Search by Customer name"
-            value={searchCustomerName}
-            onChange={(e) => setSearchCustomerName(e.target.value)}
-            className="w-60 rounded-md border border-gray-600 p-2"
-          />
-        </div>
-        <div className="m-2 mb-6 flex items-start justify-between">
-          <input
-            type="text"
-            placeholder="Search by Product name"
-            value={searchProductName}
-            onChange={(e) => setSearchProductName(e.target.value)}
-            className="w-60 rounded-md border border-gray-600 p-2"
-          />
-        </div>
-        <div className="m-2 mb-6 flex items-start justify-between">
-          <input
-            type="text"
-            placeholder="Search by Company name"
-            value={searchCompanyName}
-            onChange={(e) => setSearchCompanyName(e.target.value)}
-            className="w-60 rounded-md border border-gray-600 p-2"
-          />
-        </div>
-        <div className="ml-auto flex items-center space-x-2">
-          <div>
+        <div className="flex flex-wrap">
+          <div className="m-2">
             Start
             <input
               type="date"
@@ -186,17 +188,19 @@ export default function DataTable() {
               onChange={(e) => setStartDate(e.target.value)}
               className="rounded border p-2"
             />
+          </div>
+          <div className="m-2">
             End
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="ml-2 rounded border p-2"
+              className="rounded border p-2"
             />
           </div>
           <button
             onClick={handleReset}
-            className="ml-3 rounded-md bg-red-500 px-2 py-4 text-white"
+            className="ml-3 mt-2 rounded-md bg-red-500 px-4 py-2 text-white lg:mt-0"
           >
             Reset
           </button>
@@ -212,13 +216,13 @@ export default function DataTable() {
         </button>
       )}
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto rounded-lg">
         <Table
           className="w-full table-fixed border-collapse"
           tableRef={tableRef}
         >
-          <Table.Head className="bg-[#017082] text-left text-white">
-            <Table.Row className="h-16">
+          <Table.Head className="bg-[#02235E] text-left text-white">
+            <Table.Row className="h-[48px]">
               <Table.Heading
                 className="pl-4"
                 style={{ width: "50px" }}
@@ -255,7 +259,7 @@ export default function DataTable() {
             {currentData.map((datum, idx) => (
               <Table.Row
                 key={idx}
-                className={twMerge((idx + 1) % 2 !== 0 ? "bg-white" : "")}
+                className="border-b border-b-[#605E5E] bg-white"
               >
                 <Table.Column className="px-4 py-2">
                   <Checkbox
