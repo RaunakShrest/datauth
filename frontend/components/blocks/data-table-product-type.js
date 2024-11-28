@@ -71,13 +71,13 @@ export default function DataTable() {
 
   return (
     <div className="space-y-4">
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto rounded-lg">
         <Table
           className="w-full table-fixed border-collapse"
           tableRef={tableRef}
         >
-          <Table.Head className="bg-[#017082] text-left text-white">
-            <Table.Row className="h-16">
+          <Table.Head className="bg-[#02235E] text-left text-white">
+            <Table.Row className="h-[48px]">
               <Table.Heading className="w-[50px] pl-4">
                 <Checkbox
                   onChange={handleTableHeadingCheckboxChange}
@@ -106,7 +106,7 @@ export default function DataTable() {
             {currentData?.map((datum, idx) => (
               <Table.Row
                 key={idx}
-                className={twMerge((idx + 1) % 2 !== 0 ? "bg-[white]" : "")}
+                className="border-b border-b-[#605E5E] bg-white"
               >
                 <Table.Column className="px-4 py-2">
                   <Checkbox
@@ -150,28 +150,28 @@ export default function DataTable() {
                       contextMenuRef={contextMenuRef}
                     >
                       <ContextMenu.Item
-                        className="rounded-md bg-[#017082]"
+                        className="rounded-md bg-[#0000CC]"
                         onClick={() => router.push("/product-types/single-product-type")}
                       >
                         View
                       </ContextMenu.Item>
 
                       <ContextMenu.Item
-                        className="rounded-md bg-[#017082]"
+                        className="rounded-md bg-[#0000CC]"
                         onClick={() => router.push(`/product-types/${datum._id}/edit`)}
                       >
                         Edit
                       </ContextMenu.Item>
 
                       <ContextMenu.Item
-                        className="rounded-md bg-[#017082]"
+                        className="rounded-md bg-[#0000CC]"
                         onClick={() => handleChangeStatus(datum._id, datum.status)} // Call handleChangeStatus
                       >
                         ChangeStatus
                       </ContextMenu.Item>
 
                       <ContextMenu.Item
-                        className="rounded-md bg-[#017082]"
+                        className="rounded-md bg-[#0000CC]"
                         onClick={() => {}}
                       >
                         Blockchain View

@@ -153,7 +153,7 @@ export default function AddProductFormTemplate() {
 
         <InputGroupWithLabel
           wrapperClassName="p-0"
-          cols={2}
+          cols={3}
         >
           <AnimatedInput
             type="number"
@@ -178,17 +178,17 @@ export default function AddProductFormTemplate() {
             }}
             defaultValue=""
           />
+          <AnimatedInput
+            placeholder="Product SKU"
+            required
+            register={register}
+            errors={errors}
+            getValues={getValues}
+            name="productSku"
+            fieldRule={{ required: "This field is required" }}
+          />
         </InputGroupWithLabel>
 
-        <AnimatedInput
-          placeholder="Product SKU"
-          required
-          register={register}
-          errors={errors}
-          getValues={getValues}
-          name="productSku"
-          fieldRule={{ required: "This field is required" }}
-        />
         <InputGroupWithLabel
           wrapperClassName="p-0"
           cols={2}
@@ -207,14 +207,14 @@ export default function AddProductFormTemplate() {
             register={register}
             fieldRule={{ required: { value: true, message: "Batch ID required" } }}
           />
+          <AnimatedInput
+            placeholder="Product Web Link"
+            register={register}
+            errors={errors}
+            getValues={getValues}
+            name="productWebLink"
+          />
         </InputGroupWithLabel>
-        <AnimatedInput
-          placeholder="Product Web Link"
-          register={register}
-          errors={errors}
-          getValues={getValues}
-          name="productWebLink"
-        />
 
         {/* New Image Upload Section */}
         <input
@@ -286,7 +286,7 @@ export default function AddProductFormTemplate() {
 
       <div>
         <Button
-          className="bg-[#017082] px-12 py-2 text-white"
+          className="bg-[#02235E] px-12 py-2 text-white"
           onClick={handleSubmit(submitFn)}
           disabled={addProductMutation.isPending}
         >

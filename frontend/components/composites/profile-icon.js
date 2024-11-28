@@ -190,7 +190,7 @@ export default function ProfileIcon() {
         <ContextMenu.Trigger className="p-0">
           <div className="flex items-center gap-2">
             <ImgWithWrapper
-              wrapperClassName="size-16 rounded-full overflow-hidden"
+              wrapperClassName="size-12 rounded-full overflow-hidden"
               imageAttributes={{
                 src: !currentUserQuery.isFetching ? imageUrl : "/assets/no-profile-picture.png",
                 alt: "profile_picture",
@@ -198,7 +198,7 @@ export default function ProfileIcon() {
             />
             <FontAwesomeIcon
               icon={faCaretDown}
-              className="text-2xl"
+              className="text-l"
             />
           </div>
         </ContextMenu.Trigger>

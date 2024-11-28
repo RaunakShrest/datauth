@@ -15,18 +15,19 @@ export default function Footer() {
       <div>
         <ul className="flex justify-center divide-x-2 divide-[#02235E]">
           {footerMenu.map((each, idx) => (
-            <li key={idx} className="px-6">
+            <li
+              key={idx}
+              className="px-6"
+            >
               <Link href={each.url}>{each.name}</Link>
             </li>
           ))}
         </ul>
       </div>
 
-      <div className="text-center mr-2">
+      <div className="mr-2 text-center">
         <p>&copy; 2024 Anvesh Technologies. All Rights Reserved</p>
       </div>
     </div>
-
-
   )
 }

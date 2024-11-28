@@ -22,7 +22,7 @@ export default function BatchTemplate() {
         <h2 className="text-2xl font-bold">{title}</h2>
         <Button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center bg-[#017082] px-4 py-2 text-white"
+          className="flex items-center bg-[#02235E] px-4 py-2 text-white"
         >
           <svg
             className="inline-block w-10"

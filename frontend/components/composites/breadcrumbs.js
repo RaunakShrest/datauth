@@ -38,7 +38,7 @@ export default function Breadcrumbs() {
                 />
               </>
             ) : (
-              <span className="font-semibold">{displayRoute}</span>
+              <span className="text-[#02235E]">{displayRoute}</span>
             )}
           </div>
         )

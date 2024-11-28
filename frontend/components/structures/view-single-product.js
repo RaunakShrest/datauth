@@ -36,13 +36,11 @@ export default function ViewSingleProduct() {
   const productData = singleProductQuery.data?.data
   const productImages = productData?.productImages || []
 
-  // Ensure that productImages is not empty and the index is valid
   const currentImage =
     productImages.length > 0 && productImages[currentImageIndex]
       ? `${process.env.NEXT_PUBLIC_BASE_URL_DEV}/${productImages[currentImageIndex].replace(/\\/g, "/")}`
       : null
 
-  // Function to handle slider navigation
   const handlePrevImage = () => {
     if (productImages.length > 0) {
       setCurrentImageIndex((prevIndex) => (prevIndex - 1 + productImages.length) % productImages.length)
@@ -56,108 +54,100 @@ export default function ViewSingleProduct() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="text-3xl font-bold">
-        <span>{productData?.productName}</span>
+    <div className="px-4 md:px-8 lg:px-16">
+      <div className="flex flex-col space-y-8 lg:flex-row lg:space-x-8 lg:space-y-0">
+        <div className="lg:w-1/2">
+          {productImages.length > 0 && (
+            <div className="flex items-center justify-center space-x-4">
+              <button
+                onClick={handlePrevImage}
+                className="rounded-full bg-gray-300 p-2 hover:bg-gray-400"
+              >
+                &#8592;
+              </button>
+
+              <img
+                src={currentImage}
+                alt={`Product image ${currentImageIndex + 1}`}
+                className="h-[300px] w-3/4 rounded-md object-cover md:h-[400px] lg:h-[500px]"
+              />
+
+              <button
+                onClick={handleNextImage}
+                className="rounded-full bg-gray-300 p-2 hover:bg-gray-400"
+              >
+                &#8594;
+              </button>
+            </div>
+          )}
+        </div>
+        <div className="lg:w-1/2">
+          <div className="my-5">
+            <p className="text-sm text-[#7f7f7f]">Batch Id: {productData?.batchId}</p>
+            <h1 className="text-2xl font-bold text-[#02235E] md:text-4xl lg:text-5xl">{productData?.productName}</h1>
+            <p className="text-sm text-[#7f7f7f]">Product SKU: {productData?.productSku}</p>
+          </div>
+          <div className="my-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="rounded-lg bg-white px-4 py-4">
+              <p className="font-bold">
+                Price: <span className="font-normal">{currencyFormat(productData?.productPrice)}</span>
+              </p>
+            </div>
+            <div className="rounded-lg bg-white px-4 py-4">
+              <p className="font-bold">
+                Product Type: <span className="font-normal">{productData?.productType.name}</span>
+              </p>
+            </div>
+          </div>
+          <div className="my-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="rounded-lg bg-white px-4 py-4">
+              <p className="font-bold">
+                Product Status: <span className="font-normal">{productData?.productStatus}</span>
+              </p>
+            </div>
+            <div className="rounded-lg bg-white px-4 py-4">
+              <p className="font-bold">
+                Manufacturer: <span className="font-normal">{productData?.productManufacturer.companyName}</span>
+              </p>
+            </div>
+          </div>
+          <div className="rounded-lg bg-white px-4 py-4">
+            <p className="font-bold">Product Weblink</p>
+            {productData?.productWebLink ? (
+              <a
+                href={productData.productWebLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                {productData.productWebLink}
+              </a>
+            ) : (
+              <p className="text-[#7f7f7f]">N/A</p>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Conditionally render image slider if there are images */}
-      {productImages.length > 0 && (
-        <div className="flex items-center justify-center space-x-4">
-          {/* Left Arrow */}
-          <button
-            onClick={handlePrevImage}
-            className="rounded-full bg-gray-300 p-2"
-          >
-            &#8592; {/* Left Arrow */}
-          </button>
-
-          {/* Product Image */}
-          <img
-            src={currentImage}
-            alt={`Product image ${currentImageIndex + 1}`}
-            className="h-[500px] w-1/3 rounded-md object-cover"
-          />
-
-          {/* Right Arrow */}
-          <button
-            onClick={handleNextImage}
-            className="rounded-full bg-gray-300 p-2"
-          >
-            &#8594; {/* Right Arrow */}
-          </button>
-        </div>
-      )}
-
-      <div className="text-right">
-        <span className="text-xl font-bold">{currencyFormat(productData?.productPrice)}</span>
-      </div>
-
-      <div className="flex gap-4">
-        <div className="flex w-1/2 justify-between bg-white p-8">
-          <div>
-            <p className="font-bold">Product Type</p>
-            <p className="text-[#7f7f7f]">{productData?.productType.name}</p>
-          </div>
-
-          <div>
-            <p className="font-bold">Product Status</p>
-            <p className="text-[#7f7f7f]">{productData?.productStatus}</p>
-          </div>
-        </div>
-
-        <div className="flex w-1/2 justify-between bg-white p-8">
-          <div>
-            <p className="font-bold">Product SKU</p>
-            <p className="text-[#7f7f7f]">{productData?.productSku}</p>
-          </div>
-          <div>
-            <p className="font-bold">Batch Id</p>
-            <p className="text-[#7f7f7f]">{productData?.batchId}</p>
-          </div>
-          <div>
-            <p className="font-bold">Manufacturer</p>
-            <p className="text-[#7f7f7f]">{productData?.productManufacturer.companyName}</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-4 bg-white px-8 py-8">
+      <div className="my-2 rounded-lg bg-white px-4 py-4">
         <p className="text-lg font-bold">Detailed Description</p>
         <p
-          className="text-[#7f7f7f]"
+          className="text-black"
           dangerouslySetInnerHTML={{ __html: productData?.productDescription }}
         ></p>
       </div>
 
-      <div className="space-y-4 bg-white px-8 py-8">
-        <div>
-          <span className="text-lg font-bold">Product Attributes</span>
-        </div>
+      <div className="my-2 rounded-lg bg-white px-4 py-4">
+        <p className="text-lg font-bold">Product Attributes</p>
         {productData?.productAttributes.map((eachAttribute) => (
           <div
-            className="flex gap-4"
+            className="flex flex-wrap gap-4"
             key={eachAttribute._id}
           >
-            <p className="w-52 font-bold">{eachAttribute.attributeName}</p>
-            <p className="text-[#7f7f7f]">{eachAttribute.attributeValue}</p>
+            <p className="w-full font-bold md:w-52">{eachAttribute.attributeName}</p>
+            <p className="text-sm text-[#7f7f7f]">{eachAttribute.attributeValue}</p>
           </div>
         ))}
-      </div>
-      <div className="space-y-2 bg-white px-8 py-8">
-        <p className="font-bold">Product Weblink</p>
-        {productData?.productWebLink ? (
-          <a
-            href={productData.productWebLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:underline"
-          >
-            {productData.productWebLink}
-          </a>
-        ) : (
-          <p className="text-[#7f7f7f]">N/A</p>
-        )}
       </div>
     </div>
   )
