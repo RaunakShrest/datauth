@@ -6,10 +6,10 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: "http", // Use 'http' if your local server runs on HTTP
+        protocol: "http",
         hostname: "localhost",
-        port: "3375", // Specify the port if it's not the default
-        pathname: "/api/v1/uploads/profilePics/**", // Allow all paths under this
+        port: "3375",
+        pathname: "/api/v1/**", // Allow all paths under /api/v1/
       },
       {
         protocol: "https",
@@ -21,6 +21,6 @@ const nextConfig = {
       },
     ],
   },
-};
+}
 
-export default nextConfig;
+export default nextConfig

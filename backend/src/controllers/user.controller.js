@@ -7,6 +7,8 @@ import { UserModel } from "../models/user.model.js";
 import { sendBulkEmail } from "../middlewares/sendEmail.middleware.js";
 import { sendResetPasswordEmail } from "../utils/sendResetPasswordEmail.js";
 import crypto from "crypto";
+import axios from "axios";
+
 const userTypes = () => [
   process.env.USER_TYPE_COMPANY,
   process.env.USER_TYPE_RETAILER,
@@ -342,7 +344,9 @@ const refreshAccessToken = async (req, res, next) => {
     next(error);
   }
 };
-const getCompanies = async (req, res, next) => {
+/* 
+//orginal without hash code
+const getCompanies = async (req, res, next) => { 
   try {
     const companies = await UserModel.find({ userType: "company" }).select(
       "-__v -password -refreshToken"
@@ -357,47 +361,195 @@ const getCompanies = async (req, res, next) => {
     next(error);
   }
 };
-// const getCompanies = async (req, res, next) => {
-//   try {
-//     // Fetch companies with specific fields excluded
-//     const companies = await UserModel.find({ userType: "company" }).select(
-//       "-__v -password -refreshToken"
-//     );
+*/
 
-//     // Convert companies data to a JSON string
-//     const companiesString = JSON.stringify(companies);
-//     console.log("comapnies jsonStringify", companiesString);
+const getCompanyIds = async (req, res, next) => {
+  try {
+    const companyIds = await UserModel.find({ userType: "company" }).select(
+      "_id"
+    );
+    const ids = companyIds.map((company) => company._id);
 
-//     // Generate a SHA-256 hash of the companies data
-//     const hash = crypto
-//       .createHash("sha256")
-//       .update(companiesString)
-//       .digest("hex");
+    // If called via an HTTP request, send a response
+    if (res && req) {
+      return res.status(200).json({
+        status: 200,
+        message: "Company IDs fetched successfully",
+        data: ids,
+      });
+    }
 
-//     console.log("hashed crypto", hash);
-//     // Send the response with the companies and hash
-//     return (
-//       res
-//         .status(200)
-//         // .json(
-//         //   new ApiResponse(200, { companies }, "companies fetched successfully")
-//         // );
-//         .json(new ApiResponse(200, companies, "companies fetched successfully"))
-//     );
-//   } catch (error) {
-//     if (!error.message) {
-//       error.message = "something went wrong while fetching companies";
-//     }
-//     next(error);
-//   }
-// };
+    // If called programmatically, just return the IDs
+    return ids;
+  } catch (error) {
+    if (!error.message) {
+      error.message = "Failed to fetch company IDs";
+    }
+    if (next) next(error);
+    throw error; // Rethrow error for programmatic use
+  }
+};
+
+const getCompanies = async (req, res, next) => {
+  const blockChainToken = req.blockChainToken;
+  console.log("The blockchain token is:", blockChainToken);
+  if (!blockChainToken) {
+    throw new ApiError(401, "Authorization token of blockchain not found");
+  }
+  console.log(
+    "=================Starting getCompanies controller========================"
+  );
+
+  try {
+    // Fetch all companies, including sensitive fields for transformation
+    const companies = await UserModel.find({ userType: "company" }).lean();
+
+    if (!companies || companies.length === 0) {
+      return res.status(404).json({
+        status: 404,
+        message: "No companies found",
+      });
+    }
+
+    // Transform all companies into the desired format
+    const transformedCompanies = companies.map((company) => ({
+      id: company._id.toString(),
+      address: {
+        zip: company.address?.zip || null,
+        city: company.address?.city || null,
+        country: company.address?.country || null,
+        addressLine: company.address?.addressLine || null,
+      },
+      firstName: company.firstName,
+      lastName: company.lastName,
+      email: company.email,
+      password: company.password,
+      phoneNumber: company.phoneNumber,
+      userType: company.userType,
+      productType: company.productType,
+      companyName: company.companyName,
+      status: company.status,
+      profilePic: company.profilePic || "http://example.com/logo.png",
+      remarks: company.remarks,
+      createdAt: company.createdAt.toISOString(),
+    }));
+
+    const hashedCompanies = transformedCompanies.map((company) => {
+      const companyForHashing = { ...company };
+      delete companyForHashing.hash; // Exclude any pre-existing hash field (if present)
+
+      const companyString = JSON.stringify(companyForHashing);
+      const hash = crypto
+        .createHash("sha256")
+        .update(companyString)
+        .digest("hex");
+
+      return { ...company, hash }; // Append hash to the company object
+    });
+
+    const companyIds = hashedCompanies.map((company) => company.id);
+
+    try {
+      const payload = {
+        fcn: "GetCompanyWithHash",
+        args: companyIds,
+      };
+
+      const response = await axios.post(
+        "http://192.168.1.96:4000/channels/mychannel/chaincodes/Company",
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${blockChainToken}`,
+          },
+        }
+      );
+
+      if (
+        response.data &&
+        response.data.result &&
+        response.data.result.result
+      ) {
+        const apiHashes = response.data.result.result;
+
+        // Compare generated hashes with API hashes
+        const comparisonResults = hashedCompanies.map((company) => {
+          const apiCompany = apiHashes.find(
+            (apiHash) => apiHash.id === company.id
+          );
+
+          if (apiCompany) {
+            let blockChainVerified;
+            if (apiCompany.blockHash.trim().toLowerCase() === "pending") {
+              blockChainVerified = "pending";
+            } else {
+              blockChainVerified = apiCompany.blockHash === company.hash;
+            }
+
+            return {
+              companyId: company.id,
+              blockChainVerified,
+              generatedHash: company.hash,
+              companyName: company.companyName,
+              apiHash: apiCompany.blockHash,
+            };
+          } else {
+            return {
+              companyId: company.id,
+              blockChainVerified: false, // Default to false if not found
+              generatedHash: company.hash,
+              companyName: company.companyName,
+              apiHash: null,
+            };
+          }
+        });
+
+        console.log("Comparison Results:", comparisonResults);
+
+        // Add `blockChainVerified` to the transformed companies
+        const companiesWithBlockchainVerification = comparisonResults.map(
+          (result) => {
+            const company = hashedCompanies.find(
+              (comp) => comp.id === result.companyId
+            );
+            return {
+              ...company,
+              blockChainVerified: result.blockChainVerified,
+            };
+          }
+        );
+
+        return res.status(200).json({
+          status: 200,
+          message: "Companies fetched successfully",
+          data: companiesWithBlockchainVerification,
+        });
+      }
+    } catch (err) {
+      console.error("Error sending request:", err.message);
+    }
+
+    return res.status(200).json({
+      status: 200,
+      message: "Companies fetched successfully",
+      data: hashedCompanies.map((company) => ({
+        ...company,
+        blockChainVerified: false, // Default to false if the comparison isn't successful
+      })),
+    });
+  } catch (error) {
+    console.error("Error fetching companies:", error.message);
+    next(error);
+  }
+};
 
 const updateCompanyStatus = async (req, res, next) => {
   const { id } = req.params;
   const { status, remarks } = req.body;
-
-  // Trim the ID to remove any leading or trailing whitespace/newline characters
+  console.log("the id of params is", req.params);
   const trimmedId = id.trim();
+  console.log("trimmed id are ", trimmedId);
   if (!trimmedId || !status) {
     return res
       .status(400)
@@ -405,65 +557,212 @@ const updateCompanyStatus = async (req, res, next) => {
   }
 
   try {
-    // Update both status and remarks
-    const updatedCompany = await UserModel.findByIdAndUpdate(
+    const companyData = await UserModel.findById(
       trimmedId,
-      {
-        status: status,
-        remarks: remarks || "", // Store remarks if provided, default to empty string if not
-      },
-      { new: true, select: "-__v -password -refreshToken" }
+      "-__v -refreshToken"
     );
 
-    if (!updatedCompany) {
+    if (!companyData) {
       return res
         .status(404)
         .json(new ApiResponse(404, null, "Company not found."));
     }
+    console.log("User id is ", companyData._id);
+    console.log("user password is", companyData.password);
 
-    if (status.toLowerCase() === "enabled") {
-      const emailOptions = [
-        {
-          from: process.env.SENDER_ADDRESS,
-          to: updatedCompany.email,
-          subject: "Company enabled",
-          text: `Dear ${updatedCompany.companyName}, your company status has been "enabled".`,
-          html: `<p>Dear ${updatedCompany.companyName},</p><p>Your company status has been updated to <strong>"enabled"</strong>.</p>`,
-        },
-      ];
-      const emailResult = await sendBulkEmail(emailOptions);
-      console.log("Email sent (enabled):", emailResult);
-    } else if (status.toLowerCase() === "disabled") {
-      const emailOptions = [
-        {
-          from: process.env.SENDER_ADDRESS,
-          to: updatedCompany.email,
-          subject: "Company disabled",
-          text: `Dear ${updatedCompany.companyName}, unfortunately, your company status has been "disabled".`,
-          html: `<p>Dear ${
-            updatedCompany.companyName
-          },</p><p>Unfortunately, your company status has been updated to <strong>"disabled"</strong>.</p><p>Reason: ${
-            remarks || "No additional remarks provided."
-          }</p>`,
-        },
-      ];
-      const emailResult = await sendBulkEmail(emailOptions);
-      console.log("Email sent (disabled):", emailResult);
-    }
+    if (
+      status.toLowerCase() === "enabled" ||
+      status.toLowerCase() === "disabled"
+    ) {
+      try {
+        console.log(
+          `Registering company in friend's API for status: ${status}...`
+        );
 
-    return res
-      .status(200)
-      .json(
-        new ApiResponse(
-          200,
-          updatedCompany,
-          "Company status updated successfully."
-        )
+        const args = [
+          companyData._id.toString(),
+          companyData.companyName,
+          companyData.address.zip,
+          companyData.address.city,
+          companyData.address.country,
+          companyData.address.addressLine,
+          status.toLowerCase(),
+          remarks || "",
+          companyData.profilePic || "http://example.com/logo.png",
+          companyData.firstName,
+          companyData.lastName,
+          companyData.email,
+          companyData.password,
+          companyData.phoneNumber,
+          companyData.userType,
+          JSON.stringify(companyData.productType || ["General"]),
+          companyData.createdAt.toISOString(),
+          companyData.updatedAt.toISOString(),
+        ];
+
+        console.log("Constructed args array:", args);
+        console.log("current staatus is ", status);
+        console.log("the remarks is", companyData.remarks);
+
+        const payload = {
+          fcn: "CreateCompany",
+          peers: ["peer0.company.example.com"],
+          args,
+        };
+
+        const registerPayload = {
+          username: companyData.firstName,
+          orgName:
+            companyData.userType.charAt(0).toUpperCase() +
+            companyData.userType.slice(1),
+        };
+
+        const registerResponse = await axios.post(
+          `${process.env.BLOCKCHAIN_TEST_URL}/register`,
+          registerPayload,
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        const token = registerResponse.data?.token;
+        if (!token) {
+          return res
+            .status(500)
+            .json({ message: "Failed to fetch token from /register API." });
+        }
+
+        const apiResponse = await axios.post(
+          "http://192.168.1.96:4000/channels/mychannel/chaincodes/Company",
+          payload,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`, // Use the fetched token here
+            },
+          }
+        );
+
+        console.log(
+          `API Response of CompanyChaincode for ${status}:`,
+          apiResponse.data
+        );
+        if (apiResponse.data?.errorData != null) {
+          console.error(
+            `API Response  failure for status: ${status}`,
+            apiResponse.data
+          );
+
+          // Do not enable or disable the company
+          return res.status(503).json({
+            message: `Unable to update company status to "${status}" due to a DiscoveryService failure.`,
+            error: apiResponse.data?.error || "Unknown error occurred",
+            errorData: apiResponse.data?.errorData || null,
+          });
+        }
+
+        // If API call succeeds, update the company status
+        const updatedCompany = await UserModel.findByIdAndUpdate(
+          trimmedId,
+          { status: status.toLowerCase(), remarks: remarks || "" },
+          { new: true, select: "-__v -password -refreshToken" }
+        );
+
+        if (!updatedCompany) {
+          return res
+            .status(404)
+            .json(new ApiResponse(404, null, "Company not found."));
+        }
+
+        const emailOptions = [
+          {
+            from: process.env.SENDER_ADDRESS,
+            to: updatedCompany.email,
+            subject: `Company ${status}`,
+            html: `<p>Dear ${updatedCompany.companyName},</p>
+                   <p>Your company status has been updated to <strong>"${status}"</strong>.</p>
+                   <p>Remarks: ${remarks || "No remarks provided."}</p>`,
+          },
+        ];
+        try {
+          await sendBulkEmail(emailOptions);
+          console.log(
+            `Email sent successfully to ${updatedCompany.email} for status: ${status}`
+          );
+        } catch (emailError) {
+          console.error(
+            `Failed to send email for status: ${status}`,
+            emailError
+          );
+        }
+
+        return res
+          .status(200)
+          .json(
+            new ApiResponse(
+              200,
+              updatedCompany,
+              `Company status updated to "${status}" successfully.`
+            )
+          );
+      } catch (error) {
+        console.error("Error in friend's API call:", {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        });
+        return res.status(503).json({
+          message: `Unable to update company status to "${status}" due to an error with the external API.`,
+          error: error.response?.data || error.message,
+        });
+      }
+    } else {
+      // Handle status updates other than "enabled" or "disabled"
+      const updatedCompany = await UserModel.findByIdAndUpdate(
+        trimmedId,
+        { status, remarks: remarks || "" },
+        { new: true, select: "-__v -password -refreshToken" }
       );
-  } catch (error) {
-    if (!error.message) {
-      error.message = "Something went wrong while updating the company status.";
+
+      if (!updatedCompany) {
+        return res
+          .status(404)
+          .json(new ApiResponse(404, null, "Company not found."));
+      }
+
+      const emailOptions = [
+        {
+          from: process.env.SENDER_ADDRESS,
+          to: updatedCompany.email,
+          subject: `Company ${status}`,
+          html: `<p>Dear ${updatedCompany.companyName},</p>
+                 <p>Your company status has been updated to <strong>"${status}"</strong>.</p>
+                 <p>Remarks: ${remarks || "No remarks provided."}</p>`,
+        },
+      ];
+      try {
+        await sendBulkEmail(emailOptions);
+        console.log(
+          `Email sent successfully to ${updatedCompany.email} for status: ${status}`
+        );
+      } catch (emailError) {
+        console.error(`Failed to send email for status: ${status}`, emailError);
+      }
+
+      return res
+        .status(200)
+        .json(
+          new ApiResponse(
+            200,
+            updatedCompany,
+            `Company status updated to "${status}" successfully.`
+          )
+        );
     }
+  } catch (error) {
+    console.error("Error in updating company status:", error);
     next(error);
   }
 };
@@ -500,40 +799,237 @@ const deleteCompany = async (req, res, next) => {
   }
 };
 
+const testHash = async (req, res, next) => {
+  try {
+    // Data to be hashed
+    const companyForHashing = {
+      id: "6704c07f37d54fbca4a5644d",
+      address: {
+        zip: 88992,
+        city: "ktm",
+        country: "Nepal",
+        addressLine: "humlas",
+      },
+      firstName: "Ramon",
+      lastName: "Prasads",
+      email: "ram@gmail.com",
+      password: "$2b$10$apTB03zgF1u.kqEs5X8Uf.iGSnDtFeRIotMQST8de8Fy8Gxmbk1U.",
+      phoneNumber: "+123456789012",
+      userType: "company",
+      productType: ["Gloves"],
+      companyName: "RamEstablishment",
+      status: "enabled",
+      profilePic: "uploads\\profilePics\\file-1731314491919-430431490.jpg",
+      remarks: "",
+      createdAt: "2024-10-08T05:17:51.134Z",
+    };
+
+    // Convert the object to a string
+    const companyString = JSON.stringify(companyForHashing);
+    // console.log(companySt);
+
+    // Generate the SHA-256 hash
+    const hash = crypto
+      .createHash("sha256")
+      .update(companyString)
+      .digest("hex");
+
+    // Return the response with the hash and original data
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { ...companyForHashing, hash },
+          "Hash generated successfully."
+        )
+      );
+  } catch (error) {
+    // Catch any errors and pass them to the error handler
+    if (!error.message) {
+      error.message = "Something went wrong while generating the hash.";
+    }
+    next(error);
+  }
+};
+
 const uploadProfilePicture = async (req, res) => {
+  const blockChainToken = req.blockChainToken;
+  console.log("The blockchain token is:", blockChainToken);
+
+  if (!blockChainToken) {
+    return res
+      .status(401)
+      .json({ message: "Authorization token of blockchain not found" });
+  }
+
   try {
     const user = req.user;
 
     if (!user || !user._id) {
       return res.status(401).json({ message: "Unauthorized. User not found." });
     }
+
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
     }
 
     const filePath = req.file.path;
+
+    // Prepare data for the external API
+    const payload = {
+      fcn: "EditCompanyProfile",
+      peers: ["peer0.company.example.com"],
+      args: [
+        user._id,
+        filePath,
+        user.firstName,
+        user.lastName,
+        user.email,
+        user.phoneNumber,
+        user.companyName || "DefaultCompany",
+        user.address.zip || "00000",
+        user.address.city || "City",
+        user.address.country || "Country",
+        user.address.addressLine || "Address Line",
+      ],
+    };
+
+    console.log("Sending profilePic to external API:", filePath);
+
+    // Call the external API
+    const apiResponse = await axios.post(
+      "http://192.168.1.96:4000/channels/mychannel/chaincodes/Company",
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${blockChainToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log("Response from uploadProfile:", apiResponse.data);
+
+    // Check if the response contains an  warning
+    if (
+      apiResponse.data &&
+      (apiResponse.data.error || !apiResponse.data.result)
+    ) {
+      console.error("External API error:", apiResponse.data.errorData);
+      return res.status(503).json({
+        message:
+          "Unable to update company profile due to an external API failure.",
+        error: apiResponse.data.error || "Unknown error occurred",
+        errorData: apiResponse.data.errorData || null,
+      });
+    }
+
+    // Proceed with updating the user in the database only if the external API is successful
     const updatedUser = await UserModel.findByIdAndUpdate(
       user._id,
       { profilePic: filePath },
-      { new: true, select: "-__v -password -refreshToken" } // Select non-sensitive fields
+      { new: true, select: "-__v -password -refreshToken" }
     );
 
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
     }
 
+    // Return a combined response
     return res.status(200).json({
-      message: "Profile picture uploaded successfully",
+      message: "Profile picture uploaded and external API called successfully",
       user: updatedUser,
+      externalApiResponse: apiResponse.data,
     });
   } catch (error) {
+    console.error("Unexpected error:", error.message);
     return res.status(500).json({
-      message: "Error uploading profile picture",
+      message: "Error uploading profile picture or calling external API",
       error: error.message,
     });
   }
 };
+
+// const userEditProfile = async (req, res, next) => {
+//   try {
+//     const user = req.user;
+//     if (!user || !user._id) {
+//       return res.status(401).json({ message: "Unauthorized. User not found." });
+//     }
+
+//     const {
+//       userId,
+//       firstName,
+//       lastName,
+//       email,
+//       phoneNumber,
+//       companyName,
+//       address,
+//     } = req.body;
+
+//     if (!userId) {
+//       throw new ApiError(400, "User ID is required");
+//     }
+
+//     if (
+//       address &&
+//       (typeof address !== "object" ||
+//         !address.zip ||
+//         !address.city ||
+//         !address.country ||
+//         !address.addressLine)
+//     ) {
+//       throw new ApiError(
+//         400,
+//         "Address must be an object with zip, city, country, and addressLine"
+//       );
+//     }
+
+//     const existingUser = await UserModel.findById(userId);
+//     if (!existingUser) {
+//       throw new ApiError(404, "User not found");
+//     }
+
+//     const updatedUserFields = {
+//       firstName,
+//       lastName,
+//       email,
+//       phoneNumber,
+//       companyName,
+//       address, // Update with the new address structure
+//     };
+
+//     // Update the user in the database
+//     const updatedUser = await UserModel.findByIdAndUpdate(
+//       userId,
+//       updatedUserFields,
+//       { new: true, runValidators: true }
+//     ).select("-__v -password -refreshToken");
+
+//     return res
+//       .status(200)
+//       .json(
+//         new ApiResponse(200, updatedUser, "User profile updated successfully")
+//       );
+//   } catch (error) {
+//     if (!error.message) {
+//       error.message = "Something went wrong while updating user profile";
+//     }
+//     next(error);
+//   }
+// };
+
 const userEditProfile = async (req, res, next) => {
+  const blockChainToken = req.blockChainToken;
+  console.log("The blockchain token is:", blockChainToken);
+
+  if (!blockChainToken) {
+    return res
+      .status(401)
+      .json({ message: "Authorization token of blockchain not found" });
+  }
+
   try {
     const user = req.user;
     if (!user || !user._id) {
@@ -573,27 +1069,84 @@ const userEditProfile = async (req, res, next) => {
       throw new ApiError(404, "User not found");
     }
 
-    const updatedUserFields = {
-      firstName,
-      lastName,
-      email,
-      phoneNumber,
-      companyName,
-      address, // Update with the new address structure
+    // Prepare data for the external API
+    const payload = {
+      fcn: "EditCompanyProfile",
+      peers: ["peer0.company.example.com"],
+      args: [
+        userId,
+        existingUser.profilePic,
+        firstName || existingUser.firstName,
+        lastName || existingUser.lastName,
+        email || existingUser.email,
+        phoneNumber || existingUser.phoneNumber,
+        companyName || existingUser.companyName,
+        address?.zip || existingUser.address.zip,
+        address?.city || existingUser.address.city,
+        address?.country || existingUser.address.country,
+        address?.addressLine || existingUser.address.addressLine,
+      ],
     };
 
-    // Update the user in the database
+    console.log("Sending profile data to external API:", payload);
+
+    // Call the external API
+    const apiResponse = await axios.post(
+      "http://192.168.1.96:4000/channels/mychannel/chaincodes/Company",
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${blockChainToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    // Check if the API response indicates a failure
+    if (
+      apiResponse.status !== 200 ||
+      apiResponse.data?.error ||
+      !apiResponse.data?.result
+    ) {
+      console.error("External API error:", apiResponse.data?.errorData);
+      return res.status(503).json({
+        message: "Failed to update profile via external API",
+        error: apiResponse.data?.error || "Unknown error occurred",
+        errorData: apiResponse.data?.errorData || null,
+      });
+    }
+
+    // If the external API succeeds, update the user in the database
+    const updatedUserFields = {
+      ...(firstName && { firstName }),
+      ...(lastName && { lastName }),
+      ...(email && { email }),
+      ...(phoneNumber && { phoneNumber }),
+      ...(companyName && { companyName }),
+      ...(address && { address }),
+    };
+
     const updatedUser = await UserModel.findByIdAndUpdate(
       userId,
       updatedUserFields,
       { new: true, runValidators: true }
     ).select("-__v -password -refreshToken");
 
-    return res
-      .status(200)
-      .json(
-        new ApiResponse(200, updatedUser, "User profile updated successfully")
-      );
+    if (!updatedUser) {
+      throw new ApiError(404, "Failed to update user");
+    }
+
+    // Return a success response
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          user: updatedUser,
+          externalApiResponse: apiResponse.data,
+        },
+        "User profile updated successfully and external API called"
+      )
+    );
   } catch (error) {
     if (!error.message) {
       error.message = "Something went wrong while updating user profile";
@@ -673,6 +1226,55 @@ const resetPassword = async (req, res, next) => {
     next(error);
   }
 };
+const blockChainTokenController = async (req, res, next) => {
+  // console.log(req.user);
+  try {
+    // Check if req.user is defined
+    if (!req.user) {
+      throw new ApiError(401, "User not authenticated");
+    }
+
+    const { firstName, _id, userType } = req.user;
+    if (!firstName || !_id) {
+      throw new ApiError(400, "Missing required user information");
+    }
+
+    // Capitalize the first letter of userType
+    const formattedUserType =
+      userType === "super-admin"
+        ? "Superadmin"
+        : userType.charAt(0).toUpperCase() + userType.slice(1);
+    const payload = {
+      username: firstName,
+      orgName: formattedUserType,
+    };
+
+    // Call the external API
+    const response = await axios.post(
+      "http://192.168.1.96:4000/users/token",
+      payload
+    );
+    console.log("response from blockChainToken", response.data);
+
+    // Extract token from response
+    const blockChainToken = response.data?.message?.token;
+
+    if (!blockChainToken) {
+      throw new ApiError(500, "Token not received from blockchain API");
+    }
+
+    // Store the token in the request object for later use
+    req.token = blockChainToken;
+
+    next();
+  } catch (error) {
+    // Handle errors and provide appropriate message
+    if (!error.message) {
+      error.message = "Something went wrong while calling the user token API";
+    }
+    next(error);
+  }
+};
 
 export {
   userSignup,
@@ -689,4 +1291,7 @@ export {
   deleteCompany,
   forgotPassword,
   resetPassword,
+  getCompanyIds,
+  testHash,
+  blockChainTokenController,
 };
