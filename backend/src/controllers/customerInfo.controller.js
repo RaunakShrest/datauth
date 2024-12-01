@@ -162,56 +162,86 @@ const postCustomerInfo = async (req, res, next) => {
 
 const getSoldProductsByRetailer = async (req, res, next) => {
   try {
-    // Check if the logged-in user is super-admin
-    let customerInfo;
+    const { page = 1, limit = 10, search = "", startDate, endDate } = req.query;
 
-    if (req.user.userType === "super-admin") {
-      // Super-admin can view all sold products by all retailers
-      customerInfo = await CustomerInfoModel.find()
-        .populate({
-          path: "soldProducts",
-          populate: {
-            path: "productManufacturer", // Assuming this is the field containing the company ObjectId
-            select: "companyName", // Select only the companyName field
-          },
-        })
-        .populate({
-          path: "soldBy",
+    const filters = {};
+    const options = {
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10),
+    };
+
+    // Apply date range filter for createdAt field
+    if (startDate || endDate) {
+      filters.createdAt = {};
+      if (startDate) {
+        filters.createdAt.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        filters.createdAt.$lte = new Date(endDate);
+      }
+    }
+
+    // Base query setup
+    const baseQuery = CustomerInfoModel.find(filters)
+      .populate({
+        path: "soldProducts",
+        populate: {
+          path: "productManufacturer",
           select: "companyName",
-        })
-        .exec();
-    } else {
-      // For regular retailer, fetch sold products only by their ID
+        },
+      })
+      .populate({
+        path: "soldBy",
+        select: "companyName",
+      });
+
+    // Apply search filter (searching across name, email, and soldBy.companyName)
+    if (search) {
+      baseQuery.or([
+        { name: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+        { "soldBy.companyName": { $regex: search, $options: "i" } },
+      ]);
+    }
+
+    if (req.user.userType !== "super-admin") {
+      // Restrict to retailer's own sales for non-super-admin users
       const retailerId = req.user._id;
 
       if (!retailerId) {
         throw new ApiError(400, "Retailer ID not found");
       }
 
-      customerInfo = await CustomerInfoModel.find({ soldBy: retailerId })
-        .populate({
-          path: "soldProducts",
-          populate: {
-            path: "productManufacturer", // Populate the manufacturer field
-            select: "companyName", // Select the companyName to include in the response
-          },
-        })
-        .exec();
+      filters.soldBy = retailerId;
     }
+
+    // Apply pagination
+    const customerInfo = await baseQuery
+      .limit(options.limit)
+      .skip((options.page - 1) * options.limit)
+      .exec();
 
     if (!customerInfo.length) {
       throw new ApiError(404, "No products found");
     }
 
-    res
-      .status(200)
-      .json(
-        new ApiResponse(
-          200,
-          "Products sold by retailers retrieved successfully",
-          customerInfo
-        )
-      );
+    // Count total documents for pagination
+    const totalItems = await CustomerInfoModel.countDocuments(filters);
+
+    res.status(200).json(
+      new ApiResponse(
+        200,
+        "Products sold by retailers retrieved successfully",
+        {
+          customerInfo,
+          pagination: {
+            totalItems,
+            totalPages: Math.ceil(totalItems / options.limit),
+            currentPage: options.page,
+          },
+        }
+      )
+    );
   } catch (error) {
     next(error);
   }

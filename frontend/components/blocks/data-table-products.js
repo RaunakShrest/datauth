@@ -254,7 +254,7 @@ export default function DataTable() {
                   />
                 </Table.Column>
                 <Table.Column className="px-2">{datum.productName}</Table.Column>
-                <Table.Column className="px-2">{datum.productManufacturer.companyName}</Table.Column>
+                <Table.Column className="px-2">{datum.productManufacturer?.companyName || "N/A"}</Table.Column>
                 <Table.Column className="p-2">{datum.productPrice}</Table.Column>
                 <Table.Column className="p-2">{datum.productSku}</Table.Column>
                 <Table.Column className="p-2">{datum.batchId?.batchId}</Table.Column>

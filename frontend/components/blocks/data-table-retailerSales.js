@@ -9,6 +9,7 @@ import Checkbox from "../elements/checkbox"
 import { twMerge } from "tailwind-merge"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faEllipsisVertical } from "@fortawesome/free-solid-svg-icons"
+import { useDebounce } from "@/utils/debounce"
 const convertToCSV = (data) => {
   const header = [
     "Customer Name",
@@ -59,7 +60,8 @@ const downloadCSV = (csvContent, fileName = "Retailer_Sales.csv") => {
 export default function DataTable() {
   const tableRef = useRef()
   const contextMenuRef = useRef()
-  const { data, sortData, selectedData, setSelectedData, fetchRetailerSales, userRole } = useRetailerSales()
+  const { data, sortData, selectedData, setSelectedData, fetchRetailerSales, userRole, filters, setFilters } =
+    useRetailerSales()
 
   const numberOfDataPerPage = 8
   const [hasFetched, setHasFetched] = useState(false)
@@ -68,6 +70,7 @@ export default function DataTable() {
   const [searchCustomerName, setSearchCustomerName] = useState("")
   const [searchProductName, setSearchProductName] = useState("")
   const [searchCompanyName, setSearchCompanyName] = useState("")
+  const [searchData, setSearchData] = useState("")
 
   const initialStartDate = new Date()
   initialStartDate.setMonth(initialStartDate.getMonth() - 1) // Set to one month before today
@@ -95,6 +98,15 @@ export default function DataTable() {
     fetchSalesData() // Fetch sales data on mount
   }, [fetchSalesData])
 
+  useEffect(() => {
+    setFilters({ ...filters, page: currentPage })
+  }, [currentPage])
+
+  const debouncedSearch = useDebounce({ searchValue: searchData })
+  useEffect(() => {
+    setFilters({ ...filters, search: debouncedSearch })
+  }, [debouncedSearch])
+
   const handleTableDataCheckboxChange = (clickedData) => {
     setSelectedData((prev) =>
       isTableDataSelected(clickedData)
@@ -110,21 +122,25 @@ export default function DataTable() {
   const isTableDataSelected = (datum) => {
     return selectedData.some((selected) => selected.name === datum.name)
   }
-  const filteredData =
-    data?.data?.filter((datum) => {
-      const createdAt = new Date(datum?.createdAt)
-      const isWithinDateRange =
-        (!startDate || createdAt >= new Date(startDate)) &&
-        (!endDate || createdAt < new Date(new Date(endDate).setHours(24, 0, 0, 0))) // Adjust end date to include entire day
-      return (
-        datum.soldProducts?.batchId.toLowerCase().includes(searchBatchId.toLowerCase()) &&
-        datum.name.toLowerCase().includes(searchCustomerName.toLowerCase()) &&
-        datum.soldProducts?.productName.toLowerCase().includes(searchProductName.toLowerCase()) &&
-        datum.soldProducts?.productManufacturer?.companyName.toLowerCase().includes(searchCompanyName.toLowerCase()) &&
-        isWithinDateRange
-      )
-    }) || []
-  const currentData = filteredData.slice(indexOfFirstData, indexOfLastData)
+  console.log("the data is ", data)
+  const filteredData = data?.data?.customerInfo
+  // data?.data?.customerInfo?.filter((datum) => {
+  //   // const createdAt = new Date(datum?.createdAt)
+  //   // const isWithinDateRange =
+  //   //   (!startDate || createdAt >= new Date(startDate)) &&
+  //   //   (!endDate || createdAt < new Date(new Date(endDate).setHours(24, 0, 0, 0))) // Adjust end date to include entire day
+  //   // return (
+  //   //   datum.soldProducts?.batchId.toLowerCase().includes(searchBatchId.toLowerCase()) &&
+  //   //   datum.name.toLowerCase().includes(searchCustomerName.toLowerCase()) &&
+  //   //   datum.soldProducts?.productName.toLowerCase().includes(searchProductName.toLowerCase()) &&
+  //   //   datum.soldProducts?.productManufacturer?.companyName.toLowerCase().includes(searchCompanyName.toLowerCase()) &&
+  //   //   isWithinDateRange
+  //   // )
+  //   console.log(datum)
+
+  // }) || []
+  // const currentData = filteredData.slice(indexOfFirstData, indexOfLastData)
+
   const handleReset = () => {
     setSearchBatchId("")
     setSearchCustomerName("")
@@ -137,6 +153,7 @@ export default function DataTable() {
     const csvContent = convertToCSV(selectedData)
     downloadCSV(csvContent)
   }
+  const handleSearch = () => {}
 
   return (
     <div className="space-y-4">
@@ -173,8 +190,10 @@ export default function DataTable() {
             <input
               type="text"
               placeholder="Search by Company name"
-              value={searchCompanyName}
-              onChange={(e) => setSearchCompanyName(e.target.value)}
+              // value={searchCompanyName}
+              // onChange={(e) => setSearchCompanyName(e.target.value)}
+              value={searchData}
+              onChange={(e) => setSearchData(e.target.value)}
               className="rounded-md border border-gray-600 p-2"
             />
           </div>
@@ -184,8 +203,8 @@ export default function DataTable() {
             Start
             <input
               type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              value={filters.startDate}
+              onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
               className="rounded border p-2"
             />
           </div>
@@ -203,6 +222,12 @@ export default function DataTable() {
             className="ml-3 mt-2 rounded-md bg-red-500 px-4 py-2 text-white lg:mt-0"
           >
             Reset
+          </button>
+          <button
+            onClick={handleSearch}
+            className="ml-3 mt-2 rounded-md bg-green-500 px-4 py-2 text-white lg:mt-0"
+          >
+            Search
           </button>
         </div>
       </div>
@@ -256,7 +281,7 @@ export default function DataTable() {
           </Table.Head>
 
           <Table.Body>
-            {currentData.map((datum, idx) => (
+            {filteredData?.map((datum, idx) => (
               <Table.Row
                 key={idx}
                 className="border-b border-b-[#605E5E] bg-white"
@@ -330,9 +355,9 @@ export default function DataTable() {
 
       <div className="text-right">
         <Pagination
-          totalNumberOfData={data?.data?.length || 0}
+          totalNumberOfData={data?.data?.pagination?.totalItems || 0}
           numberOfDataPerPage={numberOfDataPerPage}
-          currentPage={currentPage}
+          currentPage={data?.data?.pagination?.currentPage}
           onPageChange={setCurrentPage}
         />
       </div>
