@@ -19,7 +19,7 @@ export default function Breadcrumbs() {
   }
 
   return (
-    <div className="flex text-sm text-[#017082]">
+    <div className="flex text-sm text-[#02235E]">
       {routesArray.map((route, idx, arr) => {
         currentLink = currentLink ? `${currentLink}/${route}` : `/${route}`
         const displayRoute = isObjectId(route) ? "" : (routeToCrumb[route] ?? route)

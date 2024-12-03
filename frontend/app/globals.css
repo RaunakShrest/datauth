@@ -196,6 +196,6 @@
   }
 
   input[type="checkbox"].checkbox-switch:checked ~ label > span.checkbox-switch {
-    background-color: #017082;
+    background-color: #02235E;
   }
 }

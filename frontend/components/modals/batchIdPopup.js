@@ -141,7 +141,7 @@ const AddBatchIdModal = ({ isOpen, onClose, onSuccess }) => {
           </Button>
           <Button
             onClick={handleSaveBatchId}
-            className="bg-[#017082] px-4 py-2 text-white"
+            className="bg-[#02235E] px-4 py-2 text-white"
             disabled={!!validationError}
           >
             Save

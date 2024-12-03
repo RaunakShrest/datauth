@@ -316,7 +316,7 @@ export default function DataTable() {
                       {userRole !== "retailer" && (
                         <>
                           <ContextMenu.Item
-                            className="rounded-md bg-[#02235E]"
+                            className="rounded-md bg-[#0000CC]"
                             onClick={() => router.push(`/companies/${datum._id}/edit`)}
                           >
                             Edit

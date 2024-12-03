@@ -72,7 +72,7 @@ export default function AddProdcutTypeFormTemplate() {
           name="productTypeName"
           fieldRule={{ required: "This field is required" }}
         />
-            <AnimatedInput
+        <AnimatedInput
           placeholder="Price"
           getValues={getValues}
           required
@@ -125,7 +125,7 @@ export default function AddProdcutTypeFormTemplate() {
           )}
           <div className="text-center">
             <Button
-              className="bg-[#017082] text-white"
+              className="bg-[#02235E] text-white"
               onClick={() => append({ attributeName: "" })}
             >
               <FontAwesomeIcon icon={faPlus} /> Add Attribute
@@ -137,7 +137,7 @@ export default function AddProdcutTypeFormTemplate() {
       <div>
         <div>
           <Button
-            className="bg-[#017082] px-12 py-2 text-white"
+            className="bg-[#02235E] px-12 py-2 text-white"
             onClick={handleSubmit(submitFn)}
           >
             Save
