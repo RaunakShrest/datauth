@@ -23,6 +23,18 @@ export default function RetailerSalesProvider({ children }) {
     data: [],
     columns: [],
   })
+  const initialStartDate = new Date()
+  initialStartDate.setMonth(initialStartDate.getMonth() - 1) // Set to one month before today
+  const initialEndDate = new Date()
+  const [filters, setFilters] = useState({
+    search: "",
+    startDate: initialStartDate.toISOString().split("T")[0],
+    endDate: initialEndDate.toISOString().split("T")[0],
+    page: 1,
+    limit: 15,
+  })
+
+  // Fetch user role
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
@@ -36,6 +48,7 @@ export default function RetailerSalesProvider({ children }) {
     fetchCurrentUser()
   }, [])
 
+  // Update columns based on user role
   useEffect(() => {
     if (userRole) {
       setData((prev) => ({
@@ -78,7 +91,7 @@ export default function RetailerSalesProvider({ children }) {
             text: "Company",
             dataKey: "productManufacturer.companyName",
             isSortable: true,
-            width: "150px",
+            width: "200px",
           },
           {
             id: "soldProducts",
@@ -94,7 +107,6 @@ export default function RetailerSalesProvider({ children }) {
             isSortable: true,
             width: "100px",
           },
-
           {
             id: "batchId",
             text: "Batch",
@@ -102,8 +114,13 @@ export default function RetailerSalesProvider({ children }) {
             isSortable: true,
             width: "250px",
           },
-
-          { id: "createdAt", text: "Created Date", dataKey: "createdAt", isSortable: true, width: "250px" },
+          {
+            id: "createdAt",
+            text: "Created Date",
+            dataKey: "createdAt",
+            isSortable: true,
+            width: "250px",
+          },
         ],
       }))
     }
@@ -119,6 +136,7 @@ export default function RetailerSalesProvider({ children }) {
     setData((prev) => ({ ...prev, data: sortedData }))
   }
 
+  // Fetch sales data with filters
   const fetchRetailerSales = async () => {
     try {
       const accessToken = localStorage.getItem("accessToken") // Replace 'token' with the actual key if different
@@ -126,11 +144,13 @@ export default function RetailerSalesProvider({ children }) {
         throw new Error("No token found")
       }
 
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL_DEV}/customerInfo/soldProducts`, {
+      const query = new URLSearchParams(filters).toString()
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL_DEV}/customerInfo/soldProducts?${query}`, {
         headers: {
-          Authorization: `Bearer ${accessToken}`, // Pass the Bearer token in the Authorization header
+          Authorization: `Bearer ${accessToken}`,
         },
       })
+
       setData((prev) => ({
         ...prev,
         data: response.data.message || [],
@@ -140,13 +160,24 @@ export default function RetailerSalesProvider({ children }) {
     }
   }
 
+  // Refetch data when filters change
   useEffect(() => {
     fetchRetailerSales()
-  }, [])
+  }, [filters])
 
   return (
     <RetailerSalesContext.Provider
-      value={{ data, setData, sortData, selectedData, setSelectedData, fetchRetailerSales, userRole }}
+      value={{
+        data,
+        setData,
+        sortData,
+        selectedData,
+        setSelectedData,
+        fetchRetailerSales,
+        userRole,
+        filters,
+        setFilters,
+      }}
     >
       {children}
     </RetailerSalesContext.Provider>

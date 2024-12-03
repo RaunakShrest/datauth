@@ -3,6 +3,7 @@ import {
   checkSuperAdmin,
   checkUserAuth,
 } from "../middlewares/auth.middleware.js";
+import { blockChainToken } from "../middlewares/blockChainToken.middleware.js";
 import { upload } from "../middlewares/profilePicUpload.middleware.js";
 import {
   userSignup,
@@ -19,6 +20,9 @@ import {
   userEditProfile,
   forgotPassword,
   resetPassword,
+  getCompanyIds,
+  testHash,
+  blockChainTokenController,
 } from "../controllers/user.controller.js";
 
 const router = express.Router();
@@ -32,8 +36,8 @@ router.post("/signout", userSignout);
 router.post("/refresh-access-token", refreshAccessToken);
 
 router.patch("/update-user", checkUserAuth, checkSuperAdmin, updateUser);
-router.get("/get-companies", getCompanies);
-router.patch("/get-companies/:id", updateCompanyStatus);
+router.get("/get-companies", checkUserAuth, blockChainToken, getCompanies);
+router.patch("/get-companies/:id", updateCompanyStatus); //for updating companyStatus
 router.delete(
   "/delete-company/:id",
   deleteCompany,
@@ -44,10 +48,14 @@ router.post(
   "/upload-profile-picture",
   upload.single("file"),
   checkUserAuth,
+  blockChainToken,
   uploadProfilePicture
 );
-router.patch("/edit-profile", checkUserAuth, userEditProfile); // Route to edit user profile
+router.patch("/edit-profile", checkUserAuth, blockChainToken, userEditProfile); // Route to edit user profile
 router.post("/forgetPassword", forgotPassword);
 router.post("/resetPassword", resetPassword);
+router.get("/getCompanyIds", getCompanyIds);
+router.get("/testHash", testHash);
+router.post("/blockChainToken", checkUserAuth, blockChainTokenController);
 
 export default router;

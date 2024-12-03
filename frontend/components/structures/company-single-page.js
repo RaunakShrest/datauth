@@ -33,10 +33,23 @@ export default function EditCompany({ params }) {
       if (!companyId) return
 
       try {
+        const accessToken = localStorage.getItem("accessToken")
+        console.log(accessToken)
+        if (!accessToken) {
+          throw new Error("Access token not found")
+        }
+
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_BASE_URL_DEV}/company/getSingleCompany/${companyId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          },
         )
+
         const companyData = response.data.data
+
         setCompany(companyData)
         setFormData({
           fullName: `${companyData.firstName || ""} ${companyData.lastName || ""}`,
@@ -127,12 +140,17 @@ export default function EditCompany({ params }) {
     }
 
     try {
+      const accessToken = localStorage.getItem("accessToken")
+      if (!accessToken) {
+        throw new Error("Access token not found while editing")
+      }
       await axios.patch(
         `${process.env.NEXT_PUBLIC_BASE_URL_DEV}/company/editCompanyDetails/${companyId}`,
         updatedData,
         {
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
           },
         },
       )

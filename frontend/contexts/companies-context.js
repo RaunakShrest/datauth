@@ -1,25 +1,32 @@
-"use client";
+"use client"
 
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useState, useEffect } from "react"
+import axios from "axios"
 
-const CompaniesContext = React.createContext();
+const CompaniesContext = React.createContext()
 
 export const useCompanies = () => {
-  const context = React.useContext(CompaniesContext);
+  const context = React.useContext(CompaniesContext)
 
   if (!context) {
-    throw new Error("use useCompanies within the scope of CompaniesProvider");
+    throw new Error("use useCompanies within the scope of CompaniesProvider")
   }
 
-  return context;
-};
+  return context
+}
 
 export default function CompaniesProvider({ children }) {
-  const [isAsc, setIsAsc] = useState(true);
+  const [isAsc, setIsAsc] = useState(true)
   const [data, setData] = useState({
     data: [],
     columns: [
+      {
+        id: "blockChainVerified",
+        text: "BC Verification",
+        dataKey: "blockChainVerified",
+        isSortable: false,
+        width: "150px",
+      },
       {
         id: "company-name",
         text: "Company Name",
@@ -50,45 +57,53 @@ export default function CompaniesProvider({ children }) {
         width: "150px",
       },
       { id: "company-status", text: "Status", dataKey: "status", isSortable: true, width: "120px" },
-    {
-      id:"createdDate",
-      text:"Created Date",
-      dataKey:"createdDate",
-      isSortable:true,
-      width:"200px"
-    }
-    
+      {
+        id: "createdDate",
+        text: "Created Date",
+        dataKey: "createdDate",
+        isSortable: true,
+        width: "200px",
+      },
     ],
-  });
-  const [selectedData, setSelectedData] = useState([]);
+  })
+  const [selectedData, setSelectedData] = useState([])
 
   const fetchCompanies = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL_DEV}/users/get-companies`);
-      setData((prev) => ({ ...prev, data: response.data.data || [] })); 
+      const token = localStorage.getItem("accessToken")
+
+      if (!token) {
+        throw new Error("Access token not found")
+      }
+
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL_DEV}/users/get-companies`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      setData((prev) => ({ ...prev, data: response.data.data || [] }))
     } catch (error) {
-      console.error("Error fetching companies data:", error);
+      console.error("Error fetching companies data:", error)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchCompanies();
-  }, []);
+    fetchCompanies()
+  }, [])
 
   const sortData = (basis) => {
-    setIsAsc((prev) => !prev);
+    setIsAsc((prev) => !prev)
 
-    const dataCopy = [...data.data];
-    const sortedData = dataCopy?.sort((a, b) =>
-      isAsc ? (a[basis] > b[basis] ? 1 : -1) : a[basis] < b[basis] ? 1 : -1
-    );
+    const dataCopy = [...data.data]
+    const sortedData = dataCopy?.sort((a, b) => (isAsc ? (a[basis] > b[basis] ? 1 : -1) : a[basis] < b[basis] ? 1 : -1))
 
-    setData((prev) => ({ ...prev, data: sortedData }));
-  };
+    setData((prev) => ({ ...prev, data: sortedData }))
+  }
 
   return (
     <CompaniesContext.Provider value={{ data, setData, sortData, selectedData, setSelectedData, fetchCompanies }}>
       {children}
     </CompaniesContext.Provider>
-  );
+  )
 }

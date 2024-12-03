@@ -98,12 +98,12 @@ const getAllProductTypes = async (req, res, next) => {
 
 const createProductType = async (req, res, next) => {
   try {
-    const { name, price, description, status, attributes } = req.body;
+    const { name, description, status, attributes } = req.body;
     const userId = req.user._id;
     const userType = req.user.userType;
 
     if (
-      [name, price, description, status].some(
+      [name, description, status].some(
         (each) => each == null || each.trim() === ""
       )
     ) {
@@ -130,7 +130,6 @@ const createProductType = async (req, res, next) => {
 
     const providedFields = {
       name,
-      price,
       description: sanitizedDescription,
       status,
       attributes,
@@ -161,7 +160,7 @@ const createProductType = async (req, res, next) => {
 const updateProductType = async (req, res, next) => {
   try {
     const productTypeId = req.body?.id;
-    const { name, price, description, status, attributes } = req.body;
+    const { name, description, status, attributes } = req.body;
 
     if (!productTypeId) {
       throw new ApiError(400, "product type id not provided");
@@ -178,7 +177,7 @@ const updateProductType = async (req, res, next) => {
       }
     }
 
-    const providedFields = { name, price, description, status, attributes };
+    const providedFields = { name, description, status, attributes };
     const updatedProductType = await ProductTypeModel.findOneAndUpdate(
       { _id: productTypeId },
       providedFields,

@@ -47,7 +47,6 @@ export default function AddProdcutTypeFormTemplate() {
   const submitFn = (formData) => {
     addProductType.mutate({
       name: formData.productTypeName,
-      price:formData.productTypePrice,
       description: formData.productTypeDescription,
       status: productTypeStatus[formData.productTypeStatus],
       attributes: formData.productTypeAttributes,

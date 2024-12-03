@@ -65,7 +65,7 @@ const getBatchId = async (req, res, next) => {
 
     if (userType === "super-admin") {
       batchIds = await BatchIdModal.find()
-        .select("batchId startDate endDate _id createdAt createdBy")
+        .select("batchId startDate endDate _id createdAt updatedAt createdBy")
         .populate({
           path: "createdBy",
           select: "companyName _id",
@@ -73,7 +73,7 @@ const getBatchId = async (req, res, next) => {
         });
     } else {
       batchIds = await BatchIdModal.find({ createdBy: userId })
-        .select("batchId startDate endDate _id createdAt createdBy")
+        .select("batchId startDate endDate _id createdAt updatedAt createdBy")
         .populate("createdBy", "companyName _id");
     }
 
@@ -86,13 +86,14 @@ const getBatchId = async (req, res, next) => {
     const responseBatchIds = batchIds.map((batch) => ({
       _id: batch._id,
       batchId: batch.batchId,
-      startDate: batch.startDate,
-      endDate: batch.endDate,
-      createdAt: batch.createdAt,
       createdBy: {
         userId: batch.createdBy._id,
         companyName: batch.createdBy.companyName,
       },
+      startDate: batch.startDate,
+      endDate: batch.endDate,
+      createdAt: batch.createdAt,
+      updatedAt: batch.updatedAt || null, // Ensure `updatedAt` exists, fallback to null
     }));
 
     return res
@@ -107,6 +108,7 @@ const getBatchId = async (req, res, next) => {
     next(error);
   }
 };
+
 const editBatchId = async (req, res, next) => {
   try {
     const { userType, _id: userId } = req.user;

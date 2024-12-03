@@ -107,7 +107,7 @@ export default function ViewSingleProduct() {
             </div>
             <div className="rounded-lg bg-white px-4 py-4">
               <p className="font-bold">
-                Manufacturer: <span className="font-normal">{productData?.productManufacturer.companyName}</span>
+                Manufacturer: <span className="font-normal">{productData?.productManufacturer?.companyName}</span>
               </p>
             </div>
           </div>

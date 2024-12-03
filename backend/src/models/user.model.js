@@ -101,6 +101,10 @@ const userSchema = new mongoose.Schema(
       type: Date,
       required: false,
     },
+    // blockchainVerified: {
+    //   type: Boolean,
+    //   default: null,
+    // },
   },
   { timestamps: true }
 );

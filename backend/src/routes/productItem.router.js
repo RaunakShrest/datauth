@@ -27,7 +27,7 @@ router.delete(
   checkCompany,
   deleteProductItem
 );
-router.get("/:productId", checkUserAuth, getSingleProduct); // for view
+router.get("/:productId", getSingleProduct); // for view
 router.get("/getSingleProduct/:id", getProductById); // for edit
 router.patch(
   "/editProductDetails/:productId",

@@ -10,8 +10,9 @@ import ContextMenu from "./context-menu"
 import { useRouter } from "next/navigation"
 import axios from "axios"
 import { getCurrentUser } from "@/contexts/query-provider/api-request-functions/api-requests"
+import ImgWithWrapper from "../composites/img-with-wrapper"
 
-const DisableModal = ({ isOpen, onClose, onSubmit, company }) => {
+const DisableModal = ({ isOpen, onClose, onSubmit, company, loading }) => {
   const [remarks, setRemarks] = useState("")
 
   const handleDisableSubmit = () => {
@@ -46,10 +47,11 @@ const DisableModal = ({ isOpen, onClose, onSubmit, company }) => {
           </div>
           <div className="flex">
             <button
-              className="rounded-md bg-red-500 px-4 py-2 text-white"
+              className={`rounded-md bg-red-500 px-4 py-2 text-white ${loading ? "cursor-not-allowed bg-gray-400" : "bg-green-500"}`}
               onClick={handleDisableSubmit}
+              disabled={loading}
             >
-              Disable
+              {loading ? "Loading" : "Disable"}
             </button>
           </div>
         </div>
@@ -57,7 +59,7 @@ const DisableModal = ({ isOpen, onClose, onSubmit, company }) => {
     </div>
   )
 }
-const ApprovalModal = ({ isOpen, onClose, onConfirm }) => {
+const ApprovalModal = ({ isOpen, onClose, onConfirm, loading }) => {
   if (!isOpen) return null
 
   return (
@@ -69,20 +71,23 @@ const ApprovalModal = ({ isOpen, onClose, onConfirm }) => {
           <button
             className="rounded-md bg-red-600 px-4 py-2"
             onClick={onClose}
+            disabled={loading}
           >
             Cancel
           </button>
           <button
-            className="rounded-md bg-green-500 px-4 py-2 text-white"
+            className={`rounded-md px-4 py-2 text-white ${loading ? "cursor-not-allowed bg-gray-400" : "bg-green-500"}`}
             onClick={onConfirm}
+            disabled={loading}
           >
-            Yes
+            {loading ? "Loading..." : "Yes"}
           </button>
         </div>
       </div>
     </div>
   )
 }
+
 export default function DataTable() {
   const router = useRouter()
   const tableRef = useRef()
@@ -139,29 +144,38 @@ export default function DataTable() {
     )
   }
 
+  const [loading, setLoading] = useState(false) // Loading state for approval
+
   const handleApprove = async () => {
+    setLoading(true) // Start loading
     const updatedCompany = { ...companyToApprove, status: "enabled" } // Update status to 'enabled'
 
     try {
-      await updateCompanyStatus(companyToApprove._id, updatedCompany)
+      await updateCompanyStatus(companyToApprove.id, updatedCompany)
       await fetchCompanies()
       setIsApprovalModalOpen(false) // Close the modal after approval
     } catch (error) {
       console.error("Failed to approve company:", error)
+    } finally {
+      setLoading(false) // Stop loading
     }
   }
+
   const handleDisable = (company) => {
     setCompanyToDisable(company)
     setIsModalOpen(true) // Open modal
   }
   const handleSubmitDisable = async (company, remarks) => {
+    setLoading(true)
     const updatedCompany = { ...company, status: "disabled", remarks }
 
     try {
-      await updateCompanyStatus(company._id, updatedCompany)
+      await updateCompanyStatus(company.id, updatedCompany)
       await fetchCompanies()
     } catch (error) {
       console.error("Failed to disable company:", error)
+    } finally {
+      setLoading(false)
     }
   }
   const updateCompanyStatus = async (id, updatedCompany) => {
@@ -256,7 +270,27 @@ export default function DataTable() {
                     checked={isTableDataSelected(datum)}
                   />
                 </Table.Column>
-                <Table.Column className="px-2">{datum.companyName} </Table.Column>
+                <Table.Column className="px-8">
+                  <ImgWithWrapper
+                    wrapperClassName="size-10 mx-15"
+                    imageClassName="object-contain object-left"
+                    imageAttributes={{
+                      src:
+                        datum?.blockChainVerified === "pending"
+                          ? "/assets/Pending.png"
+                          : datum?.blockChainVerified
+                            ? "/assets/Verified2.png"
+                            : "/assets/Unverified.png",
+                      alt:
+                        datum?.blockChainVerified === "pending"
+                          ? "Pending Logo"
+                          : datum?.blockChainVerified
+                            ? "Verified Logo"
+                            : "Unverified Logo",
+                    }}
+                  />
+                </Table.Column>
+                <Table.Column className="px-2">{datum?.companyName} </Table.Column>
                 <Table.Column className="p-2">
                   <span className="line-clamp-1">
                     {datum.firstName} {datum.lastName}
@@ -277,7 +311,7 @@ export default function DataTable() {
                       "rounded-full px-2 py-1 text-white",
                       datum.status === "disabled"
                         ? "bg-red-500"
-                        : datum.status === "enabled"
+                        : datum.status === "verified" || datum.status === "enabled"
                           ? "bg-green-600"
                           : "bg-gray-500",
                     )}
@@ -316,14 +350,14 @@ export default function DataTable() {
                       {userRole !== "retailer" && (
                         <>
                           <ContextMenu.Item
-                            className="rounded-md bg-[#0000CC]"
-                            onClick={() => router.push(`/companies/${datum._id}/edit`)}
+                            className="rounded-md bg-[#02235E]"
+                            onClick={() => router.push(`/companies/${datum.id}/edit`)}
                           >
                             Edit
                           </ContextMenu.Item>
                           <ContextMenu.Item
                             className="rounded-md bg-[#0000CC]"
-                            onClick={() => handleDelete(datum._id)}
+                            onClick={() => handleDelete(datum.id)}
                           >
                             Delete
                           </ContextMenu.Item>
@@ -337,10 +371,10 @@ export default function DataTable() {
                             Approve
                           </ContextMenu.Item>
                           <ContextMenu.Item
-                            className="rounded-md bg-[#0000CC]"
-                            onClick={() => handleDisable(datum)}
+                            className="rounded-md bg-[#02235E]"
+                            onClick={() => router.push(`/companies/${datum.id}/edit`)}
                           >
-                            Disable
+                            Edit
                           </ContextMenu.Item>
                         </>
                       )}
@@ -371,11 +405,13 @@ export default function DataTable() {
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleSubmitDisable}
         company={companyToDisable}
+        loading={loading}
       />
       <ApprovalModal
         isOpen={isApprovalModalOpen}
         onClose={() => setIsApprovalModalOpen(false)}
         onConfirm={handleApprove}
+        loading={loading}
       />
     </div>
   )
