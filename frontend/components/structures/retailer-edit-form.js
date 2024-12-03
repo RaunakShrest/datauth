@@ -171,7 +171,7 @@ export default function EditRetailerForm() {
         <div className="space-y-6 rounded-md border-2 border-gray-200 p-6">
           <div>
             <Button
-              className="bg-[#017082] px-12 py-2 text-white"
+              className="bg-[#02235E] px-12 py-2 text-white"
               onClick={handleSubmit(submitFn)}
             >
               Save

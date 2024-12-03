@@ -263,7 +263,7 @@ export default function EditCompany({ params }) {
         <div>
           <Button
             type="submit"
-            className="bg-[#017082] px-8 py-2 text-white"
+            className="bg-[#02235E] px-8 py-2 text-white"
           >
             Save Changes
           </Button>

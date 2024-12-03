@@ -29,7 +29,7 @@ export default function RichtextToolbar({ editor }) {
       <Button
         className={twMerge(
           "inline-block rounded-sm px-4 py-2",
-          editor?.isActive("bold") ? "bg-[#017082] text-white" : "",
+          editor?.isActive("bold") ? "bg-[#02235E] text-white" : "",
         )}
         onClick={() => editor?.chain().focus().toggleBold().run()}
       >
@@ -40,7 +40,7 @@ export default function RichtextToolbar({ editor }) {
       <Button
         className={twMerge(
           "inline-block rounded-sm px-4 py-2",
-          editor?.isActive("italic") ? "bg-[#017082] text-white" : "",
+          editor?.isActive("italic") ? "bg-[#02235E] text-white" : "",
         )}
         onClick={() => editor?.chain().focus().toggleItalic().run()}
       >
@@ -51,7 +51,7 @@ export default function RichtextToolbar({ editor }) {
       <Button
         className={twMerge(
           "inline-block rounded-sm px-4 py-2",
-          editor?.isActive("underline") ? "bg-[#017082] text-white" : "",
+          editor?.isActive("underline") ? "bg-[#02235E] text-white" : "",
         )}
         onClick={() => editor?.chain().focus().toggleUnderline().run()}
       >
@@ -62,7 +62,7 @@ export default function RichtextToolbar({ editor }) {
       <Button
         className={twMerge(
           "inline-block rounded-sm px-4 py-2",
-          editor?.isActive("strike") ? "bg-[#017082] text-white" : "",
+          editor?.isActive("strike") ? "bg-[#02235E] text-white" : "",
         )}
         onClick={() => editor?.chain().focus().toggleStrike().run()}
       >
@@ -73,7 +73,7 @@ export default function RichtextToolbar({ editor }) {
       <Button
         className={twMerge(
           "inline-block rounded-sm px-4 py-2",
-          editor?.isActive("heading", { level: 2 }) ? "bg-[#017082] text-white" : "",
+          editor?.isActive("heading", { level: 2 }) ? "bg-[#02235E] text-white" : "",
         )}
         onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
       >
@@ -86,7 +86,7 @@ export default function RichtextToolbar({ editor }) {
       <Button
         className={twMerge(
           "inline-block rounded-sm px-4 py-2",
-          editor?.isActive("heading", { level: 4 }) ? "bg-[#017082] text-white" : "",
+          editor?.isActive("heading", { level: 4 }) ? "bg-[#02235E] text-white" : "",
         )}
         onClick={() => editor?.chain().focus().toggleHeading({ level: 4 }).run()}
       >
@@ -99,7 +99,7 @@ export default function RichtextToolbar({ editor }) {
       <Button
         className={twMerge(
           "inline-block rounded-sm px-4 py-2",
-          editor?.isActive("heading", { level: 6 }) ? "bg-[#017082] text-white" : "",
+          editor?.isActive("heading", { level: 6 }) ? "bg-[#02235E] text-white" : "",
         )}
         onClick={() => editor?.chain().focus().toggleHeading({ level: 6 }).run()}
       >
@@ -112,7 +112,7 @@ export default function RichtextToolbar({ editor }) {
       <Button
         className={twMerge(
           "inline-block rounded-sm px-4 py-2",
-          editor?.isActive("bulletList") ? "bg-[#017082] text-white" : "",
+          editor?.isActive("bulletList") ? "bg-[#02235E] text-white" : "",
         )}
         onClick={() => editor?.chain().focus().toggleBulletList().run()}
       >
@@ -123,7 +123,7 @@ export default function RichtextToolbar({ editor }) {
       <Button
         className={twMerge(
           "inline-block rounded-sm px-4 py-2",
-          editor?.isActive("orderedList") ? "bg-[#017082] text-white" : "",
+          editor?.isActive("orderedList") ? "bg-[#02235E] text-white" : "",
         )}
         onClick={() => editor?.chain().focus().toggleOrderedList().run()}
       >
@@ -136,7 +136,7 @@ export default function RichtextToolbar({ editor }) {
           <Button
             className={twMerge(
               "inline-block rounded-sm px-4 py-2",
-              editor?.isActive("link") ? "bg-[#017082] text-white" : "",
+              editor?.isActive("link") ? "bg-[#02235E] text-white" : "",
             )}
             onClick={() => {
               editor?.isActive("link") ? editor?.chain().focus().unsetLink().run() : setPopOverOpen(true)

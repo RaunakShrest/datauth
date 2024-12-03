@@ -19,7 +19,7 @@ export default function BatchTemplate() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">{title}</h2>
+        <h2 className="text-5xl font-bold">{title}</h2>
         <Button
           onClick={() => setIsModalOpen(true)}
           className="flex items-center bg-[#02235E] px-4 py-2 text-white"
