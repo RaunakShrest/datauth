@@ -130,12 +130,14 @@ export default function EditRetailer({ params }) {
     }
 
     try {
+      const accessToken = localStorage.getItem("accessToken")
       await axios.patch(
         `${process.env.NEXT_PUBLIC_BASE_URL_DEV}/retailers/editRetailerDetails/${retailerId}`,
         updatedData,
         {
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
           },
         },
       )

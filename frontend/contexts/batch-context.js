@@ -17,9 +17,20 @@ export const useBatch = () => {
 
 export default function BatchProvider({ children, refreshTrigger }) {
   const [isAsc, setIsAsc] = useState(true)
+  const [filters, setFilters] = useState({
+    page: 1,
+    limit: 10,
+  })
   const [data, setData] = useState({
     data: [],
     columns: [
+      {
+        id: "blockChainVerified",
+        text: "BC Verification",
+        dataKey: "blockChainVerified",
+        isSortable: false,
+        width: "150px",
+      },
       {
         id: "batchId",
         text: "Batch Id",
@@ -37,12 +48,17 @@ export default function BatchProvider({ children, refreshTrigger }) {
   const fetchBatches = async () => {
     try {
       const accessToken = localStorage.getItem("accessToken")
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL_DEV}/batch/getBatchIds`, {
+      const query = new URLSearchParams(filters).toString()
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL_DEV}/batch/getBatchIds?${query}`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
       })
-      setData((prev) => ({ ...prev, data: response.data.data || [] }))
+      setData((prev) => ({
+        ...prev,
+        data: response.data?.message?.batches || [],
+        pagination: response.data?.message?.pagination || [],
+      }))
     } catch (error) {
       console.error("Error fetching batches data:", error)
     }
@@ -50,7 +66,7 @@ export default function BatchProvider({ children, refreshTrigger }) {
 
   useEffect(() => {
     fetchBatches()
-  }, [refreshTrigger])
+  }, [refreshTrigger, filters])
 
   const sortData = (basis) => {
     setIsAsc((prev) => !prev)
@@ -62,7 +78,7 @@ export default function BatchProvider({ children, refreshTrigger }) {
   }
 
   return (
-    <BatchContext.Provider value={{ data, setData, sortData, selectedData, setSelectedData }}>
+    <BatchContext.Provider value={{ data, setData, sortData, selectedData, setSelectedData, filters, setFilters }}>
       {children}
     </BatchContext.Provider>
   )

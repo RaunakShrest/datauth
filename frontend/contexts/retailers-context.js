@@ -18,22 +18,31 @@ export const useRetailers = () => {
 
 export default function RetailersProvider({ children }) {
   const [isAsc, setIsAsc] = useState(true)
+  const [filters, setFilters] = useState({
+    page: 1,
+    limit: 2,
+  })
 
   const [data, setData] = useState({
-    data: [], // Initially empty, will be populated by API call
+    data: [],
     columns: [
+      {
+        id: "blockChainVerified",
+        text: "BC Verification",
+        dataKey: "blockChainVerified",
+        isSortable: false,
+        width: "150px",
+      },
       {
         id: "retailer-name",
         text: "Retailer Name",
         dataKey: "retailerName",
-        isSortable: true,
         width: "250px",
       },
       {
         id: "retail-owner-name",
         text: "Owner Name",
         dataKey: "name",
-        isSortable: true,
         width: "150px",
       },
       {
@@ -47,7 +56,6 @@ export default function RetailersProvider({ children }) {
         id: "email",
         text: "Email",
         dataKey: "email",
-        isSortable: true,
         width: "300px",
       },
       {
@@ -57,6 +65,7 @@ export default function RetailersProvider({ children }) {
         isSortable: true,
         width: "100px",
       },
+      { id: "createdAt", text: "Created Date", dataKey: "createdAt", isSortable: true, width: "150px" },
     ],
   })
   const [selectedData, setSelectedData] = useState([])
@@ -70,17 +79,49 @@ export default function RetailersProvider({ children }) {
     setData((prev) => ({ ...prev, data: sortedData }))
   }
 
+  // const sortData = (basis) => {
+  //   setFilters((prev) => ({
+  //     ...prev,
+  //     sort: basis,
+  //     order: prev.order === "asc" ? "desc" : "asc",
+  //   }))
+  // }
   const fetchRetailers = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL_DEV}/retailers/getRetailers`)
+      // Retrieve the accessToken from localStorage
+      const accessToken = localStorage.getItem("accessToken")
+
+      if (!accessToken) {
+        console.error("Access token not found in localStorage")
+        return
+      }
+
+      // Construct the query string from filters
+      const query = new URLSearchParams(filters).toString()
+
+      // Make the API request with the Authorization header
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL_DEV}/retailers/getRetailers?${query}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
+
+      console.log("response from fetchRetailers", response.data)
+
+      // Update the state with fetched data
       setData((prev) => ({
         ...prev,
-        data: response.data.data || [],
+        data: response.data?.message?.retailers || [],
+        pagination: response.data?.message?.pagination || {},
       }))
     } catch (error) {
       console.error("Error fetching retailers data", error)
     }
   }
+
+  useEffect(() => {
+    fetchRetailers()
+  }, [filters]) // Run whenever filters change
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -92,17 +133,11 @@ export default function RetailersProvider({ children }) {
       }
     }
 
-    const fetchData = async () => {
-      await fetchRetailers()
-      await fetchCurrentUser()
-    }
-
-    fetchData()
+    fetchCurrentUser()
   }, [])
-
   return (
     <RetailersContext.Provider
-      value={{ data, setData, sortData, selectedData, setSelectedData, fetchRetailers, userRole }}
+      value={{ data, setData, sortData, selectedData, setSelectedData, fetchRetailers, userRole, filters, setFilters }}
     >
       {children}
     </RetailersContext.Provider>

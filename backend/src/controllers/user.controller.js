@@ -456,7 +456,7 @@ const getCompanies = async (req, res, next) => {
       };
 
       const response = await axios.post(
-        "http://192.168.1.96:4000/channels/mychannel/chaincodes/Company",
+        `${process.env.BLOCKCHAIN_TEST_URL}/channels/mychannel/chaincodes/Company`,
         payload,
         {
           headers: {
@@ -606,15 +606,17 @@ const updateCompanyStatus = async (req, res, next) => {
 
         const payload = {
           fcn: "CreateCompany",
-          peers: ["peer0.company.example.com"],
+          // peers: ["peer0.company.example.com"],
           args,
         };
 
         const registerPayload = {
-          username: companyData.firstName,
+          userid: companyData._id,
           orgName:
             companyData.userType.charAt(0).toUpperCase() +
             companyData.userType.slice(1),
+
+          companyName: companyData.companyName,
         };
 
         const registerResponse = await axios.post(
@@ -635,7 +637,7 @@ const updateCompanyStatus = async (req, res, next) => {
         }
 
         const apiResponse = await axios.post(
-          "http://192.168.1.96:4000/channels/mychannel/chaincodes/Company",
+          `${process.env.BLOCKCHAIN_TEST_URL}/channels/mychannel/chaincodes/Company`,
           payload,
           {
             headers: {
@@ -803,25 +805,11 @@ const testHash = async (req, res, next) => {
   try {
     // Data to be hashed
     const companyForHashing = {
-      id: "6704c07f37d54fbca4a5644d",
-      address: {
-        zip: 88992,
-        city: "ktm",
-        country: "Nepal",
-        addressLine: "humlas",
-      },
-      firstName: "Ramon",
-      lastName: "Prasads",
-      email: "ram@gmail.com",
-      password: "$2b$10$apTB03zgF1u.kqEs5X8Uf.iGSnDtFeRIotMQST8de8Fy8Gxmbk1U.",
-      phoneNumber: "+123456789012",
-      userType: "company",
-      productType: ["Gloves"],
-      companyName: "RamEstablishment",
-      status: "enabled",
-      profilePic: "uploads\\profilePics\\file-1731314491919-430431490.jpg",
-      remarks: "",
-      createdAt: "2024-10-08T05:17:51.134Z",
+      id: "675005533ef5c4d78235de8c",
+      batchId: "apple",
+      createdBy: "6704c07f37d54fbca4a5644d",
+      startDatetime: "2024-12-04T07:31:00.000Z",
+      endDatetime: "2024-12-07T07:31:00.000Z",
     };
 
     // Convert the object to a string
@@ -899,7 +887,7 @@ const uploadProfilePicture = async (req, res) => {
 
     // Call the external API
     const apiResponse = await axios.post(
-      "http://192.168.1.96:4000/channels/mychannel/chaincodes/Company",
+      `${process.env.BLOCKCHAIN_TEST_URL}/channels/mychannel/chaincodes/Company`,
       payload,
       {
         headers: {
@@ -1072,7 +1060,7 @@ const userEditProfile = async (req, res, next) => {
     // Prepare data for the external API
     const payload = {
       fcn: "EditCompanyProfile",
-      peers: ["peer0.company.example.com"],
+      // peers: ["peer0.company.example.com"],
       args: [
         userId,
         existingUser.profilePic,
@@ -1092,7 +1080,7 @@ const userEditProfile = async (req, res, next) => {
 
     // Call the external API
     const apiResponse = await axios.post(
-      "http://192.168.1.96:4000/channels/mychannel/chaincodes/Company",
+      `${process.env.BLOCKCHAIN_TEST_URL}/channels/mychannel/chaincodes/Company`,
       payload,
       {
         headers: {
@@ -1251,7 +1239,7 @@ const blockChainTokenController = async (req, res, next) => {
 
     // Call the external API
     const response = await axios.post(
-      "http://192.168.1.96:4000/users/token",
+      `${process.env.BLOCKCHAIN_TEST_URL}/users/token`,
       payload
     );
     console.log("response from blockChainToken", response.data);

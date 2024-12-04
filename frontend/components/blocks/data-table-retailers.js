@@ -2,7 +2,7 @@
 
 import { useRetailers } from "@/contexts/retailers-context"
 import { useRouter } from "next/navigation"
-import React, { useRef, useState } from "react"
+import React, { useRef, useState, useEffect } from "react"
 import Table from "./table"
 import ContextMenu from "./context-menu"
 import Pagination from "../composites/pagination"
@@ -11,6 +11,7 @@ import { twMerge } from "tailwind-merge"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faEllipsisVertical } from "@fortawesome/free-solid-svg-icons"
 import axios from "axios"
+import ImgWithWrapper from "../composites/img-with-wrapper"
 
 const DisableModal = ({ isOpen, onClose, onSubmit, retailer }) => {
   const [remarks, setRemarks] = useState("")
@@ -62,26 +63,31 @@ export default function DataTable() {
   const contextMenuRef = useRef()
   const [currentPage, setCurrentPage] = useState(1)
 
-  const { data, sortData, selectedData, setSelectedData, fetchRetailers, userRole } = useRetailers()
+  const { data, sortData, selectedData, setSelectedData, fetchRetailers, userRole, filters, setFilters } =
+    useRetailers()
 
   const numberOfDataPerPage = 8
-  const indexOfLastData = currentPage * numberOfDataPerPage
-  const indexOfFirstData = indexOfLastData - numberOfDataPerPage
+  // const indexOfLastData = currentPage * numberOfDataPerPage
+  // const indexOfFirstData = indexOfLastData - numberOfDataPerPage
 
-  const currentData = data?.data?.slice(indexOfFirstData, indexOfLastData) || []
+  console.log("data from data table", data)
+
+  const filteredData = data?.data || [] // Safeguard against undefined
 
   const isTableDataSelected = (dataToVerify) => {
     return selectedData.some((eachSelected) => eachSelected.companyName === dataToVerify.companyName) ? true : false
   }
+  useEffect(() => {
+    console.log("Fetching data for page:", currentPage)
+    setFilters((prevFilters) => ({ ...prevFilters, page: currentPage }))
+  }, [currentPage])
 
   const isTableHeadingSelected = () => {
-    const isAllDataSelected = data.data?.every((datum) =>
-      selectedData.some((eachSelected) => eachSelected.companyName === datum.companyName),
-    )
-
-    return isAllDataSelected
+    // const isAllDataSelected = data.data?.retailers.every((datum) =>
+    //   selectedData.some((eachSelected) => eachSelected.companyName === datum.companyName),
+    // )
+    // return isAllDataSelected
   }
-
   const handleTableHeadingCheckboxChange = () => {
     setSelectedData((prev) =>
       prev.length > 0 ? (prev.length < data.data.length ? [...data.data] : []) : [...data.data],
@@ -98,7 +104,7 @@ export default function DataTable() {
   const handleApprove = async (retailer) => {
     const updatedRetailer = { ...retailer, status: "enabled" }
     try {
-      await updateRetailerStatus(retailer._id, updatedRetailer)
+      await updateRetailerStatus(retailer.id, updatedRetailer)
       await fetchRetailers()
     } catch (error) {
       console.error("Failed to approve retailer", error)
@@ -112,7 +118,7 @@ export default function DataTable() {
     const updatedRetailer = { ...retailer, status: "disabled", remarks }
 
     try {
-      await updateRetailerStatus(retailer._id, updatedRetailer)
+      await updateRetailerStatus(retailer.id, updatedRetailer)
       await fetchRetailers()
     } catch (error) {
       console.error("Failed to disable retailer:", error)
@@ -120,12 +126,14 @@ export default function DataTable() {
   }
   const updateRetailerStatus = async (id, updatedRetailer) => {
     try {
+      const accessToken = localStorage.getItem("accessToken")
       const response = await axios.patch(
         `${process.env.NEXT_PUBLIC_BASE_URL_DEV}/retailers/updateRetailerStatus/${id}`,
         updatedRetailer,
         {
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
           },
         },
       )
@@ -177,7 +185,7 @@ export default function DataTable() {
           </Table.Head>
 
           <Table.Body>
-            {currentData?.map((datum, idx) => (
+            {filteredData?.map((datum, idx) => (
               <Table.Row
                 key={idx}
                 className="border-b border-b-[#605E5E] bg-white"
@@ -186,6 +194,26 @@ export default function DataTable() {
                   <Checkbox
                     onChange={() => handleTableDataCheckboxChange(datum)}
                     checked={isTableDataSelected(datum)}
+                  />
+                </Table.Column>
+                <Table.Column className="px-8">
+                  <ImgWithWrapper
+                    wrapperClassName="size-10 mx-15"
+                    imageClassName="object-contain object-left"
+                    imageAttributes={{
+                      src:
+                        datum?.blockChainVerified === "pending"
+                          ? "/assets/Pending.png"
+                          : datum?.blockChainVerified
+                            ? "/assets/Verified2.png"
+                            : "/assets/Unverified.png",
+                      alt:
+                        datum?.blockChainVerified === "pending"
+                          ? "Pending Logo"
+                          : datum?.blockChainVerified
+                            ? "Verified Logo"
+                            : "Unverified Logo",
+                    }}
                   />
                 </Table.Column>
 
@@ -220,6 +248,17 @@ export default function DataTable() {
                     {datum.status}
                   </span>
                 </Table.Column>
+                <Table.Column className="p-2">
+                  {new Date(datum.createdAt).toLocaleString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    hour: "numeric",
+                    minute: "numeric",
+                    second: "numeric",
+                    hour12: true,
+                  })}
+                </Table.Column>
 
                 <Table.Column className="p-2">
                   <ContextMenu
@@ -247,7 +286,7 @@ export default function DataTable() {
 
                       <ContextMenu.Item
                         className="rounded-md bg-[#0000CC]"
-                        onClick={() => router.push(`/retailers/${datum._id}/edit`)}
+                        onClick={() => router.push(`/retailers/${datum.id}/edit`)}
                       >
                         Edit
                       </ContextMenu.Item>
@@ -284,10 +323,10 @@ export default function DataTable() {
 
       <div className="text-right">
         <Pagination
-          totalNumberOfData={data?.data?.length || 0}
-          numberOfDataPerPage={numberOfDataPerPage}
+          totalNumberOfData={data?.pagination?.totalItems || 0}
+          numberOfDataPerPage={filters.limit}
           currentPage={currentPage}
-          onPageChange={setCurrentPage}
+          onPageChange={(newPage) => setCurrentPage(newPage)}
         />
       </div>
       <DisableModal

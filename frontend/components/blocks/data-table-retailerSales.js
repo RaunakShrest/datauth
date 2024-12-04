@@ -66,11 +66,10 @@ export default function DataTable() {
   const numberOfDataPerPage = 8
   const [hasFetched, setHasFetched] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
-  const [searchBatchId, setSearchBatchId] = useState("")
   const [searchCustomerName, setSearchCustomerName] = useState("")
-  const [searchProductName, setSearchProductName] = useState("")
   const [searchCompanyName, setSearchCompanyName] = useState("")
-  const [searchData, setSearchData] = useState("")
+  const [searchProductName, setSearchProductName] = useState("")
+  const [searchRetalerName, setSearchRetailerName] = useState("")
 
   const initialStartDate = new Date()
   initialStartDate.setMonth(initialStartDate.getMonth() - 1) // Set to one month before today
@@ -102,10 +101,35 @@ export default function DataTable() {
     setFilters({ ...filters, page: currentPage })
   }, [currentPage])
 
-  const debouncedSearch = useDebounce({ searchValue: searchData })
+  const debouncedSearchCustomerName = useDebounce({ searchValue: searchCustomerName })
+  const debouncedSearchCompanyName = useDebounce({ searchValue: searchCompanyName })
+  const debouncedSearchProducName = useDebounce({ searchValue: searchProductName })
+  const debouncedSearchRetailerName = useDebounce({ searchValue: searchRetalerName })
+
   useEffect(() => {
-    setFilters({ ...filters, search: debouncedSearch })
-  }, [debouncedSearch])
+    setFilters((prev) => ({
+      ...prev,
+      search: `${debouncedSearchCustomerName} `.trim(),
+    }))
+  }, [debouncedSearchCustomerName])
+  useEffect(() => {
+    setFilters((prev) => ({
+      ...prev,
+      productNameSearch: ` ${debouncedSearchProducName}`.trim(),
+    }))
+  }, [debouncedSearchProducName])
+  useEffect(() => {
+    setFilters((prev) => ({
+      ...prev,
+      retailerNameSearch: `${debouncedSearchRetailerName} `.trim(),
+    }))
+  }, [debouncedSearchRetailerName])
+  useEffect(() => {
+    setFilters((prev) => ({
+      ...prev,
+      companyNameSearch: debouncedSearchCompanyName.trim(),
+    }))
+  }, [debouncedSearchCompanyName])
 
   const handleTableDataCheckboxChange = (clickedData) => {
     setSelectedData((prev) =>
@@ -122,38 +146,16 @@ export default function DataTable() {
   const isTableDataSelected = (datum) => {
     return selectedData.some((selected) => selected.name === datum.name)
   }
-  console.log("the data is ", data)
+  console.log("data from retailers sales", data)
   const filteredData = data?.data?.customerInfo
-  // data?.data?.customerInfo?.filter((datum) => {
-  //   // const createdAt = new Date(datum?.createdAt)
-  //   // const isWithinDateRange =
-  //   //   (!startDate || createdAt >= new Date(startDate)) &&
-  //   //   (!endDate || createdAt < new Date(new Date(endDate).setHours(24, 0, 0, 0))) // Adjust end date to include entire day
-  //   // return (
-  //   //   datum.soldProducts?.batchId.toLowerCase().includes(searchBatchId.toLowerCase()) &&
-  //   //   datum.name.toLowerCase().includes(searchCustomerName.toLowerCase()) &&
-  //   //   datum.soldProducts?.productName.toLowerCase().includes(searchProductName.toLowerCase()) &&
-  //   //   datum.soldProducts?.productManufacturer?.companyName.toLowerCase().includes(searchCompanyName.toLowerCase()) &&
-  //   //   isWithinDateRange
-  //   // )
-  //   console.log(datum)
-
-  // }) || []
-  // const currentData = filteredData.slice(indexOfFirstData, indexOfLastData)
 
   const handleReset = () => {
-    setSearchBatchId("")
-    setSearchCustomerName("")
-    setSearchProductName("")
-    setSearchCompanyName("")
-    setStartDate(initialStartDate.toISOString().split("T")[0]) // Reset to initial start date
-    setEndDate(initialEndDate.toISOString().split("T")[0]) // Reset to initial end date
+    window.location.reload()
   }
   const handleDownloadCSV = () => {
     const csvContent = convertToCSV(selectedData)
     downloadCSV(csvContent)
   }
-  const handleSearch = () => {}
 
   return (
     <div className="space-y-4">
@@ -162,18 +164,9 @@ export default function DataTable() {
           <div className="m-2">
             <input
               type="text"
-              placeholder="Search by Batch ID"
-              value={searchBatchId}
-              onChange={(e) => setSearchBatchId(e.target.value)}
-              className="rounded-md border border-gray-600 p-2"
-            />
-          </div>
-          <div className="m-2">
-            <input
-              type="text"
-              placeholder="Search by Customer name"
-              value={searchCustomerName}
-              onChange={(e) => setSearchCustomerName(e.target.value)}
+              placeholder="Search by Retailer Name"
+              value={searchRetalerName}
+              onChange={(e) => setSearchRetailerName(e.target.value)}
               className="rounded-md border border-gray-600 p-2"
             />
           </div>
@@ -189,11 +182,20 @@ export default function DataTable() {
           <div className="m-2">
             <input
               type="text"
+              placeholder="Search by Customer name"
+              value={searchCustomerName}
+              onChange={(e) => setSearchCustomerName(e.target.value)}
+              className="rounded-md border border-gray-600 p-2"
+            />
+          </div>
+          <div className="m-2">
+            <input
+              type="text"
               placeholder="Search by Company name"
               // value={searchCompanyName}
               // onChange={(e) => setSearchCompanyName(e.target.value)}
-              value={searchData}
-              onChange={(e) => setSearchData(e.target.value)}
+              value={searchCompanyName}
+              onChange={(e) => setSearchCompanyName(e.target.value)}
               className="rounded-md border border-gray-600 p-2"
             />
           </div>
@@ -222,12 +224,6 @@ export default function DataTable() {
             className="ml-3 mt-2 rounded-md bg-red-500 px-4 py-2 text-white lg:mt-0"
           >
             Reset
-          </button>
-          <button
-            onClick={handleSearch}
-            className="ml-3 mt-2 rounded-md bg-green-500 px-4 py-2 text-white lg:mt-0"
-          >
-            Search
           </button>
         </div>
       </div>

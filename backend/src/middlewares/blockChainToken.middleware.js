@@ -12,7 +12,7 @@ export const blockChainToken = async (req, res, next) => {
       throw new ApiError(401, "User not authenticated");
     }
 
-    const { firstName, _id, userType } = req.user;
+    const { firstName, _id, userType, companyName } = req.user;
     if (!firstName || !_id) {
       throw new ApiError(400, "Missing required user information");
     }
@@ -21,10 +21,14 @@ export const blockChainToken = async (req, res, next) => {
         ? "Superadmin"
         : userType.charAt(0).toUpperCase() + userType.slice(1);
 
-    const payload = { username: firstName, orgName: formattedUserType };
+    const payload = {
+      userid: _id,
+      orgName: formattedUserType,
+      companyName: companyName,
+    };
 
     const response = await axios.post(
-      "http://192.168.1.96:4000/users/token",
+      `${process.env.BLOCKCHAIN_TEST_URL}/users/token`,
       payload
     );
 

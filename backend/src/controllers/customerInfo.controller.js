@@ -162,7 +162,17 @@ const postCustomerInfo = async (req, res, next) => {
 
 const getSoldProductsByRetailer = async (req, res, next) => {
   try {
-    const { page = 1, limit = 10, search = "", startDate, endDate } = req.query;
+    const {
+      page = 1,
+      limit = 10,
+      search = "",
+      emailSearch = "",
+      companyNameSearch = "",
+      retailerNameSearch = "",
+      productNameSearch = "",
+      startDate,
+      endDate,
+    } = req.query;
 
     const filters = {};
     const options = {
@@ -181,59 +191,113 @@ const getSoldProductsByRetailer = async (req, res, next) => {
       }
     }
 
-    // Base query setup
+    if (req.user.userType !== "super-admin") {
+      const retailerId = req.user._id;
+      if (!retailerId) {
+        throw new ApiError(400, "Retailer ID not found");
+      }
+      filters.soldBy = retailerId;
+    }
+
+    // Add search conditions
+    const searchConditions = [];
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
+      searchConditions.push({ name: searchRegex });
+    }
+    if (emailSearch) {
+      const emailRegex = new RegExp(emailSearch, "i");
+      searchConditions.push({ email: emailRegex });
+    }
+
+    if (searchConditions.length > 0) {
+      filters.$or = searchConditions;
+    }
+
+    // Base query with filters
     const baseQuery = CustomerInfoModel.find(filters)
       .populate({
         path: "soldProducts",
         populate: {
           path: "productManufacturer",
-          select: "companyName",
+          select: "companyName", // Populate companyName inside productManufacturer
         },
       })
       .populate({
         path: "soldBy",
-        select: "companyName",
+        select: "companyName", // Populate companyName inside soldBy
       });
 
-    // Apply search filter (searching across name, email, and soldBy.companyName)
-    if (search) {
-      baseQuery.or([
-        { name: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
-        { "soldBy.companyName": { $regex: search, $options: "i" } },
-      ]);
-    }
+    // Execute the query
+    const customerInfo = await baseQuery.exec();
 
-    if (req.user.userType !== "super-admin") {
-      // Restrict to retailer's own sales for non-super-admin users
-      const retailerId = req.user._id;
+    // Filter by companyNameSearch, retailerNameSearch, and productNameSearch
+    const filteredData = customerInfo.filter((doc) => {
+      let matches = true;
 
-      if (!retailerId) {
-        throw new ApiError(400, "Retailer ID not found");
+      if (companyNameSearch) {
+        const companyRegex = new RegExp(companyNameSearch, "i");
+        if (doc.soldProducts) {
+          if (Array.isArray(doc.soldProducts)) {
+            matches =
+              matches &&
+              doc.soldProducts.some((product) =>
+                companyRegex.test(
+                  product.productManufacturer?.companyName || ""
+                )
+              );
+          } else if (doc.soldProducts.productManufacturer) {
+            matches =
+              matches &&
+              companyRegex.test(
+                doc.soldProducts.productManufacturer.companyName || ""
+              );
+          }
+        } else {
+          matches = false;
+        }
       }
 
-      filters.soldBy = retailerId;
-    }
+      if (retailerNameSearch) {
+        const retailerRegex = new RegExp(retailerNameSearch, "i");
+        matches = matches && retailerRegex.test(doc.soldBy?.companyName || "");
+      }
 
-    // Apply pagination
-    const customerInfo = await baseQuery
-      .limit(options.limit)
-      .skip((options.page - 1) * options.limit)
-      .exec();
+      if (productNameSearch) {
+        const productRegex = new RegExp(productNameSearch, "i");
+        if (doc.soldProducts) {
+          if (Array.isArray(doc.soldProducts)) {
+            matches =
+              matches &&
+              doc.soldProducts.some((product) =>
+                productRegex.test(product.productName || "")
+              );
+          } else {
+            matches =
+              matches && productRegex.test(doc.soldProducts.productName || "");
+          }
+        } else {
+          matches = false;
+        }
+      }
 
-    if (!customerInfo.length) {
-      throw new ApiError(404, "No products found");
-    }
+      return matches;
+    });
 
-    // Count total documents for pagination
-    const totalItems = await CustomerInfoModel.countDocuments(filters);
+    const totalItems = filteredData.length;
 
+    const paginatedData = filteredData.slice(
+      (options.page - 1) * options.limit,
+      options.page * options.limit
+    );
+
+    // Respond with paginated data
     res.status(200).json(
       new ApiResponse(
         200,
         "Products sold by retailers retrieved successfully",
         {
-          customerInfo,
+          customerInfo: paginatedData,
           pagination: {
             totalItems,
             totalPages: Math.ceil(totalItems / options.limit),

@@ -41,13 +41,13 @@ const editCompanyInfo = async (req, res, next) => {
     // Prepare the payload
     const payload = {
       fcn: "EditCompany",
-      peers: ["peer0.company.example.com"],
+      // peers: ["peer0.company.example.com"],
       args,
     };
 
     // Send the payload to the friend's API
     const response = await axios.post(
-      "http://192.168.1.96:4000/channels/mychannel/chaincodes/Company",
+      `${process.env.BLOCKCHAIN_TEST_URL}/channels/mychannel/chaincodes/Company`,
       payload,
       {
         headers: {
