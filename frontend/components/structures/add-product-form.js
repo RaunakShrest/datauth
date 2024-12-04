@@ -122,10 +122,7 @@ export default function AddProductFormTemplate() {
 
   const handleBatchChange = (event) => {
     const selectedId = event.target.value
-    const selectedBatch = batchIdOptions.find((batch) => batch._id === selectedId) // Find the selected batch object
-    if (selectedBatch) {
-      setSelectedBatchId(selectedBatch._id)
-    }
+    setSelectedBatchId(selectedId)
   }
 
   return (
@@ -186,10 +183,10 @@ export default function AddProductFormTemplate() {
           <InputBatch
             type="select"
             className={twMerge("rounded-md border-2 border-[#bbb]", errors.batchId ? "border-red-600" : "")}
-            options={batchIdOptions?.map((batch) => ({
-              key: batch._id,
-              value: batch._id,
-              label: batch.batchId, // Human-readable label
+            options={batchIdOptions.map((batch) => ({
+              key: batch.id,
+              value: batch.id,
+              label: batch.batchId,
             }))}
             name="batchId"
             value={selectedBatchId} // This  holds the ObjectId
