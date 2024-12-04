@@ -43,7 +43,7 @@ export default function AddProductFormTemplate() {
     queryFn: fetchBatchIds,
     staleTime: reactQueryStaleTime,
   })
-  const batchIdOptions = batchIdsQuery.data?.data || [] // Assuming response.data contains an array of batch IDs
+  const batchIdOptions = batchIdsQuery.data?.message?.batches || [] // Assuming response.data contains an array of batch IDs
 
   const handleProductTypeChange = useCallback(
     (e) => {
@@ -131,16 +131,6 @@ export default function AddProductFormTemplate() {
   return (
     <div className="space-y-6">
       <div className="space-y-10 rounded-md border-2 border-gray-200 bg-white p-6">
-        {/* <AnimatedInput
-            placeholder="Company Name"
-            required
-            disabled
-            register={register}
-            errors={errors}
-            getValues={getValues}
-            name="productManufacturer"
-          /> */}
-
         <AnimatedInput
           placeholder="Product Name"
           required
@@ -196,7 +186,7 @@ export default function AddProductFormTemplate() {
           <InputBatch
             type="select"
             className={twMerge("rounded-md border-2 border-[#bbb]", errors.batchId ? "border-red-600" : "")}
-            options={batchIdOptions.map((batch) => ({
+            options={batchIdOptions?.map((batch) => ({
               key: batch._id,
               value: batch._id,
               label: batch.batchId, // Human-readable label

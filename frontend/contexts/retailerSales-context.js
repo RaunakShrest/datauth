@@ -28,10 +28,14 @@ export default function RetailerSalesProvider({ children }) {
   const initialEndDate = new Date()
   const [filters, setFilters] = useState({
     search: "",
+    emailSearch: "",
+    companyNameSearch: "",
+    retailerNameSearch: "",
+    productNameSearch: "",
     startDate: initialStartDate.toISOString().split("T")[0],
     endDate: initialEndDate.toISOString().split("T")[0],
     page: 1,
-    limit: 15,
+    limit: 10,
   })
 
   // Fetch user role

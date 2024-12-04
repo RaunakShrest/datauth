@@ -116,7 +116,7 @@ const createProductItem = async (req, res, next) => {
     } = req.body;
 
     const sanitizedStatus =
-      productStatus?.toLowerCase().replace(/['"]+/g, "").trim() || "pending";
+      productStatus?.toLowerCase().replace(/['"]+/g, "").trim() || "completed";
     if (!sanitizedStatus) {
       throw new ApiError(400, "Product status is required");
     }

@@ -36,7 +36,10 @@ export default function DataTable() {
   const numberOfDataPerPage = 8
 
   const filteredProducts = products.filter((product) => {
-    return product.batchId?.batchId.toLowerCase().includes(searchTerm.toLowerCase())
+    return (
+      product?.batchId?.batchId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.productName.toLowerCase().includes(searchTerm.toLowerCase())
+    )
   })
 
   const indexOfLastData = currentPage * numberOfDataPerPage
@@ -257,7 +260,7 @@ export default function DataTable() {
                 <Table.Column className="px-2">{datum.productManufacturer?.companyName || "N/A"}</Table.Column>
                 <Table.Column className="p-2">{datum.productPrice}</Table.Column>
                 <Table.Column className="p-2">{datum.productSku}</Table.Column>
-                <Table.Column className="p-2">{datum.batchId?.batchId}</Table.Column>
+                <Table.Column className="p-2">{datum.batchId?.batchId || "N/A"}</Table.Column>
                 <Table.Column className="p-2">
                   {" "}
                   <span

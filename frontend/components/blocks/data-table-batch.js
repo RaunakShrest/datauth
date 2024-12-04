@@ -12,6 +12,7 @@ import { useBatch } from "@/contexts/batch-context"
 import { getCurrentUser } from "@/contexts/query-provider/api-request-functions/api-requests"
 import { Modal } from "../elements/Modal"
 import toast from "react-hot-toast"
+import ImgWithWrapper from "../composites/img-with-wrapper"
 
 export default function DataTable() {
   const tableRef = useRef()
@@ -20,15 +21,16 @@ export default function DataTable() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [selectedBatch, setSelectedBatch] = useState(null)
   const [dataState, setDataState] = useState({ columns: [], data: [] }) // Local state for table data
-  const { data, sortData, selectedData, setSelectedData } = useBatch()
+  const { data, sortData, selectedData, setSelectedData, filters, setFilters } = useBatch()
 
   const [currentPage, setCurrentPage] = useState(1)
 
-  const numberOfDataPerPage = 8
-  const indexOfLastData = currentPage * numberOfDataPerPage
-  const indexOfFirstData = indexOfLastData - numberOfDataPerPage
+  // const numberOfDataPerPage = 8
+  // const indexOfLastData = currentPage * numberOfDataPerPage
+  // const indexOfFirstData = indexOfLastData - numberOfDataPerPage
 
-  const currentData = dataState.data.slice(indexOfFirstData, indexOfLastData)
+  // const currentData = dataState.data.slice(indexOfFirstData, indexOfLastData)
+  const filteredData = data?.data || []
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -50,6 +52,10 @@ export default function DataTable() {
     }
   }, [data])
 
+  useEffect(() => {
+    console.log("Fetching data for page:", currentPage)
+    setFilters((prevFilters) => ({ ...prevFilters, page: currentPage }))
+  }, [currentPage])
   const isTableDataSelected = (dataToVerify) => {
     return selectedData.some((eachSelected) => eachSelected.batchId === dataToVerify.batchId)
   }
@@ -86,7 +92,7 @@ export default function DataTable() {
     try {
       const accessToken = localStorage.getItem("accessToken")
       const response = await axios.patch(
-        `${process.env.NEXT_PUBLIC_BASE_URL_DEV}/batch/editBatchId?batchId=${selectedBatch._id}`,
+        `${process.env.NEXT_PUBLIC_BASE_URL_DEV}/batch/editBatchId?batchId=${selectedBatch.id}`,
         updatedData,
         {
           headers: {
@@ -100,7 +106,6 @@ export default function DataTable() {
 
         const updatedBatch = response.data.data
 
-        // Update the local state with the updated batch
         setDataState((prevState) => ({
           ...prevState,
           data: prevState.data.map((batch) => (batch._id === updatedBatch._id ? updatedBatch : batch)),
@@ -124,7 +129,7 @@ export default function DataTable() {
 
   return (
     <div className="space-y-4">
-      <div className="overflow-x-auto rounded-lg"> 
+      <div className="overflow-x-auto rounded-lg">
         <Table
           className="w-full table-fixed border-collapse"
           tableRef={tableRef}
@@ -161,7 +166,7 @@ export default function DataTable() {
             </Table.Row>
           </Table.Head>
           <Table.Body>
-            {currentData?.map((datum, idx) => (
+            {filteredData?.map((datum, idx) => (
               <Table.Row
                 key={idx}
                 className="border-b border-b-[#605E5E] bg-white"
@@ -170,6 +175,26 @@ export default function DataTable() {
                   <Checkbox
                     onChange={() => handleTableDataCheckboxChange(datum)}
                     checked={isTableDataSelected(datum)}
+                  />
+                </Table.Column>
+                <Table.Column className="px-8">
+                  <ImgWithWrapper
+                    wrapperClassName="size-10 mx-15"
+                    imageClassName="object-contain object-left"
+                    imageAttributes={{
+                      src:
+                        datum?.blockChainVerified === "unverified"
+                          ? "/assets/Unverified.png"
+                          : datum?.blockChainVerified
+                            ? "/assets/Verified2.png"
+                            : "/assets/pending.png",
+                      alt:
+                        datum?.blockChainVerified === "unverified"
+                          ? "Unverified Logo"
+                          : datum?.blockChainVerified
+                            ? "Verified Logo"
+                            : "Unverified Logo",
+                    }}
                   />
                 </Table.Column>
                 <Table.Column className="px-2">{datum.batchId} </Table.Column>
@@ -242,10 +267,10 @@ export default function DataTable() {
       </div>
       <div className="text-right">
         <Pagination
-          totalNumberOfData={dataState.data.length}
-          numberOfDataPerPage={numberOfDataPerPage}
+          totalNumberOfData={data?.pagination?.totalItems || 0}
+          numberOfDataPerPage={filters.limit}
           currentPage={currentPage}
-          onPageChange={setCurrentPage}
+          onPageChange={(newPage) => setCurrentPage(newPage)}
         />
       </div>
       {isEditModalOpen && selectedBatch && (
