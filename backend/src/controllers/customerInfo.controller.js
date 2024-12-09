@@ -115,7 +115,8 @@ const postCustomerInfo = async (req, res, next) => {
       // Update product status
       await ProductItemModel.findByIdAndUpdate(
         soldProducts,
-        { soldBy, productStatus: "completed" },
+        { soldBy, productStatus: "completed", purchasedStatus: "true" },
+
         { new: true }
       );
 

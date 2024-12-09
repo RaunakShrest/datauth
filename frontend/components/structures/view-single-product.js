@@ -83,7 +83,7 @@ export default function ViewSingleProduct() {
         </div>
         <div className="lg:w-1/2">
           <div className="my-5">
-            <p className="text-sm text-[#7f7f7f]">Batch Id: {productData?.batchId}</p>
+            <p className="text-sm text-[#7f7f7f]">Batch Id: {productData?.batchId?.batchId || "N/A"}</p>
             <h1 className="text-2xl font-bold text-[#02235E] md:text-4xl lg:text-5xl">{productData?.productName}</h1>
             <p className="text-sm text-[#7f7f7f]">Product SKU: {productData?.productSku}</p>
           </div>

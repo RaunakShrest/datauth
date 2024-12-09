@@ -805,11 +805,48 @@ const testHash = async (req, res, next) => {
   try {
     // Data to be hashed
     const companyForHashing = {
-      id: "675005533ef5c4d78235de8c",
-      batchId: "apple",
-      createdBy: "6704c07f37d54fbca4a5644d",
-      startDatetime: "2024-12-04T07:31:00.000Z",
-      endDatetime: "2024-12-07T07:31:00.000Z",
+      id: "67556ef010c2827a01e78073",
+      productName: "nothingos",
+      productDescription: "asd",
+      productPrice: 250,
+      productSku: "axcwqs",
+      batchId: [
+        {
+          _id: "67554a52b2ffdf0e461a0890",
+          batchId: "sanitizedBatch",
+        },
+      ],
+      productStatus: "completed",
+      productType: [
+        {
+          _id: "673057fd720e9239c26e4e6f",
+          name: "Apple",
+        },
+      ],
+      productManufacturer: [
+        {
+          _id: "6704c07f37d54fbca4a5644d",
+          companyName: "RamEst",
+        },
+      ],
+      productAttributes: [
+        {
+          attributeName: "zxc",
+          attributeValue: "zxczc",
+          _id: "67556ef110c2827a01e78077",
+        },
+      ],
+      slug: "nothingos-1",
+      productImages: [
+        "uploads\\productItems\\productItems-1733652208256-188790226.jpg",
+        "uploads\\productItems\\productItems-1733652208260-618980227.jpg",
+      ],
+      productWebLink: "https://ww4.fmovies.co/tv-series/",
+      createdAt: "2024-12-08T10:03:28.362Z",
+      qrUrl:
+        "https://res.cloudinary.com/dboot4gi3/image/upload/v1733652209/bxcxrowamuhwzjrdfjap.png",
+      soldBy: null,
+      purchasedStatus: false,
     };
 
     // Convert the object to a string

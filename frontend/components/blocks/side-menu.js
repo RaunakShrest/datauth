@@ -60,7 +60,7 @@ export default function SideMenu() {
                 height="22"
                 rx="1"
                 stroke="black"
-                stroke-width="2.5"
+                strokeWidth="2.5"
               />
               <rect
                 className={`transition-all duration-300 ${
@@ -72,8 +72,8 @@ export default function SideMenu() {
                 height="11"
                 rx="1"
                 stroke="black"
-                stroke-width="2.5"
-                stroke-linejoin="round"
+                strokeWidth="2.5"
+                strokeLinejoin="round"
               />
               <rect
                 className={`transition-all duration-300 ${
@@ -85,7 +85,7 @@ export default function SideMenu() {
                 height="7"
                 rx="1"
                 stroke="black"
-                stroke-width="2.5"
+                strokeWidth="2.5"
               />
             </svg>
 
@@ -120,13 +120,13 @@ export default function SideMenu() {
                 className={`transition-all duration-300 ${
                   usePathname() === "/product-types" ? "stroke-white" : "stroke-black group-hover:stroke-white"
                 }`}
-                fill-rule="evenodd"
-                clip-rule="evenodd"
+                fillRule="evenodd"
+                clipRule="evenodd"
                 d="M25.6426 8.1814H29.5625C31.1843 8.1814 32.5 9.50847 32.5 11.1456V15.0983C32.5 16.7342 31.1843 18.0625 29.5625 18.0625H25.6426C24.0196 18.0625 22.7039 16.7342 22.7039 15.0983V11.1456C22.7039 9.50847 24.0196 8.1814 25.6426 8.1814ZM11.4387 8.1814H15.3574C16.9804 8.1814 18.2961 9.50847 18.2961 11.1456V15.0983C18.2961 16.7342 16.9804 18.0625 15.3574 18.0625H11.4387C9.81565 18.0625 8.5 16.7342 8.5 15.0983V11.1456C8.5 9.50847 9.81565 8.1814 11.4387 8.1814ZM11.4387 22.3003H15.3574C16.9804 22.3003 18.2961 23.6273 18.2961 25.2657V29.2172C18.2961 30.8543 16.9804 32.1814 15.3574 32.1814H11.4387C9.81565 32.1814 8.5 30.8543 8.5 29.2172V25.2657C8.5 23.6273 9.81565 22.3003 11.4387 22.3003ZM25.6426 22.3003H29.5625C31.1843 22.3003 32.5 23.6273 32.5 25.2657V29.2172C32.5 30.8543 31.1843 32.1814 29.5625 32.1814H25.6426C24.0196 32.1814 22.7039 30.8543 22.7039 29.2172V25.2657C22.7039 23.6273 24.0196 22.3003 25.6426 22.3003Z"
                 stroke="black"
-                stroke-width="2.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               />
             </svg>
 
@@ -291,9 +291,9 @@ export default function SideMenu() {
                 }`}
                 d="M8.9231 25.5385L20 32L31.0769 25.5385"
                 stroke="black"
-                stroke-width="3"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               />
               <path
                 className={`transition-all duration-300 ${
@@ -301,9 +301,9 @@ export default function SideMenu() {
                 }`}
                 d="M8.9231 20L20 26.4615L31.0769 20"
                 stroke="black"
-                stroke-width="3"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               />
               <path
                 className={`transition-all duration-300 ${
@@ -311,9 +311,9 @@ export default function SideMenu() {
                 }`}
                 d="M8.9231 14.4615L20 20.9231L31.0769 14.4615L20 8L8.9231 14.4615Z"
                 stroke="black"
-                stroke-width="3"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+                strokeWidth="3"
+                strokeLinejoin="round"
+                strokeLinecap="round"
               />
             </svg>
 
@@ -345,7 +345,7 @@ export default function SideMenu() {
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
-              <g clip-path="url(#clip0_1381_1310)">
+              <g clipPath="url(#clip0_1381_1310)">
                 <path
                   className={`transition-all duration-300 ${
                     usePathname() === "/company-sales" ? "fill-white" : "fill-black group-hover:fill-white"

@@ -15,6 +15,7 @@ import QrModal from "../elements/qrmodal"
 import CustomerFormModal from "../composites/customerFormModel"
 import axios from "axios"
 import { getCurrentUser } from "@/contexts/query-provider/api-request-functions/api-requests"
+import { useDebounce } from "@/utils/debounce"
 
 export default function DataTable() {
   const router = useRouter()
@@ -22,9 +23,10 @@ export default function DataTable() {
   const tableRef = useRef()
   const contextMenuRef = useRef()
 
-  const { products, columns, sortData, selectedData, setSelectedData, setProducts } = useProducts()
+  const { products, columns, sortData, selectedData, setSelectedData, setProducts, filters, setFilters, loadProducts } =
+    useProducts()
 
-  const [searchTerm, setSearchTerm] = useState("")
+  const [searchBatchId, setSearchBatchId] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [showModal, setShowModal] = useState(false)
   const [qrImageUrl, setQrImageUrl] = useState("")
@@ -35,23 +37,16 @@ export default function DataTable() {
   const [userRole, setUserRole] = useState("")
   const numberOfDataPerPage = 8
 
-  const filteredProducts = products.filter((product) => {
-    return (
-      product?.batchId?.batchId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.productName.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  })
-
   const indexOfLastData = currentPage * numberOfDataPerPage
   const indexOfFirstData = indexOfLastData - numberOfDataPerPage
-  const currentData = filteredProducts.slice(indexOfFirstData, indexOfLastData)
 
+  const filteredData = products?.productItems
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
         const currentUserData = await getCurrentUser()
         setUserRole(currentUserData.data.userType)
-        setCurrentUser(currentUserData.data._id) // Set current user
+        setCurrentUser(currentUserData.data.id) // Set current user
       } catch (error) {
         console.error("Error fetching current user:", error)
       }
@@ -60,18 +55,18 @@ export default function DataTable() {
     fetchCurrentUser()
   }, [])
   const handleTableHeadingCheckboxChange = () => {
-    if (selectedData.length === products.length) {
+    if (selectedData.length === products?.productItems?.length) {
       setSelectedData([])
     } else {
-      setSelectedData([...products])
+      setSelectedData([...products.productItems])
     }
   }
 
   const handleTableDataCheckboxChange = (clickedData) => {
-    const isAlreadySelected = selectedData.some((eachSelected) => eachSelected._id === clickedData._id)
+    const isAlreadySelected = selectedData.some((eachSelected) => eachSelected.id === clickedData.id)
 
     if (isAlreadySelected) {
-      setSelectedData((prev) => prev.filter((eachPrev) => eachPrev._id !== clickedData._id))
+      setSelectedData((prev) => prev.filter((eachPrev) => eachPrev.id !== clickedData.id))
     } else {
       setSelectedData((prev) => [...prev, clickedData])
     }
@@ -98,7 +93,7 @@ export default function DataTable() {
     setShowCustomerModal(false)
 
     const updatedProducts = products.map((product) =>
-      product._id === productId ? { ...product, productStatus: newStatus } : product,
+      product.id === productId ? { ...product, productStatus: newStatus } : product,
     )
     setProducts(updatedProducts)
   }
@@ -169,7 +164,17 @@ export default function DataTable() {
         .catch((error) => console.error("Error downloading image:", error))
     })
   }
+  useEffect(() => {
+    setFilters((prevFilters) => ({ ...prevFilters, page: currentPage }))
+  }, [currentPage])
 
+  const debouncedSearchBatchName = useDebounce({ searchValue: searchBatchId })
+  useEffect(() => {
+    setFilters((prev) => ({
+      ...prev,
+      batchIdSearch: `${debouncedSearchBatchName} `.trim(),
+    }))
+  }, [debouncedSearchBatchName])
   return (
     <div className="space-y-4">
       {/* Search Field and Print Button */}
@@ -178,8 +183,8 @@ export default function DataTable() {
           type="text"
           placeholder="Search by Batch ID"
           className="w-80 rounded-md border border-gray-600 p-2"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          value={searchBatchId}
+          onChange={(e) => setSearchBatchId(e.target.value)}
         />
         <div className="flex justify-end">
           <button
@@ -245,7 +250,7 @@ export default function DataTable() {
           </Table.Head>
 
           <Table.Body>
-            {currentData?.map((datum, idx) => (
+            {filteredData?.map((datum, idx) => (
               <Table.Row
                 key={idx}
                 className="border-b border-b-[#605E5E] bg-white"
@@ -253,7 +258,27 @@ export default function DataTable() {
                 <Table.Column className="px-4 py-2">
                   <Checkbox
                     onChange={() => handleTableDataCheckboxChange(datum)}
-                    checked={selectedData.some((eachSelected) => eachSelected._id === datum._id)} // This makes each checkbox reflect its selection state
+                    checked={selectedData.some((eachSelected) => eachSelected.id === datum.id)} // This makes each checkbox reflect its selection state
+                  />
+                </Table.Column>
+                <Table.Column className="px-8">
+                  <ImgWithWrapper
+                    wrapperClassName="size-10 mx-15"
+                    imageClassName="object-contain object-left"
+                    imageAttributes={{
+                      src:
+                        datum?.blockChainVerified === false
+                          ? "/assets/Unverified.png"
+                          : datum?.blockChainVerified
+                            ? "/assets/Verified2.png"
+                            : "/assets/pending.png",
+                      alt:
+                        datum?.blockChainVerified === true
+                          ? "Unverified Logo"
+                          : datum?.blockChainVerified
+                            ? "Verified Logo"
+                            : "Unverified Logo",
+                    }}
                   />
                 </Table.Column>
                 <Table.Column className="px-2">{datum.productName}</Table.Column>
@@ -296,6 +321,15 @@ export default function DataTable() {
                     />
                   </button>
                 </Table.Column>
+                <Table.Column className="p-4">
+                  {datum.purchasedStatus === true ? (
+                    <span className="text bg-green-600 px-2 py-1 text-white">Purchased</span>
+                  ) : datum.purchasedStatus === false ? (
+                    <span className="text bg-yellow-500 px-2 py-1 text-white">In stock</span>
+                  ) : (
+                    <span className="px-2 py-1">N/A</span>
+                  )}
+                </Table.Column>
 
                 <Table.Column className="p-2">
                   <ContextMenu
@@ -313,14 +347,14 @@ export default function DataTable() {
                     <ContextMenu.Menu className="absolute z-10 w-[175px] space-y-1 bg-white/80 p-2 text-white">
                       <ContextMenu.Item
                         className="rounded-md bg-[#0000CC]"
-                        onClick={() => router.push(`/products/${datum._id}`)}
+                        onClick={() => router.push(`/products/${datum.id}`)}
                       >
                         View
                       </ContextMenu.Item>
 
                       <ContextMenu.Item
                         className="rounded-md bg-[#0000CC]"
-                        onClick={() => router.push(`/products/${datum._id}/edit`)}
+                        onClick={() => router.push(`/products/${datum.id}/edit`)}
                       >
                         Edit
                       </ContextMenu.Item>
@@ -338,7 +372,7 @@ export default function DataTable() {
                       icon={faUserPlus}
                       className="fa-fw"
                       size="sm"
-                      onClick={() => handleAddCustomerClick(datum._id)} // Pass product ID here
+                      onClick={() => handleAddCustomerClick(datum.id)} // Pass product ID here
                     />
                   )}
                 </Table.Column>
@@ -350,10 +384,10 @@ export default function DataTable() {
 
       <div className="text-right">
         <Pagination
-          totalNumberOfData={filteredProducts.length}
-          numberOfDataPerPage={numberOfDataPerPage}
+          totalNumberOfData={products?.pagination?.totalItems || 0}
+          numberOfDataPerPage={filters.limit}
           currentPage={currentPage}
-          onPageChange={setCurrentPage} // handle page change
+          onPageChange={(newPage) => setCurrentPage(newPage)}
         />
       </div>
 

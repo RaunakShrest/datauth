@@ -1,9 +1,8 @@
 "use client"
 
-import { useQuery } from "@tanstack/react-query"
 import React, { createContext, useContext, useEffect, useState } from "react"
+
 import { fetchProducts } from "./query-provider/api-request-functions/api-requests"
-import { reactQueryStaleTime } from "@/utils/staticUtils"
 
 const ProductsContext = createContext()
 
@@ -19,15 +18,38 @@ export const useProducts = () => {
 
 export default function ProductsProvider({ children, companyId }) {
   const [isAsc, setIsAsc] = useState(false)
-
-  const productsFromApi = useQuery({
-    queryKey: ["fetchProducts", companyId],
-    queryFn: () => fetchProducts({ companyId }),
-    staleTime: reactQueryStaleTime,
-  })
-
+  const [selectedData, setSelectedData] = useState([])
+  const [loading, setLoading] = useState(false)
   const [products, setProducts] = useState([])
+  const [filters, setFilters] = useState({
+    page: 1,
+    limit: 10,
+    batchIdSearch: "",
+  })
+  const loadProducts = async () => {
+    setLoading(true)
+    try {
+      const response = await fetchProducts({ companyId, filters })
+
+      setProducts(response.data || [])
+    } catch (error) {
+      console.error("Error loading products:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+  useEffect(() => {
+    loadProducts()
+  }, [filters, companyId])
+
   const [columns, setColumns] = useState([
+    {
+      id: "blockChainVerified",
+      text: "BC Verification",
+      dataKey: "blockChainVerified",
+      isSortable: false,
+      width: "150px",
+    },
     {
       id: "product-name",
       text: "Product Name",
@@ -65,26 +87,35 @@ export default function ProductsProvider({ children, companyId }) {
     },
     { id: "product-status", text: "Status", dataKey: "status", isSortable: true, width: "100px" },
     { id: "createdAt", text: "Created Date", dataKey: "createdAt", isSortable: true, width: "150px" },
-    { id: "qr-code", text: "QR Code", dataKey: "qr-code", isSortable: false, width: "40px" },
+    { id: "qr-code", text: "QR Code", dataKey: "qr-code", isSortable: false, width: "80px" },
+    { id: "purchasedStatus", text: "Available", dataKey: "purchasedStatus", isSortable: true, width: "100px" },
   ])
-  const [selectedData, setSelectedData] = useState([])
 
   const sortData = (basis) => {
-    setIsAsc((prev) => !prev)
-    const dataCopy = JSON.parse(JSON.stringify(products))
+    setIsAsc((prev) => !prev) // Toggle ascending/descending flag
+    const dataCopy = [...products.productItems]
+    const sortedData = dataCopy.sort((a, b) => (isAsc ? (a[basis] > b[basis] ? 1 : -1) : a[basis] < b[basis] ? 1 : -1))
 
-    const sortedData = dataCopy?.sort((a, b) => (isAsc ? (a[basis] > b[basis] ? 1 : -1) : a[basis] < b[basis] ? 1 : -1))
-
-    setProducts(sortedData)
+    setProducts({
+      ...products,
+      productItems: sortedData,
+    })
   }
-
-  useEffect(() => {
-    setProducts(productsFromApi.isFetched ? (productsFromApi.data?.data ?? []) : [])
-  }, [productsFromApi.data])
 
   return (
     <ProductsContext.Provider
-      value={{ isAsc, products, setProducts, columns, sortData, selectedData, setSelectedData }}
+      value={{
+        isAsc,
+        products,
+        setProducts,
+        columns,
+        sortData,
+        selectedData,
+        setSelectedData,
+        filters,
+        setFilters,
+        loadProducts,
+      }}
     >
       {children}
     </ProductsContext.Provider>

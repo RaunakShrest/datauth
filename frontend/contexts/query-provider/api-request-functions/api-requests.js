@@ -111,9 +111,11 @@ export const fetchBatchIds = async () => {
 
 export const createNewProduct = async (formData) => {
   try {
+    const accessToken = localStorage.getItem("accessToken")
     const response = await api.post("/products/create-product-item", formData, {
       headers: {
         "Content-Type": "multipart/form-data", // This will set the correct headers for form-data
+        Authorization: `Bearer ${accessToken}`,
       },
     })
     return response.data
@@ -122,13 +124,74 @@ export const createNewProduct = async (formData) => {
   }
 }
 
-export const fetchProducts = async ({ companyId }) => {
+// export const fetchProducts = async ({ companyId, filters }) => {
+//   try {
+//     const accessToken = localStorage.getItem("accessToken")
+//     const query = new URLSearchParams(filters).toString()
+//     const response = await api.get(
+//       companyId ? `/products/getCompanyProducts/${companyId}${query}` : `/products/get-product-items${query}`,
+//     )
+//     console.log("the response of fetchProductsss isssss", response.data)
+//     return response.data
+//   } catch (error) {
+//     throw error.response
+//   }
+// }
+
+// export const fetchProducts = async ({ companyId, filters }) => {
+//   try {
+//     const accessToken = localStorage.getItem("accessToken")
+
+//     if (!accessToken) {
+//       throw new Error("Access token not found")
+//     }
+
+//     // Convert filters into query parameters
+//     const query = new URLSearchParams(filters).toString()
+//     const endpoint = companyId
+//       ? `/products/getCompanyProducts/${companyId}?${query}`
+//       : `/products/get-product-items?${query}`
+
+//     // Make the API request with the Authorization header
+//     const response = await api.get(endpoint, {
+//       headers: {
+//         Authorization: `Bearer ${accessToken}`, // Include accessToken in the header
+//       },
+//     })
+
+//     console.log("The response of fetchProducts is:", response.data.data.productItems)
+//     return response.data
+//   } catch (error) {
+//     console.error("Error fetching products:", error.message)
+//     throw error.response
+//   }
+// }
+export const fetchProducts = async ({ companyId, filters }) => {
   try {
-    const response = await api.get(
-      companyId ? `/products/getCompanyProducts/${companyId}` : "/products/get-product-items",
+    const accessToken = localStorage.getItem("accessToken")
+
+    if (!accessToken) {
+      throw new Error("Access token not found")
+    }
+
+    // Clean up filters to remove empty or undefined values
+    const cleanedFilters = Object.fromEntries(
+      Object.entries(filters).filter(([key, value]) => value !== undefined && value !== ""),
     )
+
+    const query = new URLSearchParams(cleanedFilters).toString()
+    const endpoint = companyId
+      ? `/products/getCompanyProducts/${companyId}?${query}`
+      : `/products/get-product-items?${query}`
+
+    const response = await api.get(endpoint, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
     return response.data
   } catch (error) {
+    console.error("Error fetching products:", error.message)
     throw error.response
   }
 }

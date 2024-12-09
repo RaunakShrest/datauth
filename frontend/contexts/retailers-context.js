@@ -20,7 +20,7 @@ export default function RetailersProvider({ children }) {
   const [isAsc, setIsAsc] = useState(true)
   const [filters, setFilters] = useState({
     page: 1,
-    limit: 2,
+    limit: 10,
   })
 
   const [data, setData] = useState({

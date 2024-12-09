@@ -12,6 +12,8 @@ export const productTypeStatus = {
 export const routeToCrumb = {
   "product-types": "Product Types",
   "add-product-type": "Add Product Type",
+  "add-product": "Add product",
+  edit: "Edit",
   companies: "Companies",
   products: "Products",
   retailers: "Retailers",

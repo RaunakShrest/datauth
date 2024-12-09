@@ -141,12 +141,14 @@ export default function EditSingleProductForm({ params }) {
     })
 
     try {
+      const accessToken = localStorage.getItem("accessToken")
       const response = await axios.patch(
         `${process.env.NEXT_PUBLIC_BASE_URL_DEV}/products/editProductDetails/${productId}`,
         formData,
         {
           headers: {
             "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${accessToken}`,
           },
         },
       )
