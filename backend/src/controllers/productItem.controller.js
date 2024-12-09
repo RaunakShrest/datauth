@@ -975,7 +975,7 @@ const editProductInfo = async (req, res, next) => {
 
 //     // Base filter for productManufacturer
 //     let filter = {
-//       productManufacturer: companyId,
+//       "productManufacturer._id": companyId, // Explicitly match the _id field
 //     };
 
 //     // Apply retailer-specific filter
@@ -1043,7 +1043,7 @@ const getCompanyProductItems = async (req, res, next) => {
 
     // Base filter for productManufacturer
     let filter = {
-      productManufacturer: companyId,
+      "productManufacturer._id": companyId, // Explicitly match the _id field
     };
 
     // Apply retailer-specific filter

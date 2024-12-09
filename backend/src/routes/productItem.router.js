@@ -46,6 +46,7 @@ router.patch(
 router.get(
   "/getCompanyProducts/:companyId",
   checkUserAuth,
+  blockChainToken,
   getCompanyProductItems
 );
 export default router;
