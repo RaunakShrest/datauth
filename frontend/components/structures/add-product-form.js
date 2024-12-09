@@ -62,7 +62,7 @@ export default function AddProductFormTemplate() {
     },
     onError: (error) => {
       console.error("Error adding product:", error)
-      toast.error(error?.response?.data?.message || "An error occurred while adding the product.")
+      toast.error(error?.data?.message || "An error occurred while adding the product.")
     },
   })
 

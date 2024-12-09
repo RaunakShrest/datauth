@@ -11,13 +11,20 @@ import {
   getCompanyProductItems,
 } from "../controllers/productItem.controller.js";
 import { uploadMultiple } from "../middlewares/productImageUpload.middlware.js";
+import { blockChainToken } from "../middlewares/blockChainToken.middleware.js";
 const router = express.Router();
 
-router.get("/get-product-items", checkUserAuth, getProductItems);
+router.get(
+  "/get-product-items",
+  checkUserAuth,
+  blockChainToken,
+  getProductItems
+);
 router.post(
   "/create-product-item",
   uploadMultiple.array("productItems", 10),
   checkUserAuth,
+  blockChainToken,
   createProductItem
 );
 // router.patch("/update-product-item", checkUserAuth, checkCompany, updateProductItem)
@@ -27,11 +34,13 @@ router.delete(
   checkCompany,
   deleteProductItem
 );
-router.get("/:productId", getSingleProduct); // for view
+router.get("/:productId", checkUserAuth, getSingleProduct); // for view
 router.get("/getSingleProduct/:id", getProductById); // for edit
 router.patch(
   "/editProductDetails/:productId",
   uploadMultiple.array("productItems", 10),
+  checkUserAuth,
+  blockChainToken,
   editProductInfo
 );
 router.get(

@@ -23,7 +23,7 @@ const convertToCSV = (data) => {
   ]
   const rows = data.map((datum) => {
     const attributes = datum.soldProducts?.productAttributes
-      ? datum.soldProducts.productAttributes.map((attr) => `${attr.attributeName}: ${attr.attributeValue}`).join("; ")
+      ? datum?.soldProducts?.productAttributes.map((attr) => `${attr.attributeName}: ${attr.attributeValue}`).join("; ")
       : "N/A"
 
     return [
@@ -273,7 +273,7 @@ export default function DataTable() {
                 )}
 
                 <Table.Column className="px-2">{datum.name}</Table.Column>
-                <Table.Column className="px-2">{datum.soldProducts?.productName}</Table.Column>
+                <Table.Column className="px-2">{datum.soldProducts?.productName || "N/A"}</Table.Column>
                 <Table.Column className="overflow-hidden p-2">
                   <span className="line-clamp-1">{datum.soldBy?.companyName}</span>
                 </Table.Column>

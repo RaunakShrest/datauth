@@ -20,11 +20,15 @@ const productItemSchema = new mongoose.Schema(
     productSku: {
       type: String,
       required: true,
+      unique: true,
     },
     batchId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Batch",
-      required: true,
+      _id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Batch",
+        required: true,
+      },
+      batchId: { type: String, required: true },
     },
     productStatus: {
       type: String,
@@ -36,15 +40,30 @@ const productItemSchema = new mongoose.Schema(
       default: process.env.PRODUCT_ITEM_STATUS_PENDING,
       required: true,
     },
-    productType: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "ProductType",
-      required: true,
-    },
+    productType: [
+      {
+        _id: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "ProductType",
+          required: true,
+        },
+        name: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
+
     productManufacturer: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
+      _id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+      companyName: {
+        type: String,
+        required: true,
+      },
     },
     productAttributes: [
       {
@@ -76,6 +95,12 @@ const productItemSchema = new mongoose.Schema(
     soldBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      default: null,
+    },
+    purchasedStatus: {
+      type: Boolean,
+      default: false,
+      required: true,
     },
     productWebLink: {
       type: String,
