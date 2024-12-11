@@ -54,6 +54,7 @@ export default function BatchProvider({ children, refreshTrigger }) {
           Authorization: `Bearer ${accessToken}`,
         },
       })
+
       setData((prev) => ({
         ...prev,
         data: response.data?.message?.batches || [],

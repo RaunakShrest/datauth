@@ -45,8 +45,9 @@ export default function DataTable() {
     const fetchCurrentUser = async () => {
       try {
         const currentUserData = await getCurrentUser()
+
         setUserRole(currentUserData.data.userType)
-        setCurrentUser(currentUserData.data.id) // Set current user
+        setCurrentUser(currentUserData.data._id) // Set current user
       } catch (error) {
         console.error("Error fetching current user:", error)
       }
@@ -77,9 +78,20 @@ export default function DataTable() {
       setShowCustomerModal(true)
 
       try {
+        const accessToken = localStorage.getItem("accessToken")
+
+        if (!accessToken) {
+          console.error("Access token is missing")
+          return
+        }
+
         const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL_DEV}/customerInfo/getCustomerInfo`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
           params: { productId },
         })
+
         setCustomerInfo(response.data) // Store the fetched customer data
       } catch (error) {
         console.error("Error fetching customer data:", error)
@@ -89,13 +101,16 @@ export default function DataTable() {
       console.error("Current user is not defined")
     }
   }
+
   const handleCustomerSave = (newStatus, productId) => {
     setShowCustomerModal(false)
 
-    const updatedProducts = products.map((product) =>
-      product.id === productId ? { ...product, productStatus: newStatus } : product,
-    )
-    setProducts(updatedProducts)
+    setProducts((prevProducts) => {
+      const updatedItems = prevProducts.productItems.map((product) =>
+        product.id === productId ? { ...product, purchasedStatus: true, productStatus: newStatus } : product,
+      )
+      return { ...prevProducts, productItems: updatedItems }
+    })
   }
 
   const handlePrint = () => {

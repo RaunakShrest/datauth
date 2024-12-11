@@ -10,6 +10,7 @@ import { twMerge } from "tailwind-merge"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faEllipsisVertical } from "@fortawesome/free-solid-svg-icons"
 import { useDebounce } from "@/utils/debounce"
+import ImgWithWrapper from "../composites/img-with-wrapper"
 const convertToCSV = (data) => {
   const header = [
     "Customer Name",
@@ -63,9 +64,8 @@ export default function DataTable() {
   const { data, sortData, selectedData, setSelectedData, fetchRetailerSales, userRole, filters, setFilters } =
     useRetailerSales()
 
-  const numberOfDataPerPage = 8
   const [hasFetched, setHasFetched] = useState(false)
-  const [currentPage, setCurrentPage] = useState(1)
+
   const [searchCustomerName, setSearchCustomerName] = useState("")
   const [searchCompanyName, setSearchCompanyName] = useState("")
   const [searchProductName, setSearchProductName] = useState("")
@@ -76,10 +76,8 @@ export default function DataTable() {
   const initialEndDate = new Date()
   const [startDate, setStartDate] = useState(initialStartDate.toISOString().split("T")[0])
   const [endDate, setEndDate] = useState(initialEndDate.toISOString().split("T")[0])
-
-  const indexOfLastData = currentPage * numberOfDataPerPage
-  const indexOfFirstData = indexOfLastData - numberOfDataPerPage
-
+  const [currentPage, setCurrentPage] = useState(1)
+  const filteredData = data?.data?.customerInfo
   const fetchSalesData = useCallback(() => {
     if (!hasFetched) {
       // fetchRetailerSales()
@@ -109,7 +107,7 @@ export default function DataTable() {
   useEffect(() => {
     setFilters((prev) => ({
       ...prev,
-      search: `${debouncedSearchCustomerName} `.trim(),
+      customerNameSearch: `${debouncedSearchCustomerName} `.trim(),
     }))
   }, [debouncedSearchCustomerName])
   useEffect(() => {
@@ -146,8 +144,6 @@ export default function DataTable() {
   const isTableDataSelected = (datum) => {
     return selectedData.some((selected) => selected.name === datum.name)
   }
-  console.log("data from retailers sales", data)
-  const filteredData = data?.data?.customerInfo
 
   const handleReset = () => {
     window.location.reload()
@@ -192,8 +188,6 @@ export default function DataTable() {
             <input
               type="text"
               placeholder="Search by Company name"
-              // value={searchCompanyName}
-              // onChange={(e) => setSearchCompanyName(e.target.value)}
               value={searchCompanyName}
               onChange={(e) => setSearchCompanyName(e.target.value)}
               className="rounded-md border border-gray-600 p-2"
@@ -215,7 +209,7 @@ export default function DataTable() {
             <input
               type="date"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
               className="rounded border p-2"
             />
           </div>
@@ -288,6 +282,26 @@ export default function DataTable() {
                     checked={isTableDataSelected(datum)}
                   />
                 </Table.Column>
+                <Table.Column className="px-8">
+                  <ImgWithWrapper
+                    wrapperClassName="size-10 mx-15"
+                    imageClassName="object-contain object-left"
+                    imageAttributes={{
+                      src:
+                        datum?.blockChainVerified === "unverified"
+                          ? "/assets/Unverified.png"
+                          : datum?.blockChainVerified
+                            ? "/assets/Verified2.png"
+                            : "/assets/pending.png",
+                      alt:
+                        datum?.blockChainVerified === "unverified"
+                          ? "Unverified Logo"
+                          : datum?.blockChainVerified
+                            ? "Verified Logo"
+                            : "Unverified Logo",
+                    }}
+                  />
+                </Table.Column>
                 {userRole === "super-admin" && (
                   <Table.Column className="p-2">
                     <span>{datum.soldBy?.companyName || "N/A"}</span>
@@ -299,7 +313,7 @@ export default function DataTable() {
                   <span className="line-clamp-1">{datum.phoneNumber}</span>
                 </Table.Column>
                 <Table.Column className="p-2">
-                  <span>{datum.soldProducts?.productManufacturer?.companyName || "N/A"}</span>
+                  <span>{datum?.productManufacturer?.companyName || "N/A"}</span>
                 </Table.Column>
                 <Table.Column className="p-2">
                   <span>{datum.soldProducts?.productName || "N/A"}</span>
@@ -309,11 +323,11 @@ export default function DataTable() {
                   <span>{datum.soldProducts?.productPrice || "N/A"}</span>
                 </Table.Column>
                 <Table.Column className="p-2">
-                  <span>{datum.soldProducts?.batchId || "N/A"}</span>
+                  <span>{datum.batchId?.batchId || "N/A"}</span>
                 </Table.Column>
 
                 <Table.Column className="p-2">
-                  {new Date(datum.soldProducts?.createdAt).toLocaleString("en-US", {
+                  {new Date(datum?.createdAt).toLocaleString("en-US", {
                     year: "numeric",
                     month: "short",
                     day: "numeric",
@@ -352,9 +366,9 @@ export default function DataTable() {
       <div className="text-right">
         <Pagination
           totalNumberOfData={data?.data?.pagination?.totalItems || 0}
-          numberOfDataPerPage={numberOfDataPerPage}
-          currentPage={data?.data?.pagination?.currentPage}
-          onPageChange={setCurrentPage}
+          numberOfDataPerPage={filters.limit}
+          currentPage={currentPage}
+          onPageChange={(newPage) => setCurrentPage(newPage)}
         />
       </div>
     </div>
