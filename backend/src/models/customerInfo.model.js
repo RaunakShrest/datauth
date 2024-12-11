@@ -12,22 +12,45 @@ const customerInfoSchema = new mongoose.Schema(
     },
     phoneNumber: {
       type: String,
+      required: true,
     },
     productManufacturer: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "ProductItem",
-      required: true,
+      _id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+      companyName: {
+        type: String,
+        required: true,
+      },
     },
     soldProducts: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "ProductItem",
-      required: true,
+      _id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "ProductItem",
+        required: true,
+      },
+      productName: { type: String, required: true },
+      productPrice: { type: Number, required: true },
     },
     soldBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
+      _id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+      companyName: { type: String, required: true },
     },
+    batchId: {
+      _id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Batch",
+        required: true,
+      },
+      batchId: { type: String, required: true },
+    },
+
     orderId: {
       _id: {
         type: mongoose.Schema.Types.ObjectId,

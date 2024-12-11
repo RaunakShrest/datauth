@@ -7,12 +7,23 @@ import {
   getSoldProductsByCompany,
   getProductWithOrderNumber,
 } from "../controllers/customerInfo.controller.js";
+import { blockChainToken } from "../middlewares/blockChainToken.middleware.js";
 
 const router = express.Router();
 
-router.post("/createCustomer", postCustomerInfo);
-router.get("/soldProducts", checkUserAuth, getSoldProductsByRetailer);
-router.get("/getCustomerInfo", getCustomerInfo);
+router.post(
+  "/createCustomer",
+  checkUserAuth,
+  blockChainToken,
+  postCustomerInfo
+);
+router.get(
+  "/soldProducts",
+  checkUserAuth,
+  blockChainToken,
+  getSoldProductsByRetailer
+); // retailersales
+router.get("/getCustomerInfo", checkUserAuth, getCustomerInfo);
 router.get("/soldProductsByCompany", checkUserAuth, getSoldProductsByCompany);
 router.get(
   "/getProductByOrderNumber",

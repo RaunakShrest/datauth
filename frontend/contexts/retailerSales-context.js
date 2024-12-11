@@ -27,18 +27,16 @@ export default function RetailerSalesProvider({ children }) {
   initialStartDate.setMonth(initialStartDate.getMonth() - 1) // Set to one month before today
   const initialEndDate = new Date()
   const [filters, setFilters] = useState({
-    search: "",
-    emailSearch: "",
-    companyNameSearch: "",
-    retailerNameSearch: "",
-    productNameSearch: "",
-    startDate: initialStartDate.toISOString().split("T")[0],
-    endDate: initialEndDate.toISOString().split("T")[0],
     page: 1,
     limit: 10,
+    productNameSearch: "",
+    customerNameSearch: "",
+    retailerNameSearch: "",
+    companyNameSearch: "",
+    startDate: initialStartDate.toISOString().split("T")[0],
+    endDate: initialEndDate.toISOString().split("T")[0],
   })
 
-  // Fetch user role
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
@@ -58,6 +56,13 @@ export default function RetailerSalesProvider({ children }) {
       setData((prev) => ({
         ...prev,
         columns: [
+          {
+            id: "blockChainVerified",
+            text: "BC Verification",
+            dataKey: "blockChainVerified",
+            isSortable: false,
+            width: "150px",
+          },
           ...(userRole !== "retailer"
             ? [
                 {
@@ -143,7 +148,7 @@ export default function RetailerSalesProvider({ children }) {
   // Fetch sales data with filters
   const fetchRetailerSales = async () => {
     try {
-      const accessToken = localStorage.getItem("accessToken") // Replace 'token' with the actual key if different
+      const accessToken = localStorage.getItem("accessToken")
       if (!accessToken) {
         throw new Error("No token found")
       }
@@ -158,6 +163,7 @@ export default function RetailerSalesProvider({ children }) {
       setData((prev) => ({
         ...prev,
         data: response.data.message || [],
+        pagination: response.data?.message?.pagination || [],
       }))
     } catch (error) {
       console.error("Error fetching retailer sales data", error)

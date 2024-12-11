@@ -19,6 +19,18 @@ export const useCompanySales = () => {
 export default function CompanySalesProvider({ children }) {
   const [isAsc, setIsAsc] = useState(true)
   const [userRole, setUserRole] = useState("")
+  const initialStartDate = new Date()
+  initialStartDate.setMonth(initialStartDate.getMonth() - 1) // Set to one month before today
+  const initialEndDate = new Date()
+  const [filters, setFilters] = useState({
+    limit: 10,
+    page: 1,
+    productNameSearch: "",
+    batchIdSearch: "",
+    retailerNameSearch: "",
+    startDate: initialStartDate.toISOString().split("T")[0],
+    endDate: initialEndDate.toISOString().split("T")[0],
+  })
   const [data, setData] = useState({
     data: [],
     columns: [],
@@ -111,15 +123,20 @@ export default function CompanySalesProvider({ children }) {
       if (!accessToken) {
         throw new Error("No token found")
       }
-
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL_DEV}/customerInfo/soldProductsByCompany`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
+      const query = new URLSearchParams(filters).toString()
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BASE_URL_DEV}/customerInfo/soldProductsByCompany?${query}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
         },
-      })
+      )
+      console.log("fetching companysales data from context", response.data)
       setData((prev) => ({
         ...prev,
-        data: response.data.message || [],
+        data: response?.data?.message || [],
+        pagination: response?.data?.pagination || [],
       }))
     } catch (error) {
       console.error("Error fetching company sales data", error)
@@ -128,11 +145,21 @@ export default function CompanySalesProvider({ children }) {
 
   useEffect(() => {
     fetchCompanySales()
-  }, [])
+  }, [filters])
 
   return (
     <CompanySalesContext.Provider
-      value={{ data, setData, sortData, selectedData, setSelectedData, fetchCompanySales, userRole }}
+      value={{
+        data,
+        setData,
+        sortData,
+        selectedData,
+        setSelectedData,
+        fetchCompanySales,
+        userRole,
+        filters,
+        setFilters,
+      }}
     >
       {children}
     </CompanySalesContext.Provider>

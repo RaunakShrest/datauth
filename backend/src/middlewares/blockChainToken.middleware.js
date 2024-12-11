@@ -2,11 +2,6 @@ import { ApiError } from "../utils/ApiError.js";
 import axios from "axios";
 
 export const blockChainToken = async (req, res, next) => {
-  console.log(
-    "The authenticated user is from blockchain middleware:",
-    req.user
-  );
-
   try {
     if (!req.user) {
       throw new ApiError(401, "User not authenticated");

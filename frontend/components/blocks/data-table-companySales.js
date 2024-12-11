@@ -9,6 +9,7 @@ import { twMerge } from "tailwind-merge"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faEllipsisVertical } from "@fortawesome/free-solid-svg-icons"
 import { useCompanySales } from "@/contexts/companySales-context"
+import { useDebounce } from "@/utils/debounce"
 
 const convertToCSV = (data) => {
   const header = [
@@ -58,7 +59,8 @@ const downloadCSV = (csvContent, fileName = "Company_Sales.csv") => {
 export default function DataTable() {
   const tableRef = useRef()
   const contextMenuRef = useRef()
-  const { data, sortData, selectedData, setSelectedData, fetchCompanySales, userRole } = useCompanySales()
+  const { data, sortData, selectedData, setSelectedData, fetchCompanySales, userRole, filters, setFilters } =
+    useCompanySales()
 
   const numberOfDataPerPage = 8
   const [hasFetched, setHasFetched] = useState(false)
@@ -71,8 +73,6 @@ export default function DataTable() {
   const initialEndDate = new Date()
   const [startDate, setStartDate] = useState(initialStartDate.toISOString().split("T")[0])
   const [endDate, setEndDate] = useState(initialEndDate.toISOString().split("T")[0])
-  const indexOfLastData = currentPage * numberOfDataPerPage
-  const indexOfFirstData = indexOfLastData - numberOfDataPerPage
 
   const fetchSalesData = useCallback(() => {
     if (!hasFetched) {
@@ -91,6 +91,32 @@ export default function DataTable() {
     fetchSalesData() // Fetch sales data on mount
   }, [fetchSalesData])
 
+  useEffect(() => {
+    setFilters({ ...filters, page: currentPage })
+  }, [currentPage])
+
+  const debouncedSearchBatchName = useDebounce({ searchValue: searchBatchId })
+  const debouncedSearchProducName = useDebounce({ searchValue: searchProductName })
+  const debouncedSearchRetailerName = useDebounce({ searchValue: searchRetailerName })
+
+  useEffect(() => {
+    setFilters((prev) => ({
+      ...prev,
+      batchIdSearch: `${debouncedSearchBatchName} `.trim(),
+    }))
+  }, [debouncedSearchBatchName])
+  useEffect(() => {
+    setFilters((prev) => ({
+      ...prev,
+      retailerNameSearch: `${debouncedSearchRetailerName} `.trim(),
+    }))
+  }, [debouncedSearchRetailerName])
+  useEffect(() => {
+    setFilters((prev) => ({
+      ...prev,
+      productNameSearch: `${debouncedSearchProducName} `.trim(),
+    }))
+  }, [debouncedSearchProducName])
   const handleTableDataCheckboxChange = (clickedData) => {
     setSelectedData((prev) =>
       isTableDataSelected(clickedData)
@@ -107,27 +133,14 @@ export default function DataTable() {
     return selectedData.some((selected) => selected.name === datum.name)
   }
   // Adjusted Filtering Logic in DataTable Component
-  const filteredData =
-    data?.data?.filter((datum) => {
-      const createdAt = new Date(datum?.createdAt)
-      const isWithinDateRange =
-        (!startDate || createdAt >= new Date(startDate)) &&
-        (!endDate || createdAt < new Date(new Date(endDate).setHours(24, 0, 0, 0))) // Adjust end date to include entire day
+  const filteredData = data?.data || []
+  
 
-      return (
-        datum.soldProducts?.batchId.toLowerCase().includes(searchBatchId.toLowerCase()) &&
-        datum.soldBy?.companyName.toLowerCase().includes(searchRetailerName.toLowerCase()) &&
-        datum.soldProducts?.productName.toLowerCase().includes(searchProductName.toLowerCase()) &&
-        isWithinDateRange
-      )
-    }) || []
-
-  const currentData = filteredData.slice(indexOfFirstData, indexOfLastData)
+  // const currentData = filteredData.slice(indexOfFirstData, indexOfLastData)
 
   const handleReset = () => {
-    setSearchBatchId("")
-    setSearchRetailerName("")
-    setSearchProductName("")
+    window.location.reload()
+  
     setStartDate(initialStartDate.toISOString().split("T")[0]) // Reset to initial start date
     setEndDate(initialEndDate.toISOString().split("T")[0]) // Reset to initial end date
   }
@@ -182,8 +195,8 @@ export default function DataTable() {
             <label className="text-sm">Start</label>
             <input
               type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              value={filters.startDate}
+              onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
               className="rounded border p-2"
             />
           </div>
@@ -194,7 +207,7 @@ export default function DataTable() {
             <input
               type="date"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
               className="rounded border p-2"
             />
           </div>
@@ -257,7 +270,7 @@ export default function DataTable() {
           </Table.Head>
 
           <Table.Body>
-            {currentData.map((datum, idx) => (
+            {filteredData?.map((datum, idx) => (
               <Table.Row
                 key={idx}
                 className="border-b border-b-[#605E5E] bg-white"
@@ -282,7 +295,7 @@ export default function DataTable() {
                   <span>{datum.soldProducts?.productPrice || "N/A"}</span>
                 </Table.Column>
                 <Table.Column className="p-2">
-                  <span>{datum.soldProducts?.batchId || "N/A"}</span>
+                  <span>{datum.batchId?.batchId || "N/A"}</span>
                 </Table.Column>
                 <Table.Column className="p-2">
                   {new Date(datum?.createdAt).toLocaleString("en-US", {
@@ -336,10 +349,10 @@ export default function DataTable() {
 
       <div className="text-right">
         <Pagination
-          totalNumberOfData={data?.data?.length || 0}
-          numberOfDataPerPage={numberOfDataPerPage}
+          totalNumberOfData={data?.pagination?.totalItems || 0}
+          numberOfDataPerPage={filters.limit}
           currentPage={currentPage}
-          onPageChange={setCurrentPage}
+          onPageChange={(newPage) => setCurrentPage(newPage)}
         />
       </div>
     </div>

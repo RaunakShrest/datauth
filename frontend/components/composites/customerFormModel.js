@@ -49,9 +49,16 @@ export default function CustomerFormModal({
     setError(null) // Clear any previous error
 
     try {
+      const accessToken = localStorage.getItem("accessToken")
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_BASE_URL_DEV}/customerInfo/createCustomer`,
         dataToSend,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        },
       )
       if (response.data?.status === 204) {
         toast.info(response.data.message)
