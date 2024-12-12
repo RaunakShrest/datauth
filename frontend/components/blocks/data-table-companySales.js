@@ -10,6 +10,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faEllipsisVertical } from "@fortawesome/free-solid-svg-icons"
 import { useCompanySales } from "@/contexts/companySales-context"
 import { useDebounce } from "@/utils/debounce"
+import ImgWithWrapper from "../composites/img-with-wrapper"
 
 const convertToCSV = (data) => {
   const header = [
@@ -19,23 +20,17 @@ const convertToCSV = (data) => {
     "Retailer Name",
     "Product Price",
     "Batch ID",
-    "Product Attributes",
     "Sold Date",
   ]
   const rows = data.map((datum) => {
-    const attributes = datum.soldProducts?.productAttributes
-      ? datum?.soldProducts?.productAttributes.map((attr) => `${attr.attributeName}: ${attr.attributeValue}`).join("; ")
-      : "N/A"
-
     return [
       datum.soldBy?.companyName,
       datum.name,
       datum.soldProducts?.productName || "N/A",
       datum.soldBy?.companyName || "N/A",
       datum.soldProducts?.productPrice || "N/A",
-      datum.soldProducts?.batchId || "N/A",
-      attributes,
-      datum.soldProducts?.createdAt,
+      datum.batchId?.batchId || "N/A",
+      datum?.createdAt,
     ]
   })
 
@@ -62,7 +57,6 @@ export default function DataTable() {
   const { data, sortData, selectedData, setSelectedData, fetchCompanySales, userRole, filters, setFilters } =
     useCompanySales()
 
-  const numberOfDataPerPage = 8
   const [hasFetched, setHasFetched] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [searchBatchId, setSearchBatchId] = useState("")
@@ -133,14 +127,16 @@ export default function DataTable() {
     return selectedData.some((selected) => selected.name === datum.name)
   }
   // Adjusted Filtering Logic in DataTable Component
+  const apidata = data
+  console.log("the root api data is ", apidata.pagination)
   const filteredData = data?.data || []
-  
+  console.log("filtered data is", filteredData)
 
   // const currentData = filteredData.slice(indexOfFirstData, indexOfLastData)
 
   const handleReset = () => {
     window.location.reload()
-  
+
     setStartDate(initialStartDate.toISOString().split("T")[0]) // Reset to initial start date
     setEndDate(initialEndDate.toISOString().split("T")[0]) // Reset to initial end date
   }
@@ -281,6 +277,26 @@ export default function DataTable() {
                     checked={isTableDataSelected(datum)}
                   />
                 </Table.Column>
+                <Table.Column className="px-8">
+                  <ImgWithWrapper
+                    wrapperClassName="size-10 mx-15"
+                    imageClassName="object-contain object-left"
+                    imageAttributes={{
+                      src:
+                        datum?.blockChainVerified === "unverified"
+                          ? "/assets/Unverified.png"
+                          : datum?.blockChainVerified
+                            ? "/assets/Verified2.png"
+                            : "/assets/pending.png",
+                      alt:
+                        datum?.blockChainVerified === "unverified"
+                          ? "Unverified Logo"
+                          : datum?.blockChainVerified
+                            ? "Verified Logo"
+                            : "Unverified Logo",
+                    }}
+                  />
+                </Table.Column>
                 {userRole === "super-admin" && (
                   <Table.Column className="px-2">{datum.soldBy?.companyName}</Table.Column>
                 )}
@@ -325,20 +341,7 @@ export default function DataTable() {
                     <ContextMenu.Menu
                       className="absolute z-10 w-[175px] space-y-1 text-white"
                       contextMenuRef={contextMenuRef}
-                    >
-                      {/* <ContextMenu.Item
-                        className="rounded-md bg-[#017082]"
-                        onClick={() => {}}
-                      >
-                        View
-                      </ContextMenu.Item>
-                      <ContextMenu.Item
-                        className="rounded-md bg-[#017082]"
-                        onClick={() => {}}
-                      >
-                        Edit
-                      </ContextMenu.Item> */}
-                    </ContextMenu.Menu>
+                    ></ContextMenu.Menu>
                   </ContextMenu>
                 </Table.Column>
               </Table.Row>
@@ -349,7 +352,7 @@ export default function DataTable() {
 
       <div className="text-right">
         <Pagination
-          totalNumberOfData={data?.pagination?.totalItems || 0}
+          totalNumberOfData={data?.pagination?.totalRecords || 0}
           numberOfDataPerPage={filters.limit}
           currentPage={currentPage}
           onPageChange={(newPage) => setCurrentPage(newPage)}
