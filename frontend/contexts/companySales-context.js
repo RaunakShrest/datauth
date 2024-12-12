@@ -55,6 +55,13 @@ export default function CompanySalesProvider({ children }) {
       setData((prev) => ({
         ...prev,
         columns: [
+          {
+            id: "blockChainVerified",
+            text: "BC Verification",
+            dataKey: "blockChainVerified",
+            isSortable: false,
+            width: "150px",
+          },
           ...(userRole !== "company"
             ? [
                 {
@@ -135,8 +142,8 @@ export default function CompanySalesProvider({ children }) {
       console.log("fetching companysales data from context", response.data)
       setData((prev) => ({
         ...prev,
-        data: response?.data?.message || [],
-        pagination: response?.data?.pagination || [],
+        data: response?.data?.message?.salesData || [],
+        pagination: response?.data?.message?.pagination || [],
       }))
     } catch (error) {
       console.error("Error fetching company sales data", error)

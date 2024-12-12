@@ -24,7 +24,12 @@ router.get(
   getSoldProductsByRetailer
 ); // retailersales
 router.get("/getCustomerInfo", checkUserAuth, getCustomerInfo);
-router.get("/soldProductsByCompany", checkUserAuth, getSoldProductsByCompany);
+router.get(
+  "/soldProductsByCompany",
+  checkUserAuth,
+  blockChainToken,
+  getSoldProductsByCompany
+);
 router.get(
   "/getProductByOrderNumber",
   checkUserAuth,

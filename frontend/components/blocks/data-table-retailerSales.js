@@ -20,14 +20,9 @@ const convertToCSV = (data) => {
     "Product Price",
     "Batch ID",
     "Manufacturer",
-    "Product Attributes",
     "Sold Date",
   ]
   const rows = data.map((datum) => {
-    const attributes = datum.soldProducts?.productAttributes
-      ? datum.soldProducts.productAttributes.map((attr) => `${attr.attributeName}: ${attr.attributeValue}`).join("; ")
-      : "N/A"
-
     return [
       datum.name,
       datum.email,
@@ -35,9 +30,8 @@ const convertToCSV = (data) => {
       datum.soldProducts?.productManufacturer?.companyName || "N/A",
       datum.soldProducts?.productName || "N/A",
       datum.soldProducts?.productPrice || "N/A",
-      datum.soldProducts?.batchId || "N/A",
-      attributes,
-      datum.soldProducts?.createdAt,
+      datum.batchId?.batchId || "N/A",
+      datum.createdAt,
     ]
   })
 

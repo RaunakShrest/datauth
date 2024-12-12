@@ -673,6 +673,7 @@ const getSoldProductsByRetailer = async (req, res, next) => {
       };
 
       const blockchainToken = req.blockChainToken;
+      console.log("the blockChaint oken issssss========", blockchainToken);
       if (!blockchainToken) {
         throw new ApiError(401, "Blockchain authorization token not found");
       }
@@ -687,7 +688,7 @@ const getSoldProductsByRetailer = async (req, res, next) => {
           },
         }
       );
-      console.log("response of bses", response.data.result);
+      console.log("response of bses", response.data);
 
       if (
         response.data &&
@@ -801,7 +802,7 @@ const getSoldProductsByCompany = async (req, res, next) => {
       startDate,
       endDate,
     } = req.query;
-
+    const blockChainToken = req.blockChainToken;
     const companyId = req.user._id;
     const userType = req.user.userType;
 
@@ -825,7 +826,7 @@ const getSoldProductsByCompany = async (req, res, next) => {
     }
 
     // Add product name search
-    if (productNameSearch) {
+    if (productNameSearch.trim() !== "") {
       query["soldProducts.productName"] = {
         $regex: productNameSearch,
         $options: "i",
@@ -833,11 +834,15 @@ const getSoldProductsByCompany = async (req, res, next) => {
     }
 
     // Add batch ID search
-    if (batchIdSearch) {
+    if (batchIdSearch.trim() !== "") {
       query["batchId.batchId"] = batchIdSearch;
     }
-    if (retailerNameSearch) {
-      query["soldBy.companyName"] = batchIdSearch;
+
+    if (retailerNameSearch.trim() !== "") {
+      query["soldBy.companyName"] = {
+        $regex: retailerNameSearch,
+        $options: "i",
+      };
     }
 
     // Add date range filter
@@ -860,33 +865,144 @@ const getSoldProductsByCompany = async (req, res, next) => {
       }
     }
 
-    // Fetch data based on the query
-    const totalRecords = await CustomerInfoModel.countDocuments(query);
-    const salesData = await CustomerInfoModel.find(query)
+    const companySalesData = await CustomerInfoModel.find(query)
       .skip(options.skip)
-      .limit(options.limit);
+      .limit(options.limit)
+      .populate("batchId", "batchId")
+      .populate("soldBy", "companyName _id")
+      .populate("soldProducts", "productName productPrice")
+      .populate("productManufacturer", "companyName _id");
 
-    // Check if salesData is empty
-    if (!salesData || !salesData.length) {
-      throw new ApiError(404, "No sales found");
+    const totalRecords = await CustomerInfoModel.countDocuments(query);
+
+    const hashedSalesData = companySalesData.map((item) => {
+      const saleData = {
+        id: item?._id?.toString() || null,
+        name: item?.name || null,
+        email: item?.email || null,
+        phoneNumber: item?.phoneNumber || null,
+        productManufacturer: item?.productManufacturer
+          ? {
+              _id: item.productManufacturer._id?.toString() || null,
+              companyName: item.productManufacturer.companyName || null,
+            }
+          : null,
+        soldProducts: item?.soldProducts
+          ? {
+              _id: item.soldProducts._id?.toString() || null,
+              productName: item.soldProducts.productName || null,
+              productPrice: item.soldProducts.productPrice || null,
+            }
+          : null,
+        soldBy: item?.soldBy
+          ? {
+              _id: item.soldBy._id?.toString() || null,
+              companyName: item.soldBy.companyName || null,
+            }
+          : null,
+        batchId: item?.batchId
+          ? {
+              _id: item.batchId._id?.toString() || null,
+              batchId: item.batchId.batchId || null,
+            }
+          : null,
+        createdAt: item?.createdAt?.toISOString() || null,
+        updatedAt: item?.updatedAt?.toISOString() || null,
+      };
+
+      const saleString = JSON.stringify(saleData);
+      const saleHash = crypto
+        .createHash("sha256")
+        .update(saleString)
+        .digest("hex");
+
+      return {
+        ...saleData,
+        saleHash,
+      };
+    });
+
+    const saleIdList = hashedSalesData.map((sale) => sale.id);
+
+    let externalApiResponse = [];
+    try {
+      const payload = {
+        fcn: "GetCustomerWithHash",
+        args: saleIdList,
+      };
+
+      if (!blockChainToken) {
+        throw new ApiError(
+          401,
+          "Authorization token for external API not found"
+        );
+      }
+
+      const response = await axios.post(
+        `${process.env.BLOCKCHAIN_TEST_URL}/channels/mychannel/chaincodes/Customer`,
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${blockChainToken}`,
+          },
+        }
+      );
+
+      if (
+        response.data &&
+        response.data.result &&
+        Array.isArray(response.data.result.result)
+      ) {
+        externalApiResponse = response.data.result.result;
+      }
+    } catch (error) {
+      console.error("Error fetching external API data:", error.message);
     }
 
-    res.status(200).json({
-      statusCode: 200,
-      data:
-        userType === "super-admin"
-          ? "All sold products retrieved successfully"
-          : "Products sold by company retrieved successfully",
-      message: salesData,
-      pagination: {
-        currentPage: options.page,
-        totalPages: Math.ceil(totalRecords / options.limit),
-        totalRecords,
-        pageSize: options.limit,
-      },
-      success: true,
+    const comparisonResults = hashedSalesData.map((sale) => {
+      const apiSale = externalApiResponse.find(
+        (apiData) => apiData.id === sale.id // Match using `id` from external API response
+      );
+
+      // Log the hashes for debugging
+      console.log("Sale ID:", sale.id);
+      console.log("Generated Hash (Company):", sale.saleHash);
+
+      if (apiSale) {
+        console.log("External API Sale Data:", apiSale);
+        console.log("External API Hash:", apiSale.blockHash);
+
+        const blockChainVerified =
+          apiSale.blockHash === sale.saleHash ? true : "unverified";
+
+        console.log("Verification Result:", blockChainVerified);
+
+        return {
+          ...sale,
+          blockChainVerified,
+        };
+      } else {
+        console.log("No matching sale found in external API for ID:", sale.id);
+        return {
+          ...sale,
+          blockChainVerified: false,
+        };
+      }
     });
+
+    res.status(200).json(
+      new ApiResponse(200, "Sales data retrieved successfully", {
+        salesData: comparisonResults,
+        pagination: {
+          totalRecords,
+          totalPages: Math.ceil(totalRecords / options.limit),
+          currentPage: options.page,
+        },
+      })
+    );
   } catch (error) {
+    console.error("Error:", error.message || "unknown error");
     next(error);
   }
 };
