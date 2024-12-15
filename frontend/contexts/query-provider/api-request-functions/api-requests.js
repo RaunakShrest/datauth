@@ -204,3 +204,11 @@ export const fetchSingleProduct = async (productId) => {
     throw error.response
   }
 }
+export const fetchSingleProductWithSlug = async (slug) => {
+  try {
+    const response = await api.get(`/products/getSingleProdWithSlug/${slug}`)
+    return response.data
+  } catch (error) {
+    throw error.response
+  }
+}

@@ -255,12 +255,12 @@ export default function DataTable() {
                 </Table.Heading>
               ))}
 
-              <Table.Heading
+              {/* <Table.Heading
                 className="pl-4"
                 style={{ width: "100px" }}
               >
                 Action
-              </Table.Heading>
+              </Table.Heading> */}
             </Table.Row>
           </Table.Head>
 
@@ -332,7 +332,7 @@ export default function DataTable() {
                   })}
                 </Table.Column>
 
-                <Table.Column className="p-2">
+                {/* <Table.Column className="p-0">
                   <ContextMenu
                     className="relative"
                     tableRef={tableRef}
@@ -350,7 +350,7 @@ export default function DataTable() {
                       contextMenuRef={contextMenuRef}
                     ></ContextMenu.Menu>
                   </ContextMenu>
-                </Table.Column>
+                </Table.Column> */}
               </Table.Row>
             ))}
           </Table.Body>

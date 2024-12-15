@@ -249,39 +249,171 @@ const getProductItems = async (req, res, next) => {
 };
 
 const getSingleProduct = async (req, res, next) => {
-  // for company left
   try {
-    const userId = req.user?._id;
-
-    if (!userId) {
-      throw new ApiError(401, "unauthorized request");
-    }
-
-    // Always query by slug
     const query = {
       _id: req.params?.productId,
     };
 
-    // If the user is not a Super Admin, we will not restrict the query
-    // This allows Retailers to see all products based on the slug
     const productItem = await ProductItemModel.findOne(query)
       .populate("productManufacturer", "companyName")
       .populate("productType", "name")
       .select("-__v");
 
     if (!productItem) {
-      throw new ApiError(404, "product doesn't exist");
+      throw new ApiError(404, "Product doesn't exist");
+    }
+
+    // Prepare payload for blockchain token API
+    const payload = {
+      userid: productItem.productManufacturer?._id,
+      orgName: "Company",
+      companyName: productItem.productManufacturer?.companyName,
+    };
+
+    // Call blockchain token API
+    const blockchainResponse = await axios.post(
+      `${process.env.BLOCKCHAIN_TEST_URL}/users/token`,
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const blockChainToken = blockchainResponse.data.message.token;
+
+    // Use blockchain token to access another API
+    const productAccessPayload = {
+      fcn: "GetProductWithHash",
+      args: [productItem._id],
+    };
+
+    const productAccessResponse = await axios.post(
+      `${process.env.BLOCKCHAIN_TEST_URL}/channels/mychannel/chaincodes/Productitem`,
+      productAccessPayload,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${blockChainToken}`,
+        },
+      }
+    );
+
+    const productAccessData = productAccessResponse.data.result;
+
+    // Generate SHA-256 hash for the product data
+    const productData = {
+      id: productItem._id.toString(),
+      productName: productItem.productName,
+      productDescription: productItem.productDescription,
+      productPrice: productItem.productPrice,
+      productSku: productItem.productSku,
+      batchId: productItem.batchId
+        ? {
+            _id: productItem.batchId._id.toString(),
+            batchId: productItem.batchId.batchId,
+          }
+        : null,
+      productStatus: productItem.productStatus,
+      productType: productItem.productType.map((type) => ({
+        _id: type._id.toString(),
+        name: type.name,
+      })),
+      productManufacturer: productItem.productManufacturer
+        ? {
+            _id: productItem.productManufacturer._id.toString(),
+            companyName: productItem.productManufacturer.companyName,
+          }
+        : null,
+      productAttributes: productItem.productAttributes.map((attr) => ({
+        attributeName: attr.attributeName,
+        attributeValue: attr.attributeValue,
+        _id: attr._id.toString(),
+      })),
+      slug: productItem.slug,
+      productImages: productItem.productImages,
+      productWebLink: productItem.productWebLink,
+      createdAt: productItem.createdAt.toISOString(),
+      qrUrl: productItem.qrUrl,
+      soldBy: productItem.soldBy,
+      purchasedStatus: productItem.purchasedStatus,
+    };
+
+    const productString = JSON.stringify(productData);
+    const hash = crypto
+      .createHash("sha256")
+      .update(productString)
+      .digest("hex");
+
+    // Compare hash with blockchain data
+    const externalProduct = productAccessData.result.find(
+      (item) => item.ProductId === productItem._id.toString()
+    );
+
+    if (!externalProduct) {
+      throw new ApiError(404, "Blockchain data for product not found");
+    }
+
+    const externalHash = externalProduct.blockHash;
+    const blockChainVerified = externalHash === hash;
+
+    // Add blockChainVerified to productItem
+    const productWithVerification = {
+      ...productItem.toObject(),
+      blockChainVerified,
+    };
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          productItem: productWithVerification,
+        },
+        "Product item fetched successfully"
+      )
+    );
+  } catch (error) {
+    if (!error.message) {
+      error.message = "Something went wrong while getting product";
+    }
+    next(error);
+  }
+};
+
+const getSingleProductOnSlug = async (req, res, next) => {
+  console.log("htting product on slug");
+  try {
+    const userId = req.user?._id;
+
+    if (!userId) {
+      throw new ApiError(401, "Unauthorized request");
+    }
+
+    // Validate slug
+    const slug = req.params?.slug;
+    if (!slug || typeof slug !== "string") {
+      throw new ApiError(400, "Invalid or missing slug parameter");
+    }
+
+    const query = { slug }; // Make sure to use the slug directly
+
+    // Query the ProductItem collection by slug (not ObjectId)
+    const productItem = await ProductItemModel.findOne(query)
+      .populate("productManufacturer", "companyName")
+      .populate("productType", "name")
+      .select("-__v");
+
+    if (!productItem) {
+      throw new ApiError(404, "Product doesn't exist");
     }
 
     return res
       .status(200)
       .json(
-        new ApiResponse(200, productItem, "product item fetched successfully")
+        new ApiResponse(200, productItem, "Product item fetched successfully")
       );
   } catch (error) {
-    if (!error.message) {
-      error.message = "something went wrong while getting products";
-    }
     next(error);
   }
 };
@@ -612,7 +744,7 @@ const createProductItem = async (req, res, next) => {
         ? process.env.FRONTEND_URL_DEV
         : process.env.FRONTEND_URL_PROD;
     const qrFilePath = await generateQr(
-      `${FRONTEND_URL}/products/${createdProductItem._id}`
+      `${FRONTEND_URL}/product/${createdProductItem._id}`
     );
     const response = await uploadFile(qrFilePath);
 
@@ -772,6 +904,7 @@ const deleteProductItem = async (req, res, next) => {
   }
 };
 const getProductById = async (req, res, next) => {
+  // console.log("hitting to get single prod");
   try {
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -1224,4 +1357,5 @@ export {
   deleteProductItem,
   getProductById,
   editProductInfo,
+  getSingleProductOnSlug,
 };

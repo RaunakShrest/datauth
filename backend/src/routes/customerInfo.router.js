@@ -32,7 +32,7 @@ router.get(
 );
 router.get(
   "/getProductByOrderNumber",
-  checkUserAuth,
+
   getProductWithOrderNumber
 );
 

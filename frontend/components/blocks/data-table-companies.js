@@ -370,12 +370,12 @@ export default function DataTable() {
                           >
                             Approve
                           </ContextMenu.Item>
-                          <ContextMenu.Item
+                          {/* <ContextMenu.Item
                             className="rounded-md bg-[#02235E]"
                             onClick={() => router.push(`/companies/${datum.id}/edit`)}
                           >
                             Edit
-                          </ContextMenu.Item>
+                          </ContextMenu.Item> */}
                         </>
                       )}
                       <ContextMenu.Item

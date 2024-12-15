@@ -60,6 +60,9 @@ const customerInfoSchema = new mongoose.Schema(
         type: String,
       },
     },
+    transactionId: {
+      type: String,
+    },
   },
   { timestamps: true }
 );
