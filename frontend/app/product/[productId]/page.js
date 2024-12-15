@@ -1,54 +1,107 @@
 "use client"
 
-import { fetchSingleProductWithSlug } from "@/contexts/query-provider/api-request-functions/api-requests"
-import { reactQueryStaleTime } from "@/utils/staticUtils"
-import { useQuery } from "@tanstack/react-query"
 import { useParams } from "next/navigation"
-import React, { useState } from "react"
-import { currencyFormat } from "@/utils/functionalUtils"
-import LoadingAnimation from "../composites/loading-animation"
+import { useEffect, useState } from "react"
+import { useSwipeable } from "react-swipeable"
+import ImgWithWrapper from "@/components/composites/img-with-wrapper"
 
-export default function ViewSingleProduct() {
+const Page = () => {
   const params = useParams()
-
+  const [productData, setProductData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
-  const singleProductQuery = useQuery({
-    queryKey: ["fetchSinglProduct", params["single-product"]],
-    queryFn: () => fetchSingleProductWithSlug(params["single-product"]),
-    staleTime: reactQueryStaleTime,
+  const handlePrevImage = () => {
+    if (productData?.productImages?.length > 0) {
+      setCurrentImageIndex(
+        (prevIndex) => (prevIndex - 1 + productData.productImages.length) % productData.productImages.length,
+      )
+    }
+  }
+
+  const handleNextImage = () => {
+    if (productData?.productImages?.length > 0) {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % productData.productImages.length)
+    }
+  }
+
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: handleNextImage,
+    onSwipedRight: handlePrevImage,
+    preventDefaultTouchmoveEvent: true,
+    trackTouch: true,
+    trackMouse: false,
   })
 
-  const productData = singleProductQuery.data?.data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL_DEV}/products/${params.productId}`)
+        if (!response.ok) {
+          throw new Error("Failed to fetch product data")
+        }
+        const data = await response.json()
+        setProductData(data.data?.productItem)
+      } catch (err) {
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [params.productId])
+
+  if (loading) {
+    return <div>Loading...</div>
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>
+  }
 
   const productImages = productData?.productImages || []
-
   const currentImage =
     productImages.length > 0 && productImages[currentImageIndex]
       ? `${process.env.NEXT_PUBLIC_BASE_URL_DEV}/${productImages[currentImageIndex].replace(/\\/g, "/")}`
       : null
 
-  const handlePrevImage = () => {
-    if (productImages.length > 0) {
-      setCurrentImageIndex((prevIndex) => (prevIndex - 1 + productImages.length) % productImages.length)
-    }
-  }
-
-  const handleNextImage = () => {
-    if (productImages.length > 0) {
-      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % productImages.length)
-    }
-  }
-
   return (
-    <div className="px-4 md:px-8 lg:px-16">
+    <div className="px-4 pt-14 md:px-8 lg:px-16">
+      <div className="left-4 top-4 z-10 mb-4 flex justify-center">
+        <ImgWithWrapper
+          wrapperClassName="size-20"
+          imageClassName="object-contain"
+          imageAttributes={{
+            src:
+              productData?.blockChainVerified === false
+                ? "/assets/Unverified.png"
+                : productData?.blockChainVerified === true
+                  ? "/assets/Verified2.png"
+                  : "/assets/pending.png",
+            alt:
+              productData?.blockChainVerified === false
+                ? "Unverified Logo"
+                : productData?.blockChainVerified === true
+                  ? "Verified Logo"
+                  : "Pending Logo",
+          }}
+        />
+      </div>
       <div className="flex flex-col space-y-8 lg:flex-row lg:space-x-8 lg:space-y-0">
         <div className="lg:w-1/2">
           {productImages.length > 0 && (
-            <div className="flex items-center justify-center space-x-4">
+            <div
+              className="relative flex items-center justify-center space-x-4"
+              {...swipeHandlers} // Attach swipe handlers here
+            >
+              {/* Blockchain Verified Icon */}
+
+              {/* Image Navigation */}
               <button
                 onClick={handlePrevImage}
-                className="rounded-full bg-gray-300 p-2 hover:bg-gray-400"
+                className="z-10 rounded-full bg-gray-300 p-2 hover:bg-gray-400"
               >
                 &#8592;
               </button>
@@ -61,7 +114,7 @@ export default function ViewSingleProduct() {
 
               <button
                 onClick={handleNextImage}
-                className="rounded-full bg-gray-300 p-2 hover:bg-gray-400"
+                className="z-10 rounded-full bg-gray-300 p-2 hover:bg-gray-400"
               >
                 &#8594;
               </button>
@@ -70,14 +123,17 @@ export default function ViewSingleProduct() {
         </div>
         <div className="lg:w-1/2">
           <div className="my-5">
-            <p className="text-sm text-[#7f7f7f]">Batch Id: {productData?.batchId?.batchId || "N/A"}</p>
-            <h1 className="text-2xl font-bold text-[#02235E] md:text-4xl lg:text-5xl">{productData?.productName}</h1>
-            <p className="text-sm text-[#7f7f7f]">Product SKU: {productData?.productSku}</p>
+            <p className="mt-4 text-base font-bold"> Batch Id: {productData?.batchId?.batchId || "N/A"}</p>
+            <div className="flex items-center space-x-3">
+              <h1 className="text-2xl font-bold text-[#02235E] md:text-4xl lg:text-5xl">{productData?.productName}</h1>
+            </div>
+
+            <p className="mt-4 text-base font-bold">Product SKU: {productData?.productSku}</p>
           </div>
           <div className="my-5 grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="rounded-lg bg-white px-4 py-4">
               <p className="font-bold">
-                Price: <span className="font-normal">{currencyFormat(productData?.productPrice)}</span>
+                Price: <span className="font-normal">${productData?.productPrice}</span>
               </p>
             </div>
             <div className="rounded-lg bg-white px-4 py-4">
@@ -127,7 +183,7 @@ export default function ViewSingleProduct() {
         ></p>
       </div>
 
-      <div className="my-2 rounded-lg bg-white px-4 py-4">
+      <div className="my-2 mt-4 rounded-lg bg-white px-4 py-4">
         <p className="text-lg font-bold">Product Attributes</p>
         {productData?.productAttributes.map((eachAttribute) => (
           <div
@@ -142,3 +198,5 @@ export default function ViewSingleProduct() {
     </div>
   )
 }
+
+export default Page

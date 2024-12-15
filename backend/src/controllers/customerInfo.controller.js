@@ -291,7 +291,12 @@ const postCustomerInfo = async (req, res, next) => {
           }
         );
 
-        console.log("Blockchain API response:", blockchainResponse.data);
+        const transactionId = blockchainResponse.data.result.transactionId;
+
+        if (transactionId) {
+          customerInfo.transactionId = transactionId; // Assuming `transactionId` field exists in your schema
+          await customerInfo.save();
+        }
       } catch (blockchainError) {
         console.error("Blockchain API error:", blockchainError.message);
         // Handle blockchain API error gracefully
@@ -375,7 +380,12 @@ const postCustomerInfo = async (req, res, next) => {
           }
         );
 
-        console.log("Blockchain API response:", blockchainResponse.data);
+        const transactionId = blockchainResponse.data.result.transactionId;
+
+        if (transactionId) {
+          existingCustomer.transactionId = transactionId; // Assuming `transactionId` field exists in your schema
+          await existingCustomer.save();
+        }
       } catch (blockchainError) {
         console.error("Blockchain API error:", blockchainError.message);
         // Handle blockchain API error gracefully
@@ -648,7 +658,6 @@ const getSoldProductsByRetailer = async (req, res, next) => {
             }
           : null,
         createdAt: item?.createdAt?.toISOString() || null,
-        updatedAt: item?.updatedAt?.toISOString() || null,
       };
 
       const customerString = JSON.stringify(customerData);
@@ -906,8 +915,13 @@ const getSoldProductsByCompany = async (req, res, next) => {
               batchId: item.batchId.batchId || null,
             }
           : null,
+        orderId: item?.orderId
+          ? {
+              _id: item.orderId._id?.toString() || null,
+              orderNumber: item.orderId.orderNumber || null,
+            }
+          : null,
         createdAt: item?.createdAt?.toISOString() || null,
-        updatedAt: item?.updatedAt?.toISOString() || null,
       };
 
       const saleString = JSON.stringify(saleData);
@@ -1010,9 +1024,12 @@ const getSoldProductsByCompany = async (req, res, next) => {
 const getProductWithOrderNumber = async (req, res, next) => {
   try {
     const { email, orderNumber } = req.query;
+
     if (!email || !orderNumber) {
       throw new ApiError(400, "Missing email or orderNumber parameter");
     }
+
+    // Find customer information based on email and orderNumber
     const customerInfo = await CustomerInfoModel.findOne({
       email: email,
       "orderId.orderNumber": orderNumber,
@@ -1025,6 +1042,7 @@ const getProductWithOrderNumber = async (req, res, next) => {
       );
     }
 
+    // Find product item based on soldProducts
     const productItem = await ProductItemModel.findOne({
       _id: customerInfo.soldProducts,
     });
@@ -1036,10 +1054,42 @@ const getProductWithOrderNumber = async (req, res, next) => {
       );
     }
 
+    // Fetch the user details for the soldBy userId
+    const soldByUser = await UserModel.findById(productItem.soldBy);
+
+    if (!soldByUser) {
+      throw new ApiError(404, "User not found for the soldBy userId");
+    }
+
+    // Construct the response object
+    const responseData = {
+      product: {
+        ...productItem.toObject(),
+        soldBy: {
+          userId: soldByUser._id,
+          companyName: soldByUser.companyName,
+        },
+      },
+      customer: {
+        name: customerInfo.name,
+        email: customerInfo.email,
+        phoneNumber: customerInfo.phoneNumber,
+        transactionId: customerInfo?.transactionId,
+      },
+      order: {
+        orderId: customerInfo.orderId._id,
+        orderNumber: customerInfo.orderId.orderNumber,
+      },
+    };
+
     res
       .status(200)
       .json(
-        new ApiResponse(200, "Product item retrieved successfully", productItem)
+        new ApiResponse(
+          200,
+          "Product item and customer details retrieved successfully",
+          responseData
+        )
       );
   } catch (error) {
     next(error);

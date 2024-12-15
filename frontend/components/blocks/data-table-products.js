@@ -362,17 +362,18 @@ export default function DataTable() {
                     <ContextMenu.Menu className="absolute z-10 w-[175px] space-y-1 bg-white/80 p-2 text-white">
                       <ContextMenu.Item
                         className="rounded-md bg-[#0000CC]"
-                        onClick={() => router.push(`/products/${datum.id}`)}
+                        onClick={() => router.push(`/products/${datum.slug}`)}
                       >
                         View
                       </ContextMenu.Item>
-
-                      <ContextMenu.Item
-                        className="rounded-md bg-[#0000CC]"
-                        onClick={() => router.push(`/products/${datum.id}/edit`)}
-                      >
-                        Edit
-                      </ContextMenu.Item>
+                      {userRole !== "retailer" && (
+                        <ContextMenu.Item
+                          className="rounded-md bg-[#0000CC]"
+                          onClick={() => router.push(`/products/${datum.id}/edit`)}
+                        >
+                          Edit
+                        </ContextMenu.Item>
+                      )}
 
                       <ContextMenu.Item
                         className="rounded-md bg-[#0000CC]"

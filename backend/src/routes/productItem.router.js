@@ -9,6 +9,7 @@ import {
   getProductById,
   editProductInfo,
   getCompanyProductItems,
+  getSingleProductOnSlug,
 } from "../controllers/productItem.controller.js";
 import { uploadMultiple } from "../middlewares/productImageUpload.middlware.js";
 import { blockChainToken } from "../middlewares/blockChainToken.middleware.js";
@@ -34,7 +35,13 @@ router.delete(
   checkCompany,
   deleteProductItem
 );
-router.get("/:productId", checkUserAuth, getSingleProduct); // for view
+router.get("/:productId", getSingleProduct); // for QR
+
+router.get(
+  "/getSingleProdWithSlug/:slug",
+  checkUserAuth,
+  getSingleProductOnSlug
+); //for view
 router.get("/getSingleProduct/:id", getProductById); // for edit
 router.patch(
   "/editProductDetails/:productId",

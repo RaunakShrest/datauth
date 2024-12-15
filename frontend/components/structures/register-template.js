@@ -6,6 +6,7 @@ import InputWithIcon from "../composites/input-with-icon"
 import InputGroupWithLabel from "../blocks/input-group-with-label"
 import { userTypeOptions } from "@/utils/staticUtils"
 import Button from "../elements/button"
+import { countriesData } from "@/utils/countryData"
 import {
   addressLineRule,
   cityRule,
@@ -66,7 +67,7 @@ export default function RegisterTemplate() {
       address: {
         zip: formData.zip,
         city: formData.city,
-        country: formData.country,
+        country: selectedCountry,
         addressLine: formData.addressLine,
       },
     }
@@ -76,6 +77,8 @@ export default function RegisterTemplate() {
   const [productTypes, setProductTypes] = useState([])
   const [loadingProductTypes, setLoadingProductTypes] = useState(true)
   const [errorProductTypes, setErrorProductTypes] = useState(null)
+  const [countries, setCountries] = useState([])
+  const [selectedCountry, setSelectedCountry] = useState("")
   useEffect(() => {
     // Fetch product types from the API
     const fetchProductTypes = async () => {
@@ -99,6 +102,9 @@ export default function RegisterTemplate() {
     fetchProductTypes()
   }, [])
 
+  useEffect(() => {
+    setCountries(countriesData)
+  }, [])
   const togglePasswordVisibility = () => {
     setPasswordVisible(!isPasswordVisible)
   }
@@ -112,12 +118,12 @@ export default function RegisterTemplate() {
       <div className="h-full w-0 bg-[url('/assets/loginimage.png')] bg-cover bg-bottom bg-no-repeat md:w-[30%]"></div>
 
       {/* Right side form container */}
-      <div className="flex w-full h-full flex-col items-center justify-center md:w-[70%]">
+      <div className="flex h-full w-full flex-col items-center justify-center md:w-[70%]">
         {/* Heading and welcome message */}
 
         {/* Form container */}
         <div className="flex-shrink space-y-6 rounded-lg">
-          <div className=" text-center">
+          <div className="text-center">
             <h1 className="text-4xl font-bold text-[#02235E]">Create Your Account</h1>
             <p className="text-lg">Welcome! We're excited to have you join us</p>
           </div>
@@ -125,10 +131,15 @@ export default function RegisterTemplate() {
           {/* Already have an account message */}
           <div className="mb-2 text-center">
             <span>Already have an account? </span>
-            <span className="font-bold cursor-pointer text[#02235E]">Login</span>
+            <button
+              onClick={() => router.push("/login")}
+              className="cursor-pointer font-bold text-[#02235E]"
+            >
+              Login
+            </button>
           </div>
           <div className="space-y-4">
-          <div className="rounded-lg px-4">
+            <div className="rounded-lg px-4">
               <InputWithIcon
                 useFormContext={useRegisterFormContext}
                 iconElement={false}
@@ -207,10 +218,9 @@ export default function RegisterTemplate() {
               />
             </InputGroupWithLabel>
             <InputGroupWithLabel
-              cols={3}
+              cols={2}
               requiredField
             >
-              
               <InputWithIcon
                 useFormContext={useRegisterFormContext}
                 iconElement={false}
@@ -235,19 +245,30 @@ export default function RegisterTemplate() {
                   fieldRule: zipRule,
                 }}
               />
-              <InputWithIcon
-                useFormContext={useRegisterFormContext}
-                iconElement={false}
-                inputAttributes={{
-                  type: "text",
-                  placeholder: "Country",
-                  required: true,
-                  name: "country",
-                  register,
-                  fieldRule: countryRule,
-                }}
-              />
-              
+              <div>
+                <label className="mb-2 block font-bold">Country</label>
+                <select
+                  className="block w-full rounded-md border-2 border-[#bbbbbb] p-2"
+                  value={selectedCountry || ""}
+                  onChange={(e) => setSelectedCountry(e.target.value)}
+                  required
+                >
+                  <option
+                    value=""
+                    disabled
+                  >
+                    -- Please select a Country --
+                  </option>
+                  {countries.map((country) => (
+                    <option
+                      key={country.value}
+                      value={country.value}
+                    >
+                      {country.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </InputGroupWithLabel>
 
             <div className="grid grid-cols-2 gap-4 rounded-lg px-4">
@@ -263,7 +284,6 @@ export default function RegisterTemplate() {
                   fieldRule: registerEmailRule,
                 }}
                 label={<span className="font-bold">Email</span>}
-
               />
               <InputWithIcon
                 useFormContext={useRegisterFormContext}
@@ -277,7 +297,6 @@ export default function RegisterTemplate() {
                   fieldRule: phoneRule,
                 }}
                 label={<span className="font-bold">Phone</span>}
-
               />
             </div>
             <div className="grid grid-cols-2 gap-4 rounded-lg px-4">
@@ -294,7 +313,6 @@ export default function RegisterTemplate() {
                   fieldRule: userTypeRule,
                 }}
                 label={<span className="font-bold">User Type</span>}
-
               />
               <InputWithIcon
                 useFormContext={useRegisterFormContext}
@@ -306,7 +324,6 @@ export default function RegisterTemplate() {
                   ...register("productType", { required: "Product Type is required" }),
                 }}
                 label={<span className="font-bold">Product Type</span>}
-
               >
                 <option value="">-- Select a Product Type --</option>
                 {productTypes.map((productType) => (
@@ -395,7 +412,7 @@ export default function RegisterTemplate() {
             <div className="w-full px-4 py-2 text-right">
               <Button
                 type="submit"
-                className="w-full bg-[#02235E] px-8 py-2 text-white flex items-center justify-center hover:bg-[#012D61]"
+                className="flex w-full items-center justify-center bg-[#02235E] px-8 py-2 text-white hover:bg-[#012D61]"
                 onClick={handleSubmit(submitFn)}
                 disabled={registerMutation.isPending}
               >
