@@ -201,7 +201,7 @@ const getAllBatchIds = async (req, res, next) => {
 const getBatchId = async (req, res, next) => {
   try {
     const { userType, _id: userId } = req.user;
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 50 } = req.query;
 
     const options = {
       page: parseInt(page, 10),
@@ -236,7 +236,8 @@ const getBatchId = async (req, res, next) => {
 
     const batchIds = await batchIdsQuery
       .skip((options.page - 1) * options.limit)
-      .limit(options.limit);
+      .limit(options.limit)
+      .sort({ createdAt: -1 });
 
     const filteredBatchIds = batchIds.filter(
       (batch) => batch.createdBy || userType === "super-admin"

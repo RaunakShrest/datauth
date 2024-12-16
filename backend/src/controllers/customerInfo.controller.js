@@ -613,6 +613,7 @@ const getSoldProductsByRetailer = async (req, res, next) => {
     const customerInfo = await CustomerInfoModel.find(query)
       .skip(options.skip)
       .limit(options.limit)
+      .sort({ createdAt: -1 })
       .populate("batchId", "batchId")
       .populate("soldBy", "companyName _id")
       .populate("soldProducts", "productName productPrice")
@@ -697,7 +698,6 @@ const getSoldProductsByRetailer = async (req, res, next) => {
           },
         }
       );
-      console.log("response of bses", response.data);
 
       if (
         response.data &&
@@ -770,7 +770,6 @@ const getCustomerInfo = async (req, res, next) => {
       throw new ApiError(400, "Missing productId parameter");
     }
 
-    // Check if product exists
     const productExists = await ProductItemModel.findById(productId);
     if (!productExists) {
       throw new ApiError(404, "Product not found");
@@ -778,8 +777,8 @@ const getCustomerInfo = async (req, res, next) => {
 
     // Fetch customer info related to the product using `soldProducts._id`
     const customerInfo = await CustomerInfoModel.findOne({
-      "soldProducts._id": productId, // Check the _id inside soldProducts
-    }).populate("soldProducts._id"); // Populate the referenced product item
+      "soldProducts._id": productId,
+    }).populate("soldProducts._id");
 
     if (!customerInfo) {
       throw new ApiError(404, "Customer info not found for this product");
@@ -821,7 +820,6 @@ const getSoldProductsByCompany = async (req, res, next) => {
       skip: (parseInt(page, 10) - 1) * parseInt(limit, 10),
     };
 
-    // Build query object
     const query = {};
 
     // Filter by company for company users
@@ -834,7 +832,6 @@ const getSoldProductsByCompany = async (req, res, next) => {
       throw new ApiError(403, "Unauthorized user type");
     }
 
-    // Add product name search
     if (productNameSearch.trim() !== "") {
       query["soldProducts.productName"] = {
         $regex: productNameSearch,
@@ -842,7 +839,6 @@ const getSoldProductsByCompany = async (req, res, next) => {
       };
     }
 
-    // Add batch ID search
     if (batchIdSearch.trim() !== "") {
       query["batchId.batchId"] = batchIdSearch;
     }
@@ -877,6 +873,7 @@ const getSoldProductsByCompany = async (req, res, next) => {
     const companySalesData = await CustomerInfoModel.find(query)
       .skip(options.skip)
       .limit(options.limit)
+      .sort({ createdAt: -1 })
       .populate("batchId", "batchId")
       .populate("soldBy", "companyName _id")
       .populate("soldProducts", "productName productPrice")
@@ -1029,7 +1026,6 @@ const getProductWithOrderNumber = async (req, res, next) => {
       throw new ApiError(400, "Missing email or orderNumber parameter");
     }
 
-    // Find customer information based on email and orderNumber
     const customerInfo = await CustomerInfoModel.findOne({
       email: email,
       "orderId.orderNumber": orderNumber,
@@ -1042,7 +1038,6 @@ const getProductWithOrderNumber = async (req, res, next) => {
       );
     }
 
-    // Find product item based on soldProducts
     const productItem = await ProductItemModel.findOne({
       _id: customerInfo.soldProducts,
     });
@@ -1054,14 +1049,11 @@ const getProductWithOrderNumber = async (req, res, next) => {
       );
     }
 
-    // Fetch the user details for the soldBy userId
     const soldByUser = await UserModel.findById(productItem.soldBy);
 
     if (!soldByUser) {
       throw new ApiError(404, "User not found for the soldBy userId");
     }
-
-    // Construct the response object
     const responseData = {
       product: {
         ...productItem.toObject(),

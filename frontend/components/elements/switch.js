@@ -2,10 +2,15 @@
 
 import { capitalize } from "@/utils/functionalUtils"
 import { productTypeStatus } from "@/utils/staticUtils"
-import React, { useId } from "react"
+import React, { useId, useEffect } from "react"
 
-export default function Switch({ state, className, register, name, watch, ...props }) {
+export default function Switch({ state, className, register, setValue, name, watch, ...props }) {
   const elementId = useId()
+  useEffect(() => {
+    if (watch(name) === undefined) {
+      setValue(name, true)
+    }
+  }, [watch, name, setValue])
 
   return (
     <>
@@ -26,7 +31,7 @@ export default function Switch({ state, className, register, name, watch, ...pro
           <span className="checkbox-switch"></span>
         </label>
 
-        <span className="inline-block">{capitalize(productTypeStatus[watch(name)] ?? productTypeStatus.false)}</span>
+        <span className="inline-block">{capitalize(productTypeStatus[watch(name)] ?? productTypeStatus.true)} </span>
       </div>
     </>
   )

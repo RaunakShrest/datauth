@@ -96,6 +96,7 @@ const getProductItems = async (req, res, next) => {
       .populate("batchId", "batchId")
       .populate("productManufacturer", "companyName _id")
       .populate("productType", "name")
+      .sort({ createdAt: -1 })
       .select(
         "productName productDescription productPrice productSku productStatus productAttributes productImages slug productWebLink createdAt updatedAt qrUrl batchId productManufacturer productType soldBy purchasedStatus"
       );

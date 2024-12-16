@@ -392,7 +392,6 @@ const getCompanyIds = async (req, res, next) => {
 
 const getCompanies = async (req, res, next) => {
   const blockChainToken = req.blockChainToken;
-  console.log("The blockchain token is:", blockChainToken);
   if (!blockChainToken) {
     throw new ApiError(401, "Authorization token of blockchain not found");
   }
@@ -401,8 +400,9 @@ const getCompanies = async (req, res, next) => {
   );
 
   try {
-    // Fetch all companies, including sensitive fields for transformation
-    const companies = await UserModel.find({ userType: "company" }).lean();
+    const companies = await UserModel.find({ userType: "company" })
+      .sort({ createdAt: -1 })
+      .lean();
 
     if (!companies || companies.length === 0) {
       return res.status(404).json({

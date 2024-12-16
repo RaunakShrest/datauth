@@ -19,7 +19,7 @@ export default function BatchProvider({ children, refreshTrigger }) {
   const [isAsc, setIsAsc] = useState(true)
   const [filters, setFilters] = useState({
     page: 1,
-    limit: 10,
+    limit: 50,
   })
   const [data, setData] = useState({
     data: [],

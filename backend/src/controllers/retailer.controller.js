@@ -29,7 +29,8 @@ const getRetailers = async (req, res, next) => {
     const retailers = await UserModel.find(filters)
       .skip((options.page - 1) * options.limit)
       .limit(options.limit)
-      .lean();
+      .lean()
+      .sort({ createdAt: -1 });
 
     const totalItems = await UserModel.countDocuments(filters);
 

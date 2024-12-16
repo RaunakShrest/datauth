@@ -19,7 +19,7 @@ import toast from "react-hot-toast"
 import { useRouter } from "next/navigation"
 
 export default function AddProdcutTypeFormTemplate() {
-  const { handleSubmit, register, control, errors, watch, getValues } = useFormContext()
+  const { handleSubmit, register, control, errors, watch, getValues, setValue } = useFormContext()
 
   const router = useRouter()
 
@@ -60,6 +60,7 @@ export default function AddProdcutTypeFormTemplate() {
           name="productTypeStatus"
           register={register}
           watch={watch}
+          setValue={setValue}
         />
 
         <AnimatedInput
@@ -69,15 +70,6 @@ export default function AddProdcutTypeFormTemplate() {
           register={register}
           errors={errors}
           name="productTypeName"
-          fieldRule={{ required: "This field is required" }}
-        />
-        <AnimatedInput
-          placeholder="Price"
-          getValues={getValues}
-          required
-          register={register}
-          errors={errors}
-          name="productTypePrice"
           fieldRule={{ required: "This field is required" }}
         />
 
