@@ -3,12 +3,9 @@
 import { useEffect, useRef, useCallback, useState } from "react"
 import { useRetailerSales } from "@/contexts/retailerSales-context"
 import Table from "./table"
-import ContextMenu from "./context-menu"
 import Pagination from "../composites/pagination"
 import Checkbox from "../elements/checkbox"
 import { twMerge } from "tailwind-merge"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faEllipsisVertical } from "@fortawesome/free-solid-svg-icons"
 import { useDebounce } from "@/utils/debounce"
 import ImgWithWrapper from "../composites/img-with-wrapper"
 const convertToCSV = (data) => {
@@ -55,8 +52,17 @@ const downloadCSV = (csvContent, fileName = "Retailer_Sales.csv") => {
 export default function DataTable() {
   const tableRef = useRef()
   const contextMenuRef = useRef()
-  const { data, sortData, selectedData, setSelectedData, fetchRetailerSales, userRole, filters, setFilters } =
-    useRetailerSales()
+  const {
+    data,
+    sortData,
+    selectedData,
+    setSelectedData,
+    fetchRetailerSales,
+    userRole,
+    filters,
+    setFilters,
+    dataLoading,
+  } = useRetailerSales()
 
   const [hasFetched, setHasFetched] = useState(false)
 
@@ -263,76 +269,85 @@ export default function DataTable() {
               </Table.Heading> */}
             </Table.Row>
           </Table.Head>
-
           <Table.Body>
-            {filteredData?.map((datum, idx) => (
-              <Table.Row
-                key={idx}
-                className="border-b border-b-[#605E5E] bg-white"
-              >
-                <Table.Column className="px-4 py-2">
-                  <Checkbox
-                    onChange={() => handleTableDataCheckboxChange(datum)}
-                    checked={isTableDataSelected(datum)}
-                  />
+            {dataLoading ? (
+              <Table.Row>
+                <Table.Column
+                  colSpan={data.columns?.length + 2}
+                  className="py-8 text-center"
+                >
+                  <div className="inline-block size-8 animate-spin border-4 border-black" />
                 </Table.Column>
-                <Table.Column className="px-8">
-                  <ImgWithWrapper
-                    wrapperClassName="size-10 mx-15"
-                    imageClassName="object-contain object-left"
-                    imageAttributes={{
-                      src:
-                        datum?.blockChainVerified === "unverified"
-                          ? "/assets/Unverified.png"
-                          : datum?.blockChainVerified
-                            ? "/assets/Verified2.png"
-                            : "/assets/pending.png",
-                      alt:
-                        datum?.blockChainVerified === "unverified"
-                          ? "Unverified Logo"
-                          : datum?.blockChainVerified
-                            ? "Verified Logo"
-                            : "Unverified Logo",
-                    }}
-                  />
-                </Table.Column>
-                {userRole === "super-admin" && (
-                  <Table.Column className="p-2">
-                    <span>{datum.soldBy?.companyName || "N/A"}</span>
+              </Table.Row>
+            ) : (
+              filteredData?.map((datum, idx) => (
+                <Table.Row
+                  key={idx}
+                  className="border-b border-b-[#605E5E] bg-white"
+                >
+                  <Table.Column className="px-4 py-2">
+                    <Checkbox
+                      onChange={() => handleTableDataCheckboxChange(datum)}
+                      checked={isTableDataSelected(datum)}
+                    />
                   </Table.Column>
-                )}
-                <Table.Column className="px-2">{datum.name}</Table.Column>
-                <Table.Column className="px-2">{datum.email}</Table.Column>
-                <Table.Column className="overflow-hidden p-2">
-                  <span className="line-clamp-1">{datum.phoneNumber}</span>
-                </Table.Column>
-                <Table.Column className="p-2">
-                  <span>{datum?.productManufacturer?.companyName || "N/A"}</span>
-                </Table.Column>
-                <Table.Column className="p-2">
-                  <span>{datum.soldProducts?.productName || "N/A"}</span>
-                </Table.Column>
+                  <Table.Column className="px-8">
+                    <ImgWithWrapper
+                      wrapperClassName="size-10 mx-15"
+                      imageClassName="object-contain object-left"
+                      imageAttributes={{
+                        src:
+                          datum?.blockChainVerified === "unverified"
+                            ? "/assets/Unverified.png"
+                            : datum?.blockChainVerified
+                              ? "/assets/Verified2.png"
+                              : "/assets/pending.png",
+                        alt:
+                          datum?.blockChainVerified === "unverified"
+                            ? "Unverified Logo"
+                            : datum?.blockChainVerified
+                              ? "Verified Logo"
+                              : "Unverified Logo",
+                      }}
+                    />
+                  </Table.Column>
+                  {userRole === "super-admin" && (
+                    <Table.Column className="p-2">
+                      <span>{datum.soldBy?.companyName || "N/A"}</span>
+                    </Table.Column>
+                  )}
+                  <Table.Column className="px-2">{datum.name}</Table.Column>
+                  <Table.Column className="px-2">{datum.email}</Table.Column>
+                  <Table.Column className="overflow-hidden p-2">
+                    <span className="line-clamp-1">{datum.phoneNumber}</span>
+                  </Table.Column>
+                  <Table.Column className="p-2">
+                    <span>{datum?.productManufacturer?.companyName || "N/A"}</span>
+                  </Table.Column>
+                  <Table.Column className="p-2">
+                    <span>{datum.soldProducts?.productName || "N/A"}</span>
+                  </Table.Column>
 
-                <Table.Column className="p-2">
-                  <span>{datum.soldProducts?.productPrice || "N/A"}</span>
-                </Table.Column>
-                <Table.Column className="p-2">
-                  <span>{datum.batchId?.batchId || "N/A"}</span>
-                </Table.Column>
+                  <Table.Column className="p-2">
+                    <span>{datum.soldProducts?.productPrice || "N/A"}</span>
+                  </Table.Column>
+                  <Table.Column className="p-2">
+                    <span>{datum.batchId?.batchId || "N/A"}</span>
+                  </Table.Column>
 
-                <Table.Column className="p-2">
-                  {new Date(datum?.createdAt).toLocaleString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                    hour: "numeric",
-                    minute: "numeric",
-                    second: "numeric",
-                    hour12: true,
-                  })}
-                </Table.Column>
+                  <Table.Column className="p-2">
+                    {new Date(datum?.createdAt).toLocaleString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                      hour: "numeric",
+                      minute: "numeric",
+                      second: "numeric",
+                      hour12: true,
+                    })}
+                  </Table.Column>
 
-                {/* <Table.Column className="p-0">
+                  {/* <Table.Column className="p-0">
                   <ContextMenu
                     className="relative"
                     tableRef={tableRef}
@@ -351,8 +366,9 @@ export default function DataTable() {
                     ></ContextMenu.Menu>
                   </ContextMenu>
                 </Table.Column> */}
-              </Table.Row>
-            ))}
+                </Table.Row>
+              ))
+            )}
           </Table.Body>
         </Table>
       </div>

@@ -70,6 +70,7 @@ export default function RetailersProvider({ children }) {
   })
   const [selectedData, setSelectedData] = useState([])
   const [userRole, setUserRole] = useState("")
+  const [loading, setLoading] = useState(true)
 
   const sortData = (basis) => {
     setIsAsc((prev) => !prev)
@@ -79,16 +80,9 @@ export default function RetailersProvider({ children }) {
     setData((prev) => ({ ...prev, data: sortedData }))
   }
 
-  // const sortData = (basis) => {
-  //   setFilters((prev) => ({
-  //     ...prev,
-  //     sort: basis,
-  //     order: prev.order === "asc" ? "desc" : "asc",
-  //   }))
-  // }
   const fetchRetailers = async () => {
+    setLoading(true)
     try {
-      // Retrieve the accessToken from localStorage
       const accessToken = localStorage.getItem("accessToken")
 
       if (!accessToken) {
@@ -96,32 +90,26 @@ export default function RetailersProvider({ children }) {
         return
       }
 
-      // Construct the query string from filters
       const query = new URLSearchParams(filters).toString()
-
-      // Make the API request with the Authorization header
       const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL_DEV}/retailers/getRetailers?${query}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: { Authorization: `Bearer ${accessToken}` },
       })
 
-      console.log("response from fetchRetailers", response.data)
-
-      // Update the state with fetched data
       setData((prev) => ({
         ...prev,
         data: response.data?.message?.retailers || [],
         pagination: response.data?.message?.pagination || {},
       }))
     } catch (error) {
-      console.error("Error fetching retailers data", error)
+      console.error("Error fetching retailers data:", error)
+    } finally {
+      setLoading(false)
     }
   }
 
   useEffect(() => {
     fetchRetailers()
-  }, [filters]) // Run whenever filters change
+  }, [filters])
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -137,7 +125,19 @@ export default function RetailersProvider({ children }) {
   }, [])
   return (
     <RetailersContext.Provider
-      value={{ data, setData, sortData, selectedData, setSelectedData, fetchRetailers, userRole, filters, setFilters }}
+      value={{
+        data,
+        setData,
+        sortData,
+        selectedData,
+        setSelectedData,
+        fetchRetailers,
+        userRole,
+        filters,
+        setFilters,
+        loading,
+        setLoading,
+      }}
     >
       {children}
     </RetailersContext.Provider>

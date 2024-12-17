@@ -684,8 +684,14 @@ const updateCompanyStatus = async (req, res, next) => {
             to: updatedCompany.email,
             subject: `Company ${status}`,
             html: `<p>Dear ${updatedCompany.companyName},</p>
-                   <p>Your company status has been updated to <strong>"${status}"</strong>.</p>
-                   <p>Remarks: ${remarks || "No remarks provided."}</p>`,
+            <p>We’re excited to let you know that your company’s status has been updated to <strong>"${status}"</strong>.</>
+            <p>You can log in anytime at ${
+              process.env.FRONTEND_URL_DEV
+            } to explore further updates.</p>
+            <p>Thank you for choosing AuthyProduct. We’re thrilled to have you on board!</p>
+            <p>Remarks: ${remarks || "No additional remarks at this time."}</p>
+            <p>Warm regards,</p>
+            <p>The AuthyProduct Team</p>`,
           },
         ];
         try {

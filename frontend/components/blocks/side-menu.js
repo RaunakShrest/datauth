@@ -101,7 +101,7 @@ export default function SideMenu() {
 
         <Tabs.Item
           href="/product-types"
-          accessableBy={["super-admin", "company"]}
+          accessableBy={["super-admin"]}
         >
           <Link
             href="/product-types"

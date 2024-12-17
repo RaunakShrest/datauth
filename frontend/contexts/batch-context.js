@@ -21,6 +21,7 @@ export default function BatchProvider({ children, refreshTrigger }) {
     page: 1,
     limit: 50,
   })
+  const [dataLoading, setDataLoading] = useState(true)
   const [data, setData] = useState({
     data: [],
     columns: [
@@ -46,6 +47,7 @@ export default function BatchProvider({ children, refreshTrigger }) {
   const [selectedData, setSelectedData] = useState([])
 
   const fetchBatches = async () => {
+    setDataLoading(true)
     try {
       const accessToken = localStorage.getItem("accessToken")
       const query = new URLSearchParams(filters).toString()
@@ -62,6 +64,8 @@ export default function BatchProvider({ children, refreshTrigger }) {
       }))
     } catch (error) {
       console.error("Error fetching batches data:", error)
+    } finally {
+      setDataLoading(false)
     }
   }
 
@@ -79,7 +83,9 @@ export default function BatchProvider({ children, refreshTrigger }) {
   }
 
   return (
-    <BatchContext.Provider value={{ data, setData, sortData, selectedData, setSelectedData, filters, setFilters }}>
+    <BatchContext.Provider
+      value={{ data, setData, sortData, selectedData, setSelectedData, filters, setFilters, dataLoading }}
+    >
       {children}
     </BatchContext.Provider>
   )

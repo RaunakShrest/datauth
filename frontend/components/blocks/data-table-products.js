@@ -238,7 +238,7 @@ export default function DataTable() {
               >
                 <Checkbox
                   onChange={handleTableHeadingCheckboxChange}
-                  checked={selectedData.length === products.length} // This makes the checkbox reflect the select all state
+                  checked={selectedData.length === filteredData?.length} // This makes the checkbox reflect the select all state
                 />
               </Table.Heading>
 
@@ -306,9 +306,9 @@ export default function DataTable() {
                   <span
                     className={twMerge(
                       "rounded-full px-2 py-1 text-white",
-                      datum.productStatus === "pending"
+                      datum.productStatus === "disabled"
                         ? "bg-red-500"
-                        : datum.productStatus === "completed"
+                        : datum.productStatus === "enabled"
                           ? "bg-green-600"
                           : "bg-gray-500",
                     )}
