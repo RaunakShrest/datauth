@@ -85,6 +85,9 @@ const getProductItems = async (req, res, next) => {
 
     let filter =
       isSuperAdmin || isRetailer ? {} : { "productManufacturer._id": userId };
+    if (isRetailer) {
+      filter["productStatus"] = { $ne: "disabled" };
+    }
 
     if (batchIdSearch) {
       filter["batchId.batchId"] = { $regex: batchIdSearch, $options: "i" };
@@ -624,7 +627,7 @@ const createProductItem = async (req, res, next) => {
     }
 
     const sanitizedStatus =
-      productStatus?.toLowerCase().replace(/['"]+/g, "").trim() || "completed";
+      productStatus?.toLowerCase().replace(/['"]+/g, "").trim() || "enabled";
     if (!sanitizedStatus) {
       throw new ApiError(400, "Product status is required");
     }

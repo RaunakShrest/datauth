@@ -19,11 +19,14 @@ export default function EditSingleProductForm({ params }) {
     productPrice: "",
     productDescription: "",
     productAttributes: [],
+    productStatus: process.env.PRODUCT_ITEM_STATUS_CANCELLED,
   })
   const [images, setImages] = useState([])
   const [imageFiles, setImageFiles] = useState([])
   const [imagePreviews, setImagePreviews] = useState([]) // To store image preview URLs
   const [removedImages, setRemovedImages] = useState([])
+  const [showModal, setShowModal] = useState(false)
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false)
 
   // Fetch product details
   useEffect(() => {
@@ -35,6 +38,7 @@ export default function EditSingleProductForm({ params }) {
           `${process.env.NEXT_PUBLIC_BASE_URL_DEV}/products/getSingleProduct/${productId}`,
         )
         const productData = response.data.data
+
         setProduct(productData)
         setFormData({
           productName: productData.productName || "",
@@ -43,6 +47,7 @@ export default function EditSingleProductForm({ params }) {
           productSku: productData.productSku || "",
           productWebLink: productData.productWebLink || "",
           productAttributes: productData.productAttributes || [],
+          productStatus: productData.productStatus || "disabled",
         })
         setImages(productData.productImages || [])
       } catch (err) {
@@ -76,6 +81,28 @@ export default function EditSingleProductForm({ params }) {
         productAttributes: updatedAttributes,
       }
     })
+  }
+  const handleToggleChange = () => {
+    if (formData.productStatus === "enabled") {
+      setShowConfirmationModal(true)
+    } else {
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        productStatus: "enabled",
+      }))
+    }
+  }
+  const handleConfirmDisable = () => {
+    setShowConfirmationModal(false) // Close the confirmation modal
+    setShowModal(true) // Show the disabling note modal
+
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      productStatus: "disabled",
+    }))
+  }
+  const handleCancelDisable = () => {
+    setShowConfirmationModal(false) // Close the confirmation modal
   }
 
   const getChangedFields = () => {
@@ -118,6 +145,9 @@ export default function EditSingleProductForm({ params }) {
     e.preventDefault()
 
     const updatedData = getChangedFields()
+    if (!updatedData.productStatus) {
+      updatedData.productStatus = process.env.PRODUCT_ITEM_STATUS_PENDING
+    }
 
     if (updatedData.productPrice) {
       updatedData.productPrice = Number(updatedData.productPrice)
@@ -172,6 +202,67 @@ export default function EditSingleProductForm({ params }) {
         className="space-y-4"
       >
         <div className="rounded-lg bg-white p-4">
+          <div className="mb-5 w-[15%]">
+            <label className="font-bold">Product Status</label>
+            <div className="flex items-center space-x-2 rounded-sm border border-[#616161] px-2 py-4">
+              <span>Disabled</span>
+              <label className="relative inline-flex cursor-pointer items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.productStatus === "enabled"}
+                  onChange={handleToggleChange}
+                  className="peer sr-only"
+                />
+                <div className="peer h-6 w-11 rounded-full bg-red-600 peer-checked:bg-[#02235E] dark:bg-gray-700"></div>
+                <span className="absolute inset-y-0 left-0 h-5 w-5 rounded-[1000px] bg-white transition-transform peer-checked:translate-x-5"></span>
+              </label>
+              <span>Enabled</span>
+            </div>
+
+            {showConfirmationModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="rounded-lg bg-white p-4 shadow-md">
+                  <h3 className="mb-2 text-center text-lg font-semibold">
+                    Are you sure you want to disable the product?
+                  </h3>
+                  <div className="mt-4 flex justify-center space-x-4">
+                    <button
+                      onClick={handleConfirmDisable}
+                      className="rounded bg-red-600 px-4 py-2 text-white"
+                    >
+                      Yes
+                    </button>
+                    <button
+                      onClick={handleCancelDisable}
+                      className="rounded bg-gray-300 px-4 py-2 text-black"
+                    >
+                      No
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {showModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="rounded-lg bg-white p-4 shadow-md">
+                  <h3 className="mb-2 text-center text-lg font-semibold">
+                    <u>Important Note</u>
+                  </h3>
+                  <p className="mt-2 text-base">Disabling a product will allow the product to hide from retailers.</p>
+                  <div className="mt-4 flex justify-center">
+                    <button
+                      onClick={() => setShowModal(false)} // Close the modal
+                      className="rounded bg-[#02235E] px-4 py-2 text-white"
+                    >
+                      OK
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="mb-5">
             <label className="font-bold">Product Name</label>
             <input
@@ -224,6 +315,7 @@ export default function EditSingleProductForm({ params }) {
               className="w-full rounded-sm border border-[#616161] px-2 py-4"
             />
           </div>
+
           <div className="mb-5">
             <label className="font-bold">Attributes</label>
             {formData.productAttributes.map((attribute, index) => (

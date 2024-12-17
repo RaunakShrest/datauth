@@ -21,15 +21,9 @@ export default function DataTable() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [selectedBatch, setSelectedBatch] = useState(null)
   const [dataState, setDataState] = useState({ columns: [], data: [] }) // Local state for table data
-  const { data, sortData, selectedData, setSelectedData, filters, setFilters } = useBatch()
+  const { data, sortData, selectedData, setSelectedData, filters, setFilters, dataLoading } = useBatch()
 
   const [currentPage, setCurrentPage] = useState(1)
-
-  // const numberOfDataPerPage = 8
-  // const indexOfLastData = currentPage * numberOfDataPerPage
-  // const indexOfFirstData = indexOfLastData - numberOfDataPerPage
-
-  // const currentData = dataState.data.slice(indexOfFirstData, indexOfLastData)
   const filteredData = data?.data || []
 
   useEffect(() => {
@@ -166,102 +160,113 @@ export default function DataTable() {
             </Table.Row>
           </Table.Head>
           <Table.Body>
-            {filteredData?.map((datum, idx) => (
-              <Table.Row
-                key={idx}
-                className="border-b border-b-[#605E5E] bg-white"
-              >
-                <Table.Column className="px-4 py-2">
-                  <Checkbox
-                    onChange={() => handleTableDataCheckboxChange(datum)}
-                    checked={isTableDataSelected(datum)}
-                  />
-                </Table.Column>
-                <Table.Column className="px-8">
-                  <ImgWithWrapper
-                    wrapperClassName="size-10 mx-15"
-                    imageClassName="object-contain object-left"
-                    imageAttributes={{
-                      src:
-                        datum?.blockChainVerified === "unverified"
-                          ? "/assets/Unverified.png"
-                          : datum?.blockChainVerified
-                            ? "/assets/Verified2.png"
-                            : "/assets/pending.png",
-                      alt:
-                        datum?.blockChainVerified === "unverified"
-                          ? "Unverified Logo"
-                          : datum?.blockChainVerified
-                            ? "Verified Logo"
-                            : "Unverified Logo",
-                    }}
-                  />
-                </Table.Column>
-                <Table.Column className="px-2">{datum.batchId} </Table.Column>
-                <Table.Column className="p-2">
-                  {new Date(datum.createdAt).toLocaleString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                    hour: "numeric",
-                    minute: "numeric",
-                    second: "numeric",
-                    hour12: true,
-                  })}
-                </Table.Column>
-                <Table.Column className="p-2">
-                  {datum.startDate
-                    ? new Date(datum.startDate).toLocaleString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                        hour: "numeric",
-                        minute: "numeric",
-                        second: "numeric",
-                        hour12: true,
-                      })
-                    : "N/A"}
-                </Table.Column>
-                <Table.Column className="p-2">
-                  {datum.endDate
-                    ? new Date(datum.endDate).toLocaleString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                        hour: "numeric",
-                        minute: "numeric",
-                        second: "numeric",
-                        hour12: true,
-                      })
-                    : "N/A"}
-                </Table.Column>
-                <Table.Column className="p-2">
-                  <ContextMenu
-                    className="relative"
-                    tableRef={tableRef}
-                    contextMenuRef={contextMenuRef}
-                  >
-                    <ContextMenu.Trigger>
-                      <FontAwesomeIcon
-                        icon={faEllipsisVertical}
-                        className="fa-fw"
-                      />
-                    </ContextMenu.Trigger>
-                    <ContextMenu.Menu
-                      className="absolute z-10 w-[175px] space-y-1 text-white"
-                      contextMenuRef={contextMenuRef}
-                    >
-                      <ContextMenu.Item
-                        className="rounded-md bg-[#0000CC]"
-                        onClick={() => handleEditClick(datum)}
-                      >
-                        Edit
-                      </ContextMenu.Item>
-                    </ContextMenu.Menu>
-                  </ContextMenu>
+            {dataLoading ? (
+              <Table.Row>
+                <Table.Column
+                  colSpan={data.columns?.length + 2}
+                  className="py-8 text-center"
+                >
+                  <div className="inline-block size-8 animate-spin border-4 border-black" />
                 </Table.Column>
               </Table.Row>
-            ))}
+            ) : (
+              filteredData?.map((datum, idx) => (
+                <Table.Row
+                  key={idx}
+                  className="border-b border-b-[#605E5E] bg-white"
+                >
+                  <Table.Column className="px-4 py-2">
+                    <Checkbox
+                      onChange={() => handleTableDataCheckboxChange(datum)}
+                      checked={isTableDataSelected(datum)}
+                    />
+                  </Table.Column>
+                  <Table.Column className="px-8">
+                    <ImgWithWrapper
+                      wrapperClassName="size-10 mx-15"
+                      imageClassName="object-contain object-left"
+                      imageAttributes={{
+                        src:
+                          datum?.blockChainVerified === "unverified"
+                            ? "/assets/Unverified.png"
+                            : datum?.blockChainVerified
+                              ? "/assets/Verified2.png"
+                              : "/assets/pending.png",
+                        alt:
+                          datum?.blockChainVerified === "unverified"
+                            ? "Unverified Logo"
+                            : datum?.blockChainVerified
+                              ? "Verified Logo"
+                              : "Unverified Logo",
+                      }}
+                    />
+                  </Table.Column>
+                  <Table.Column className="px-2">{datum.batchId} </Table.Column>
+                  <Table.Column className="p-2">
+                    {new Date(datum.createdAt).toLocaleString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                      hour: "numeric",
+                      minute: "numeric",
+                      second: "numeric",
+                      hour12: true,
+                    })}
+                  </Table.Column>
+                  <Table.Column className="p-2">
+                    {datum.startDate
+                      ? new Date(datum.startDate).toLocaleString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                          hour: "numeric",
+                          minute: "numeric",
+                          second: "numeric",
+                          hour12: true,
+                        })
+                      : "N/A"}
+                  </Table.Column>
+                  <Table.Column className="p-2">
+                    {datum.endDate
+                      ? new Date(datum.endDate).toLocaleString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                          hour: "numeric",
+                          minute: "numeric",
+                          second: "numeric",
+                          hour12: true,
+                        })
+                      : "N/A"}
+                  </Table.Column>
+                  <Table.Column className="p-2">
+                    <ContextMenu
+                      className="relative"
+                      tableRef={tableRef}
+                      contextMenuRef={contextMenuRef}
+                    >
+                      <ContextMenu.Trigger>
+                        <FontAwesomeIcon
+                          icon={faEllipsisVertical}
+                          className="fa-fw"
+                        />
+                      </ContextMenu.Trigger>
+                      <ContextMenu.Menu
+                        className="absolute z-10 w-[175px] space-y-1 text-white"
+                        contextMenuRef={contextMenuRef}
+                      >
+                        <ContextMenu.Item
+                          className="rounded-md bg-[#0000CC]"
+                          onClick={() => handleEditClick(datum)}
+                        >
+                          Edit
+                        </ContextMenu.Item>
+                      </ContextMenu.Menu>
+                    </ContextMenu>
+                  </Table.Column>
+                </Table.Row>
+              ))
+            )}
           </Table.Body>
         </Table>
       </div>

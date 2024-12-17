@@ -136,6 +136,7 @@ export default function RetailerSalesProvider({ children }) {
   }, [userRole])
 
   const [selectedData, setSelectedData] = useState([])
+  const [dataLoading, setDataLoading] = useState(true)
 
   const sortData = (basis) => {
     setIsAsc((prev) => !prev)
@@ -147,6 +148,7 @@ export default function RetailerSalesProvider({ children }) {
 
   // Fetch sales data with filters
   const fetchRetailerSales = async () => {
+    setDataLoading(true)
     try {
       const accessToken = localStorage.getItem("accessToken")
       if (!accessToken) {
@@ -167,6 +169,8 @@ export default function RetailerSalesProvider({ children }) {
       }))
     } catch (error) {
       console.error("Error fetching retailer sales data", error)
+    } finally {
+      setDataLoading(false)
     }
   }
 
@@ -187,6 +191,7 @@ export default function RetailerSalesProvider({ children }) {
         userRole,
         filters,
         setFilters,
+        dataLoading,
       }}
     >
       {children}

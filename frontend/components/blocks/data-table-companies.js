@@ -93,12 +93,12 @@ export default function DataTable() {
   const tableRef = useRef()
   const contextMenuRef = useRef()
   const [userRole, setUserRole] = useState("")
-  const [isModalOpen, setIsModalOpen] = useState(false) // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const [companyToDisable, setCompanyToDisable] = useState(null) // Track which company to disable
   const [companyToApprove, setCompanyToApprove] = useState(null)
   const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false)
-
-  const { data, sortData, selectedData, setSelectedData, fetchCompanies } = useCompanies() // Added fetchData
+  const [loading, setLoading] = useState(false)
+  const { data, sortData, selectedData, setSelectedData, fetchCompanies, dataLoading, setDataLoading } = useCompanies()
 
   const [currentPage, setCurrentPage] = useState(1)
 
@@ -111,8 +111,8 @@ export default function DataTable() {
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
-        const user = await getCurrentUser() // Assuming this returns an object with user details
-        setUserRole(user.data.userType) // Set the user role (e.g., "retailer", "super-admin", etc.)
+        const user = await getCurrentUser()
+        setUserRole(user.data.userType)
       } catch (error) {
         console.error("Error fetching current user:", error)
       }
@@ -144,20 +144,18 @@ export default function DataTable() {
     )
   }
 
-  const [loading, setLoading] = useState(false) // Loading state for approval
-
   const handleApprove = async () => {
-    setLoading(true) // Start loading
-    const updatedCompany = { ...companyToApprove, status: "enabled" } // Update status to 'enabled'
+    setLoading(true)
+    const updatedCompany = { ...companyToApprove, status: "enabled" }
 
     try {
       await updateCompanyStatus(companyToApprove.id, updatedCompany)
       await fetchCompanies()
-      setIsApprovalModalOpen(false) // Close the modal after approval
+      setIsApprovalModalOpen(false)
     } catch (error) {
       console.error("Failed to approve company:", error)
     } finally {
-      setLoading(false) // Stop loading
+      setLoading(false)
     }
   }
 
@@ -259,136 +257,147 @@ export default function DataTable() {
             </Table.Row>
           </Table.Head>
           <Table.Body>
-            {currentData?.map((datum, idx) => (
-              <Table.Row
-                key={idx}
-                className="border-b border-b-[#605E5E] bg-white"
-              >
-                <Table.Column className="px-4 py-2">
-                  <Checkbox
-                    onChange={() => handleTableDataCheckboxChange(datum)}
-                    checked={isTableDataSelected(datum)}
-                  />
+            {dataLoading ? (
+              <Table.Row>
+                <Table.Column
+                  colSpan={data.columns?.length + 2}
+                  className="py-8 text-center"
+                >
+                  <div className="inline-block size-8 animate-spin border-4 border-black" />
                 </Table.Column>
-                <Table.Column className="px-8">
-                  <ImgWithWrapper
-                    wrapperClassName="size-10 mx-15"
-                    imageClassName="object-contain object-left"
-                    imageAttributes={{
-                      src:
-                        datum?.blockChainVerified === "pending"
-                          ? "/assets/Pending.png"
-                          : datum?.blockChainVerified
-                            ? "/assets/Verified2.png"
-                            : "/assets/Unverified.png",
-                      alt:
-                        datum?.blockChainVerified === "pending"
-                          ? "Pending Logo"
-                          : datum?.blockChainVerified
-                            ? "Verified Logo"
-                            : "Unverified Logo",
-                    }}
-                  />
-                </Table.Column>
-                <Table.Column className="px-2">{datum?.companyName} </Table.Column>
-                <Table.Column className="p-2">
-                  <span className="line-clamp-1">
-                    {datum.firstName} {datum.lastName}
-                  </span>
-                </Table.Column>
-                <Table.Column className="overflow-hidden p-2">
-                  <span className="line-clamp-1">{datum.phoneNumber}</span>
-                </Table.Column>
-                <Table.Column className="overflow-hidden p-2">
-                  <span className="line-clamp-1">{datum.email}</span>
-                </Table.Column>
-                <Table.Column className="overflow-hidden p-2">
-                  <span className="line-clamp-1">{datum.productType.join(", ")}</span>
-                </Table.Column>
-                <Table.Column className="p-2">
-                  <span
-                    className={twMerge(
-                      "rounded-full px-2 py-1 text-white",
-                      datum.status === "disabled"
-                        ? "bg-red-500"
-                        : datum.status === "verified" || datum.status === "enabled"
-                          ? "bg-green-600"
-                          : "bg-gray-500",
-                    )}
-                  >
-                    {datum.status}
-                  </span>
-                </Table.Column>
-                <Table.Column className="p-2">
-                  {new Date(datum.createdAt).toLocaleString("eng-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                    hour: "numeric",
-                    minute: "numeric",
-                    second: "numeric",
-                    hour12: true,
-                  })}
-                </Table.Column>
+              </Table.Row>
+            ) : (
+              currentData?.map((datum, idx) => (
+                <Table.Row
+                  key={idx}
+                  className="border-b border-b-[#605E5E] bg-white"
+                >
+                  <Table.Column className="px-4 py-2">
+                    <Checkbox
+                      onChange={() => handleTableDataCheckboxChange(datum)}
+                      checked={isTableDataSelected(datum)}
+                    />
+                  </Table.Column>
+                  <Table.Column className="px-8">
+                    <ImgWithWrapper
+                      wrapperClassName="size-10 mx-15"
+                      imageClassName="object-contain object-left"
+                      imageAttributes={{
+                        src:
+                          datum?.blockChainVerified === "pending"
+                            ? "/assets/Pending.png"
+                            : datum?.blockChainVerified
+                              ? "/assets/Verified2.png"
+                              : "/assets/Unverified.png",
+                        alt:
+                          datum?.blockChainVerified === "pending"
+                            ? "Pending Logo"
+                            : datum?.blockChainVerified
+                              ? "Verified Logo"
+                              : "Unverified Logo",
+                      }}
+                    />
+                  </Table.Column>
+                  <Table.Column className="px-2">{datum?.companyName} </Table.Column>
+                  <Table.Column className="p-2">
+                    <span className="line-clamp-1">
+                      {datum.firstName} {datum.lastName}
+                    </span>
+                  </Table.Column>
+                  <Table.Column className="overflow-hidden p-2">
+                    <span className="line-clamp-1">{datum.phoneNumber}</span>
+                  </Table.Column>
+                  <Table.Column className="overflow-hidden p-2">
+                    <span className="line-clamp-1">{datum.email}</span>
+                  </Table.Column>
+                  <Table.Column className="overflow-hidden p-2">
+                    <span className="line-clamp-1">{datum.productType.join(", ")}</span>
+                  </Table.Column>
+                  <Table.Column className="p-2">
+                    <span
+                      className={twMerge(
+                        "rounded-full px-2 py-1 text-white",
+                        datum.status === "disabled"
+                          ? "bg-red-500"
+                          : datum.status === "verified" || datum.status === "enabled"
+                            ? "bg-green-600"
+                            : "bg-gray-500",
+                      )}
+                    >
+                      {datum.status}
+                    </span>
+                  </Table.Column>
+                  <Table.Column className="p-2">
+                    {new Date(datum.createdAt).toLocaleString("eng-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                      hour: "numeric",
+                      minute: "numeric",
+                      second: "numeric",
+                      hour12: true,
+                    })}
+                  </Table.Column>
 
-                <Table.Column className="p-2">
-                  <ContextMenu
-                    className="relative"
-                    tableRef={tableRef}
-                    contextMenuRef={contextMenuRef}
-                  >
-                    <ContextMenu.Trigger>
-                      <FontAwesomeIcon
-                        icon={faEllipsisVertical}
-                        className="fa-fw"
-                      />
-                    </ContextMenu.Trigger>
-                    <ContextMenu.Menu
-                      className="absolute z-10 w-[175px] space-y-1 text-white"
+                  <Table.Column className="p-2">
+                    <ContextMenu
+                      className="relative"
+                      tableRef={tableRef}
                       contextMenuRef={contextMenuRef}
                     >
-                      {userRole !== "retailer" && (
-                        <>
-                          <ContextMenu.Item
-                            className="rounded-md bg-[#02235E]"
-                            onClick={() => router.push(`/companies/${datum.id}/edit`)}
-                          >
-                            Edit
-                          </ContextMenu.Item>
-                          <ContextMenu.Item
-                            className="rounded-md bg-[#0000CC]"
-                            onClick={() => handleDelete(datum.id)}
-                          >
-                            Delete
-                          </ContextMenu.Item>
-                          <ContextMenu.Item
-                            className="rounded-md bg-[#0000CC]"
-                            onClick={() => {
-                              setCompanyToApprove(datum)
-                              setIsApprovalModalOpen(true)
-                            }}
-                          >
-                            Approve
-                          </ContextMenu.Item>
-                          {/* <ContextMenu.Item
+                      <ContextMenu.Trigger>
+                        <FontAwesomeIcon
+                          icon={faEllipsisVertical}
+                          className="fa-fw"
+                        />
+                      </ContextMenu.Trigger>
+                      <ContextMenu.Menu
+                        className="absolute z-10 w-[175px] space-y-1 text-white"
+                        contextMenuRef={contextMenuRef}
+                      >
+                        {userRole !== "retailer" && (
+                          <>
+                            <ContextMenu.Item
+                              className="rounded-md bg-[#02235E]"
+                              onClick={() => router.push(`/companies/${datum.id}/edit`)}
+                            >
+                              Edit
+                            </ContextMenu.Item>
+                            <ContextMenu.Item
+                              className="rounded-md bg-[#0000CC]"
+                              onClick={() => handleDelete(datum.id)}
+                            >
+                              Delete
+                            </ContextMenu.Item>
+                            <ContextMenu.Item
+                              className="rounded-md bg-[#0000CC]"
+                              onClick={() => {
+                                setCompanyToApprove(datum)
+                                setIsApprovalModalOpen(true)
+                              }}
+                            >
+                              Approve
+                            </ContextMenu.Item>
+                            {/* <ContextMenu.Item
                             className="rounded-md bg-[#02235E]"
                             onClick={() => router.push(`/companies/${datum.id}/edit`)}
                           >
                             Edit
                           </ContextMenu.Item> */}
-                        </>
-                      )}
-                      <ContextMenu.Item
-                        className="rounded-md bg-[#0000CC]"
-                        onClick={() => router.push(`/companies/${datum.id}/products`)}
-                      >
-                        View Products
-                      </ContextMenu.Item>
-                    </ContextMenu.Menu>
-                  </ContextMenu>
-                </Table.Column>
-              </Table.Row>
-            ))}
+                          </>
+                        )}
+                        <ContextMenu.Item
+                          className="rounded-md bg-[#0000CC]"
+                          onClick={() => router.push(`/companies/${datum.id}/products`)}
+                        >
+                          View Products
+                        </ContextMenu.Item>
+                      </ContextMenu.Menu>
+                    </ContextMenu>
+                  </Table.Column>
+                </Table.Row>
+              ))
+            )}
           </Table.Body>
         </Table>
       </div>
@@ -416,3 +425,24 @@ export default function DataTable() {
     </div>
   )
 }
+
+/*
+        <ImgWithWrapper
+          wrapperClassName="size-10 mx-15"
+          imageClassName="object-contain object-left"
+          imageAttributes={{
+            src:
+              datum?.blockChainVerified === "pending"
+                ? "/assets/BCpending.jpeg"
+                : datum?.blockChainVerified
+                  ? "/assets/BCverified.jpeg"
+                  : "/assets/BCunverified.jpeg",
+            alt:
+              datum?.blockChainVerified === "pending"
+                ? "Pending Logo"
+                : datum?.blockChainVerified
+                  ? "Verified Logo"
+                  : "Unverified Logo",
+          }}
+        />
+        */

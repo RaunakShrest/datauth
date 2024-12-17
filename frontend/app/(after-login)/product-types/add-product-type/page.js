@@ -1,5 +1,6 @@
 import AddProdcutTypeFormTemplate from "@/components/structures/add-product-type-form"
 import FormContextProvider from "@/contexts/add-product-type-form-context"
+import RequireRole from "@/contexts/require-auth/require-role"
 import React from "react"
 
 export default function AddProductTypePage() {
@@ -11,7 +12,9 @@ export default function AddProductTypePage() {
 
       <FormContextProvider>
         <div>
-          <AddProdcutTypeFormTemplate />
+          <RequireRole roles={[process.env.NEXT_PUBLIC_USER_TYPE_SUPER_ADMIN]}>
+            <AddProdcutTypeFormTemplate />
+          </RequireRole>
         </div>
       </FormContextProvider>
     </div>

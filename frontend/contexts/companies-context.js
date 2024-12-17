@@ -17,6 +17,7 @@ export const useCompanies = () => {
 
 export default function CompaniesProvider({ children }) {
   const [isAsc, setIsAsc] = useState(true)
+  const [dataLoading, setDataLoading] = useState(true)
   const [data, setData] = useState({
     data: [],
     columns: [
@@ -69,6 +70,7 @@ export default function CompaniesProvider({ children }) {
   const [selectedData, setSelectedData] = useState([])
 
   const fetchCompanies = async () => {
+    setDataLoading(true)
     try {
       const token = localStorage.getItem("accessToken")
 
@@ -85,6 +87,8 @@ export default function CompaniesProvider({ children }) {
       setData((prev) => ({ ...prev, data: response.data.data || [] }))
     } catch (error) {
       console.error("Error fetching companies data:", error)
+    } finally {
+      setDataLoading(false)
     }
   }
 
@@ -102,7 +106,9 @@ export default function CompaniesProvider({ children }) {
   }
 
   return (
-    <CompaniesContext.Provider value={{ data, setData, sortData, selectedData, setSelectedData, fetchCompanies }}>
+    <CompaniesContext.Provider
+      value={{ data, setData, sortData, selectedData, setSelectedData, fetchCompanies, dataLoading, setDataLoading }}
+    >
       {children}
     </CompaniesContext.Provider>
   )

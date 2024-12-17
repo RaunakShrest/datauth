@@ -35,6 +35,7 @@ export default function CompanySalesProvider({ children }) {
     data: [],
     columns: [],
   })
+  const [dataLoading, setDataLoading] = useState(true)
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -50,7 +51,6 @@ export default function CompanySalesProvider({ children }) {
   }, [])
 
   useEffect(() => {
-    // Only set columns after userRole is fetched
     if (userRole) {
       setData((prev) => ({
         ...prev,
@@ -69,7 +69,7 @@ export default function CompanySalesProvider({ children }) {
                   text: "Company Name",
                   dataKey: "companyName",
                   isSortable: true,
-                  width: "150px",
+                  width: "200px",
                 },
               ]
             : []),
@@ -78,14 +78,21 @@ export default function CompanySalesProvider({ children }) {
             text: "Customer Name",
             dataKey: "name",
             isSortable: true,
-            width: "150px",
+            width: "200px",
+          },
+          {
+            id: "customer-email",
+            text: "Customer Email",
+            dataKey: "email",
+            isSortable: true,
+            width: "200px",
           },
           {
             id: "soldProducts",
             text: "Product",
             dataKey: "soldProducts",
             isSortable: true,
-            width: "150px",
+            width: "200px",
           },
           {
             id: "retailer-name",
@@ -125,6 +132,7 @@ export default function CompanySalesProvider({ children }) {
   }
 
   const fetchCompanySales = async () => {
+    setDataLoading(true)
     try {
       const accessToken = localStorage.getItem("accessToken")
       if (!accessToken) {
@@ -139,7 +147,6 @@ export default function CompanySalesProvider({ children }) {
           },
         },
       )
-      console.log("fetching companysales data from context", response.data)
       setData((prev) => ({
         ...prev,
         data: response?.data?.message?.salesData || [],
@@ -147,6 +154,8 @@ export default function CompanySalesProvider({ children }) {
       }))
     } catch (error) {
       console.error("Error fetching company sales data", error)
+    } finally {
+      setDataLoading(false)
     }
   }
 
@@ -166,6 +175,7 @@ export default function CompanySalesProvider({ children }) {
         userRole,
         filters,
         setFilters,
+        dataLoading,
       }}
     >
       {children}

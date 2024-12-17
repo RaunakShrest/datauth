@@ -102,6 +102,13 @@ const createProductType = async (req, res, next) => {
     const userId = req.user._id;
     const userType = req.user.userType;
 
+    if (userType !== "super-admin") {
+      throw new ApiError(
+        403,
+        "Unauthorized: Only super-admin can create a product type"
+      );
+    }
+
     if (
       [name, description, status].some(
         (each) => each == null || each.trim() === ""
@@ -125,7 +132,6 @@ const createProductType = async (req, res, next) => {
       }
     }
 
-    // Strip <p> and </p> tags from description
     const sanitizedDescription = description.replace(/<\/?p>/g, "");
 
     const providedFields = {
