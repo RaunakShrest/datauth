@@ -6,7 +6,8 @@
     "dev": "next dev --turbo",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "prod": "npm run build && npm run start"
   },
   "dependencies": {
     "@fortawesome/free-brands-svg-icons": "^6.6.0",

@@ -115,7 +115,7 @@ export default function RegisterTemplate() {
   return (
     <div className="flex h-screen w-screen">
       {/* Left side image container */}
-      <div className="h-full w-0 bg-[url('/assets/loginimage.png')] bg-cover bg-bottom bg-no-repeat md:w-[30%]"></div>
+      <div className="h-full w-0 bg-[url('/assets/loginImage.png')] bg-cover bg-bottom bg-no-repeat md:w-[30%]"></div>
 
       {/* Right side form container */}
       <div className="flex h-full w-full flex-col items-center justify-center md:w-[70%]">

@@ -44,7 +44,7 @@ export default function LoginTemplate() {
       {/* Main content of the login page */}
 
       {/* Image Section on the left */}
-      <div className="h-full w-0 bg-[url('/assets/loginimage.png')] bg-cover bg-bottom bg-no-repeat md:w-[30%]"></div>
+      <div className="h-full w-0 bg-[url('/assets/loginImage.png')] bg-cover bg-bottom bg-no-repeat md:w-[30%]"></div>
 
       {/* Form Section on the right */}
       <div className="flex min-h-screen w-full items-center justify-center border-2 md:w-[70%]">
@@ -136,7 +136,7 @@ export default function LoginTemplate() {
               {/* Forgot Password link positioned below the password field */}
               <div className="absolute bottom-[-1.5rem] right-0">
                 <Button
-                  className="p-0 text-xs text-[#02235E] hover:[#012D61]"
+                  className="hover:[#012D61] p-0 text-xs text-[#02235E]"
                   onClick={() => router.push("/forgetPassword")}
                 >
                   Forgot Password?
@@ -147,10 +147,10 @@ export default function LoginTemplate() {
             {/* Login Button */}
             <div className="mt-8 text-center">
               <Button
-                className={`w-full max-w-[350px] mt-3 rounded-lg bg-[#02235E] px-8 py-2 text-white ${
+                className={`mt-3 w-full max-w-[350px] rounded-lg bg-[#02235E] px-8 py-2 text-white ${
                   loginMutation.isPending ? "cursor-not-allowed opacity-50" : "opacity-100"
                 } hover:bg-[#012D61]`}
-                onClick={handleSubmit(submitFn)}  
+                onClick={handleSubmit(submitFn)}
                 disabled={loginMutation.isPending}
               >
                 <span className="flex items-center justify-center">
@@ -169,7 +169,7 @@ export default function LoginTemplate() {
                 onClick={() => router.push("/register")}
               >
                 <span className="text-black">Don't have an account? </span>
-                <span className="text-[#02235E] hover:[#012D61]">Register</span>
+                <span className="hover:[#012D61] text-[#02235E]">Register</span>
               </Button>
             </div>
           </div>
