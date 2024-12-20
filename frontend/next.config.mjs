@@ -19,8 +19,20 @@ const nextConfig = {
       },
       {
         protocol: "http",
+        hostname: "localhost",
+        port: "8000",
+        pathname: "/api/v1/**",
+      },
+      {
+        protocol: "http",
         hostname: "89.117.149.181",
         port: "3375",
+        pathname: "/api/v1/**",
+      },
+      {
+        protocol: "http",
+        hostname: "192.168.1.64",
+        port: "8000",
         pathname: "/api/v1/**",
       },
       {
