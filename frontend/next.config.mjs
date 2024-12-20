@@ -18,6 +18,12 @@ const nextConfig = {
         pathname: "/api/v1/**",
       },
       {
+        protocol: "http",
+        hostname: "89.117.149.181",
+        port: "3375",
+        pathname: "/api/v1/**",
+      },
+      {
         protocol: "https",
         hostname: "img.freepik.com",
       },

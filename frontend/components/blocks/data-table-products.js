@@ -23,8 +23,18 @@ export default function DataTable() {
   const tableRef = useRef()
   const contextMenuRef = useRef()
 
-  const { products, columns, sortData, selectedData, setSelectedData, setProducts, filters, setFilters, loadProducts } =
-    useProducts()
+  const {
+    products,
+    columns,
+    sortData,
+    selectedData,
+    setSelectedData,
+    setProducts,
+    filters,
+    setFilters,
+    loadProducts,
+    dataLoading,
+  } = useProducts()
 
   const [searchBatchId, setSearchBatchId] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
@@ -265,135 +275,146 @@ export default function DataTable() {
           </Table.Head>
 
           <Table.Body>
-            {filteredData?.map((datum, idx) => (
-              <Table.Row
-                key={idx}
-                className="border-b border-b-[#605E5E] bg-white"
-              >
-                <Table.Column className="px-4 py-2">
-                  <Checkbox
-                    onChange={() => handleTableDataCheckboxChange(datum)}
-                    checked={selectedData.some((eachSelected) => eachSelected.id === datum.id)} // This makes each checkbox reflect its selection state
-                  />
-                </Table.Column>
-                <Table.Column className="px-8">
-                  <ImgWithWrapper
-                    wrapperClassName="size-10 mx-15"
-                    imageClassName="object-contain object-left"
-                    imageAttributes={{
-                      src:
-                        datum?.blockChainVerified === false
-                          ? "/assets/Unverified.png"
-                          : datum?.blockChainVerified
-                            ? "/assets/Verified2.png"
-                            : "/assets/pending.png",
-                      alt:
-                        datum?.blockChainVerified === true
-                          ? "Unverified Logo"
-                          : datum?.blockChainVerified
-                            ? "Verified Logo"
-                            : "Unverified Logo",
-                    }}
-                  />
-                </Table.Column>
-                <Table.Column className="px-2">{datum.productName}</Table.Column>
-                <Table.Column className="px-2">{datum.productManufacturer?.companyName || "N/A"}</Table.Column>
-                <Table.Column className="p-2">{datum.productPrice}</Table.Column>
-                <Table.Column className="p-2">{datum.productSku}</Table.Column>
-                <Table.Column className="p-2">{datum.batchId?.batchId || "N/A"}</Table.Column>
-                <Table.Column className="p-2">
-                  {" "}
-                  <span
-                    className={twMerge(
-                      "rounded-full px-2 py-1 text-white",
-                      datum.productStatus === "disabled"
-                        ? "bg-red-500"
-                        : datum.productStatus === "enabled"
-                          ? "bg-green-600"
-                          : "bg-gray-500",
-                    )}
-                  >
-                    {datum.productStatus}
-                  </span>
-                </Table.Column>
-                <Table.Column className="p-2">
-                  {new Date(datum.createdAt).toLocaleString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                    hour: "numeric",
-                    minute: "numeric",
-                    second: "numeric",
-                    hour12: true,
-                  })}
-                </Table.Column>
-
-                <Table.Column className="p-2">
-                  <button onClick={() => handleQrClick(datum.qrUrl)}>
-                    <ImgWithWrapper
-                      wrapperClassName="size-10 mx-auto"
-                      imageAttributes={{ src: datum.qrUrl, alt: "product-qr" }}
-                    />
-                  </button>
-                </Table.Column>
-                <Table.Column className="p-4">
-                  {datum.purchasedStatus === true ? (
-                    <span className="text bg-green-600 px-2 py-1 text-white">Purchased</span>
-                  ) : datum.purchasedStatus === false ? (
-                    <span className="text bg-yellow-500 px-2 py-1 text-white">In stock</span>
-                  ) : (
-                    <span className="px-2 py-1">N/A</span>
-                  )}
-                </Table.Column>
-
-                <Table.Column className="p-2">
-                  <ContextMenu
-                    className="relative"
-                    tableRef={tableRef}
-                    contextMenuRef={contextMenuRef}
-                  >
-                    <ContextMenu.Trigger>
-                      <FontAwesomeIcon
-                        icon={faEllipsisVertical}
-                        className="fa-fw"
-                      />
-                    </ContextMenu.Trigger>
-
-                    <ContextMenu.Menu className="absolute z-10 w-[175px] space-y-1 bg-white/80 p-2 text-white">
-                      <ContextMenu.Item
-                        className="rounded-md bg-[#0000CC]"
-                        onClick={() => router.push(`/products/${datum.slug}`)}
-                      >
-                        View
-                      </ContextMenu.Item>
-                      {userRole !== "retailer" && (
-                        <ContextMenu.Item
-                          className="rounded-md bg-[#0000CC]"
-                          onClick={() => router.push(`/products/${datum.id}/edit`)}
-                        >
-                          Edit
-                        </ContextMenu.Item>
-                      )}
-
-                      <ContextMenu.Item
-                        className="rounded-md bg-[#0000CC]"
-                        onClick={() => router.push()}
-                      >
-                        Delete
-                      </ContextMenu.Item>
-                    </ContextMenu.Menu>
-                  </ContextMenu>
-                  {userRole !== "company" && (
-                    <FontAwesomeIcon
-                      icon={faUserPlus}
-                      className="fa-fw"
-                      size="sm"
-                      onClick={() => handleAddCustomerClick(datum.id)} // Pass product ID here
-                    />
-                  )}
+            {dataLoading ? (
+              <Table.Row>
+                <Table.Column
+                  colSpan={columns?.length + 2}
+                  className="py-8 text-center"
+                >
+                  <div className="inline-block size-8 animate-spin border-4 border-black" />
                 </Table.Column>
               </Table.Row>
-            ))}
+            ) : (
+              filteredData?.map((datum, idx) => (
+                <Table.Row
+                  key={idx}
+                  className="border-b border-b-[#605E5E] bg-white"
+                >
+                  <Table.Column className="px-4 py-2">
+                    <Checkbox
+                      onChange={() => handleTableDataCheckboxChange(datum)}
+                      checked={selectedData.some((eachSelected) => eachSelected.id === datum.id)} // This makes each checkbox reflect its selection state
+                    />
+                  </Table.Column>
+                  <Table.Column className="px-8">
+                    <ImgWithWrapper
+                      wrapperClassName="size-10 mx-15"
+                      imageClassName="object-contain object-left"
+                      imageAttributes={{
+                        src:
+                          datum?.blockChainVerified === false
+                            ? "/assets/Unverified.png"
+                            : datum?.blockChainVerified
+                              ? "/assets/Verified2.png"
+                              : "/assets/pending.png",
+                        alt:
+                          datum?.blockChainVerified === true
+                            ? "Unverified Logo"
+                            : datum?.blockChainVerified
+                              ? "Verified Logo"
+                              : "Unverified Logo",
+                      }}
+                    />
+                  </Table.Column>
+                  <Table.Column className="px-2">{datum.productName}</Table.Column>
+                  <Table.Column className="px-2">{datum.productManufacturer?.companyName || "N/A"}</Table.Column>
+                  <Table.Column className="p-2">{datum.productPrice}</Table.Column>
+                  <Table.Column className="p-2">{datum.productSku}</Table.Column>
+                  <Table.Column className="p-2">{datum.batchId?.batchId || "N/A"}</Table.Column>
+                  <Table.Column className="p-2">
+                    {" "}
+                    <span
+                      className={twMerge(
+                        "rounded-full px-2 py-1 text-white",
+                        datum.productStatus === "disabled"
+                          ? "bg-red-500"
+                          : datum.productStatus === "enabled"
+                            ? "bg-green-600"
+                            : "bg-gray-500",
+                      )}
+                    >
+                      {datum.productStatus}
+                    </span>
+                  </Table.Column>
+                  <Table.Column className="p-2">
+                    {new Date(datum.createdAt).toLocaleString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                      hour: "numeric",
+                      minute: "numeric",
+                      second: "numeric",
+                      hour12: true,
+                    })}
+                  </Table.Column>
+
+                  <Table.Column className="p-2">
+                    <button onClick={() => handleQrClick(datum.qrUrl)}>
+                      <ImgWithWrapper
+                        wrapperClassName="size-10 mx-auto"
+                        imageAttributes={{ src: datum.qrUrl, alt: "product-qr" }}
+                      />
+                    </button>
+                  </Table.Column>
+                  <Table.Column className="p-4">
+                    {datum.purchasedStatus === true ? (
+                      <span className="text bg-green-600 px-2 py-1 text-white">Purchased</span>
+                    ) : datum.purchasedStatus === false ? (
+                      <span className="text bg-yellow-500 px-2 py-1 text-white">In stock</span>
+                    ) : (
+                      <span className="px-2 py-1">N/A</span>
+                    )}
+                  </Table.Column>
+
+                  <Table.Column className="p-2">
+                    <ContextMenu
+                      className="relative"
+                      tableRef={tableRef}
+                      contextMenuRef={contextMenuRef}
+                    >
+                      <ContextMenu.Trigger>
+                        <FontAwesomeIcon
+                          icon={faEllipsisVertical}
+                          className="fa-fw"
+                        />
+                      </ContextMenu.Trigger>
+
+                      <ContextMenu.Menu className="absolute z-10 w-[175px] space-y-1 bg-white/80 p-2 text-white">
+                        <ContextMenu.Item
+                          className="rounded-md bg-[#0000CC]"
+                          onClick={() => router.push(`/products/${datum.slug}`)}
+                        >
+                          View
+                        </ContextMenu.Item>
+                        {userRole !== "retailer" && (
+                          <ContextMenu.Item
+                            className="rounded-md bg-[#0000CC]"
+                            onClick={() => router.push(`/products/${datum.id}/edit`)}
+                          >
+                            Edit
+                          </ContextMenu.Item>
+                        )}
+
+                        <ContextMenu.Item
+                          className="rounded-md bg-[#0000CC]"
+                          onClick={() => router.push()}
+                        >
+                          Delete
+                        </ContextMenu.Item>
+                      </ContextMenu.Menu>
+                    </ContextMenu>
+                    {userRole !== "company" && (
+                      <FontAwesomeIcon
+                        icon={faUserPlus}
+                        className="fa-fw"
+                        size="sm"
+                        onClick={() => handleAddCustomerClick(datum.id)} // Pass product ID here
+                      />
+                    )}
+                  </Table.Column>
+                </Table.Row>
+              ))
+            )}
           </Table.Body>
         </Table>
       </div>

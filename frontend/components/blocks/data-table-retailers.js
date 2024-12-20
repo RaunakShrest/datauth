@@ -337,12 +337,6 @@ export default function DataTable() {
                             Disable
                           </ContextMenu.Item>
                         )}
-                        <ContextMenu.Item
-                          className="rounded-md bg-[#0000CC]"
-                          onClick={() => {}}
-                        >
-                          Blockchain View
-                        </ContextMenu.Item>
                       </ContextMenu.Menu>
                     </ContextMenu>
                   </Table.Column>

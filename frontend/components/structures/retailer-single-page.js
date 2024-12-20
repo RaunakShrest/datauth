@@ -13,6 +13,7 @@ export default function EditRetailer({ params }) {
   const [retailer, setRetailer] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [saving, setSaving] = useState(false)
   const [successMessage, setSuccessMessage] = useState(null)
   const [formData, setFormData] = useState({
     fullName: "",
@@ -115,6 +116,7 @@ export default function EditRetailer({ params }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setSaving(true)
     const updatedData = getChangedFields()
 
     const [firstName, lastName] = formData.fullName.split(" ")
@@ -145,6 +147,8 @@ export default function EditRetailer({ params }) {
       router.push(`/retailers`)
     } catch (error) {
       setError("Failed to update retailer")
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -261,9 +265,10 @@ export default function EditRetailer({ params }) {
         <div>
           <Button
             type="submit"
+            disabled={saving}
             className="bg-[#02235E] px-8 py-2 text-white"
           >
-            Save Changes
+            {saving ? "Saving..." : "Save Changes"}
           </Button>
         </div>
       </form>

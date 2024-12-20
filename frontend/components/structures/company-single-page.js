@@ -12,6 +12,7 @@ export default function EditCompany({ params }) {
 
   const [company, setCompany] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [formData, setFormData] = useState({
     fullName: "",
@@ -34,7 +35,6 @@ export default function EditCompany({ params }) {
 
       try {
         const accessToken = localStorage.getItem("accessToken")
-        console.log(accessToken)
         if (!accessToken) {
           throw new Error("Access token not found")
         }
@@ -140,6 +140,7 @@ export default function EditCompany({ params }) {
     }
 
     try {
+      setSaving(true)
       const accessToken = localStorage.getItem("accessToken")
       if (!accessToken) {
         throw new Error("Access token not found while editing")
@@ -158,6 +159,8 @@ export default function EditCompany({ params }) {
       router.push(`/companies`)
     } catch (error) {
       setError("Failed to update company")
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -263,9 +266,10 @@ export default function EditCompany({ params }) {
         <div>
           <Button
             type="submit"
+            disabled={saving}
             className="bg-[#02235E] px-8 py-2 text-white"
           >
-            Save Changes
+            {saving ? "Saving..." : "Save Changes"}
           </Button>
         </div>
       </form>

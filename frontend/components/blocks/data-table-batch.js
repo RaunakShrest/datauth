@@ -13,6 +13,7 @@ import { getCurrentUser } from "@/contexts/query-provider/api-request-functions/
 import { Modal } from "../elements/Modal"
 import toast from "react-hot-toast"
 import ImgWithWrapper from "../composites/img-with-wrapper"
+import Button from "../elements/button"
 
 export default function DataTable() {
   const tableRef = useRef()
@@ -22,7 +23,7 @@ export default function DataTable() {
   const [selectedBatch, setSelectedBatch] = useState(null)
   const [dataState, setDataState] = useState({ columns: [], data: [] }) // Local state for table data
   const { data, sortData, selectedData, setSelectedData, filters, setFilters, dataLoading } = useBatch()
-
+  const [saving, setSaving] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const filteredData = data?.data || []
 
@@ -47,7 +48,6 @@ export default function DataTable() {
   }, [data])
 
   useEffect(() => {
-    console.log("Fetching data for page:", currentPage)
     setFilters((prevFilters) => ({ ...prevFilters, page: currentPage }))
   }, [currentPage])
   const isTableDataSelected = (dataToVerify) => {
@@ -82,6 +82,7 @@ export default function DataTable() {
       toast.error("No batch selected for update.")
       return
     }
+    setSaving(true)
 
     try {
       const accessToken = localStorage.getItem("accessToken")
@@ -108,6 +109,7 @@ export default function DataTable() {
         setIsEditModalOpen(false)
         setSelectedBatch(null)
         setSelectedData([])
+        window.location.reload()
       } else {
         toast.error("Unexpected response from the server.")
       }
@@ -118,6 +120,8 @@ export default function DataTable() {
       } else {
         toast.error("Failed to update the batch. Please try again.") // Fallback error message
       }
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -328,12 +332,15 @@ export default function DataTable() {
               >
                 Cancel
               </button>
-              <button
-                type="submit"
-                className="rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-300 focus:ring-opacity-50"
-              >
-                Save Changes
-              </button>
+              <div>
+                <Button
+                  type="submit"
+                  disabled={saving}
+                  className="bg-[#02235E] px-8 py-2 text-white"
+                >
+                  {saving ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
             </div>
           </form>
         </Modal>
