@@ -21,6 +21,7 @@ export default function ProductsProvider({ children, companyId }) {
   const [selectedData, setSelectedData] = useState([])
   const [loading, setLoading] = useState(false)
   const [products, setProducts] = useState([])
+  const [dataLoading, setDataLoading] = useState(true)
   const [filters, setFilters] = useState({
     page: 1,
     limit: 10,
@@ -28,6 +29,7 @@ export default function ProductsProvider({ children, companyId }) {
   })
   const loadProducts = async () => {
     setLoading(true)
+    setDataLoading(true)
     try {
       const response = await fetchProducts({ companyId, filters })
 
@@ -36,6 +38,7 @@ export default function ProductsProvider({ children, companyId }) {
       console.error("Error loading products:", error)
     } finally {
       setLoading(false)
+      setDataLoading(false)
     }
   }
   useEffect(() => {
@@ -115,6 +118,7 @@ export default function ProductsProvider({ children, companyId }) {
         filters,
         setFilters,
         loadProducts,
+        dataLoading,
       }}
     >
       {children}

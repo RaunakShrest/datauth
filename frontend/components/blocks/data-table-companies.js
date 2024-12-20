@@ -97,7 +97,7 @@ export default function DataTable() {
   const [companyToDisable, setCompanyToDisable] = useState(null) // Track which company to disable
   const [companyToApprove, setCompanyToApprove] = useState(null)
   const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false) // modal loader
   const { data, sortData, selectedData, setSelectedData, fetchCompanies, dataLoading, setDataLoading } = useCompanies()
 
   const [currentPage, setCurrentPage] = useState(1)
@@ -358,7 +358,7 @@ export default function DataTable() {
                         {userRole !== "retailer" && (
                           <>
                             <ContextMenu.Item
-                              className="rounded-md bg-[#02235E]"
+                              className="rounded-md bg-[#0000CC]"
                               onClick={() => router.push(`/companies/${datum.id}/edit`)}
                             >
                               Edit
