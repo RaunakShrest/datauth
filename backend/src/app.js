@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import morgan from "morgan";
 import cors from "cors";
 import multer from "multer";
-import path from "path"; // Import path module
+import path from "path";
 
 dotenv.config("../.env");
 const app = express();
