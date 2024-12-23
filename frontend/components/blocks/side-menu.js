@@ -14,6 +14,7 @@ export default function SideMenu() {
   const [userData, setUserData] = useState({ companyName: "", userType: "" })
 
   useEffect(() => {
+    //test
     const fetchUserData = async () => {
       try {
         const response = await getCurrentUser()
