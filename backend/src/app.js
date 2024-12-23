@@ -24,23 +24,15 @@ app.get("/", (req, res) => {
 
 // app specific middlewares
 import usersRoute from "./routes/user.route.js";
-import productTypesRoute from "./routes/productType.router.js";
-import productItemsRoute from "./routes/productItem.router.js";
-import customerInfoRoute from "./routes/customerInfo.router.js";
-import retailerRoute from "./routes/retailer.route.js";
-import batchIdRoute from "./routes/batch.route.js";
+
 import companyRoute from "./routes/company.route.js";
 
 app.use("/api/v1/users", usersRoute);
-app.use("/api/v1/product-types", productTypesRoute);
-app.use("/api/v1/products", productItemsRoute);
-app.use("/api/v1/customerInfo", customerInfoRoute);
-app.use("/api/v1/retailers", retailerRoute);
-app.use("/api/v1/batch", batchIdRoute);
+
 app.use("/api/v1/company", companyRoute);
 
 // Serve static files from the uploads directory
-app.use('/api/v1/uploads', express.static(path.join(process.cwd(), 'uploads'))); // Update path to use process.cwd()
+app.use("/api/v1/uploads", express.static(path.join(process.cwd(), "uploads"))); // Update path to use process.cwd()
 
 // Global Error Handler
 app.use((error, _, res, __) => {
@@ -56,8 +48,8 @@ app.use((error, _, res, __) => {
   return res.status(error.statusCode).json(error);
 });
 
-app.all('*', (req, res) => {
-  return res.status(404).json({ error: 'Route not found!' });
+app.all("*", (req, res) => {
+  return res.status(404).json({ error: "Route not found!" });
 });
 
 export { server };

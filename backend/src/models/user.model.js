@@ -34,16 +34,16 @@ const userSchema = new mongoose.Schema(
     },
     userType: {
       type: String,
-      enum: [process.env.USER_TYPE_COMPANY, process.env.USER_TYPE_RETAILER],
+      enum: [process.env.USER_TYPE_COMPANY],
       required: true,
       lowercase: true,
     },
-    productType: {
-      type: [String],
-      required: true,
-      lowercase: true,
-      trim: true,
-    },
+    // productType: {
+    //   type: [String],
+    //   required: true,
+    //   lowercase: true,
+    //   trim: true,
+    // },
     companyName: {
       type: String,
       required: true,

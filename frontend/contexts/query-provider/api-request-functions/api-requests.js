@@ -56,52 +56,9 @@ export const registerUser = async (data) => {
   }
 }
 
-export const createNewProductType = async (data) => {
-  try {
-    // Get the access token from localStorage
-    const accessToken = localStorage.getItem("accessToken")
-
-    if (!accessToken) {
-      throw new Error("No access token found")
-    }
-
-    // Set up the headers with the Bearer token
-    const config = {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    }
-
-    // Make the POST request to create a new product type with authorization headers
-    const response = await api.post("/product-types/create", data, config)
-
-    return response.data
-  } catch (error) {
-    throw error.response || error
-  }
-}
-
 export const fetchProductTypes = async () => {
   try {
     const response = await api.get("/product-types/get-enabled")
-
-    return response.data
-  } catch (error) {
-    throw error.response
-  }
-}
-export const fetchProductTypesRegistration = async () => {
-  try {
-    const response = await api.get("/product-types/getProductTypeRegistration")
-
-    return response.data
-  } catch (error) {
-    throw error.response
-  }
-}
-export const fetchBatchIds = async () => {
-  try {
-    const response = await api.get("/batch/getBatchIds")
 
     return response.data
   } catch (error) {

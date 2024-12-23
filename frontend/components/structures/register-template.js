@@ -16,7 +16,7 @@ import {
   lastNameRule,
   middleNameRule,
   phoneRule,
-  productTypeRule,
+  // productTypeRule,
   registerEmailRule,
   registrationConfirmPasswordRule,
   registrationPasswordRule,
@@ -74,33 +74,33 @@ export default function RegisterTemplate() {
 
     return registerMutation.mutate(dataToPost)
   }
-  const [productTypes, setProductTypes] = useState([])
-  const [loadingProductTypes, setLoadingProductTypes] = useState(true)
-  const [errorProductTypes, setErrorProductTypes] = useState(null)
+  // const [productTypes, setProductTypes] = useState([])
+  // const [loadingProductTypes, setLoadingProductTypes] = useState(true)
+  // const [errorProductTypes, setErrorProductTypes] = useState(null)
   const [countries, setCountries] = useState([])
   const [selectedCountry, setSelectedCountry] = useState("")
-  useEffect(() => {
-    // Fetch product types from the API
-    const fetchProductTypes = async () => {
-      try {
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_BASE_URL_DEV}/product-types/getProductTypeRegistration`,
-        )
-        const { data } = response.data
-        if (Array.isArray(data)) {
-          setProductTypes(data)
-        } else {
-          setError("Invalid data format")
-        }
-      } catch (error) {
-        setError("Error fetching product types")
-      } finally {
-        setLoadingProductTypes(false)
-      }
-    }
+  // useEffect(() => {
+  //   // Fetch product types from the API
+  //   const fetchProductTypes = async () => {
+  //     try {
+  //       const response = await axios.get(
+  //         `${process.env.NEXT_PUBLIC_BASE_URL_DEV}/product-types/getProductTypeRegistration`,
+  //       )
+  //       const { data } = response.data
+  //       if (Array.isArray(data)) {
+  //         setProductTypes(data)
+  //       } else {
+  //         setError("Invalid data format")
+  //       }
+  //     } catch (error) {
+  //       setError("Error fetching product types")
+  //     } finally {
+  //       setLoadingProductTypes(false)
+  //     }
+  //   }
 
-    fetchProductTypes()
-  }, [])
+  //   fetchProductTypes()
+  // }, [])
 
   useEffect(() => {
     setCountries(countriesData)
@@ -314,7 +314,7 @@ export default function RegisterTemplate() {
                 }}
                 label={<span className="font-bold">User Type</span>}
               />
-              <InputWithIcon
+              {/* <InputWithIcon
                 useFormContext={useRegisterFormContext}
                 iconElement={false}
                 inputType="select"
@@ -334,7 +334,7 @@ export default function RegisterTemplate() {
                     {productType.name}
                   </option>
                 ))}
-              </InputWithIcon>
+              </InputWithIcon> */}
             </div>
 
             {/* Password Input Group */}

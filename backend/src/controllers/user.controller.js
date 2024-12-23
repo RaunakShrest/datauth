@@ -75,8 +75,7 @@ const userSignup = async (req, res, next) => {
       !password ||
       !phoneNumber ||
       !userType ||
-      !companyName ||
-      !productType
+      !companyName
     ) {
       throw new ApiError(400, "Required Fields Empty");
     }
@@ -391,7 +390,7 @@ const getCompanyIds = async (req, res, next) => {
 };
 
 const getCompanies = async (req, res, next) => {
-  const blockChainToken = req.blockChainToken;
+  const blockChainToken = "asdzxcxzcasd";
   if (!blockChainToken) {
     throw new ApiError(401, "Authorization token of blockchain not found");
   }

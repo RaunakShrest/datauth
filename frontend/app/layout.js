@@ -9,7 +9,7 @@ config.autoAddCss = false
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata = {
-  title: "Supply Chain Management",
+  title: "Data Authenticity",
   description: "Maintain authenticity among customers and companies",
 }
 

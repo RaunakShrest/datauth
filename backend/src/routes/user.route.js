@@ -36,7 +36,7 @@ router.post("/signout", userSignout);
 router.post("/refresh-access-token", refreshAccessToken);
 
 router.patch("/update-user", checkUserAuth, checkSuperAdmin, updateUser);
-router.get("/get-companies", checkUserAuth, blockChainToken, getCompanies);
+router.get("/get-companies", checkUserAuth, getCompanies);
 router.patch("/get-companies/:id", updateCompanyStatus); //for updating companyStatus
 router.delete(
   "/delete-company/:id",

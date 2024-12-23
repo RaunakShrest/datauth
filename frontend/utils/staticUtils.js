@@ -1,7 +1,6 @@
 export const userTypeOptions = [
   { value: "", text: "----- Select A Type -----" },
   { value: "company", text: "Company" },
-  { value: "retailer", text: "Retailer" },
 ]
 
 export const productTypeStatus = {
